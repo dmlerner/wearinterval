@@ -48,7 +48,15 @@ class SettingsRepositoryTest {
 
         // When/Then
         repository.notificationSettings.test {
-            assertThat(awaitItem()).isEqualTo(customSettings)
+            // StateFlow.stateIn may emit initialValue first, then the actual value
+            val firstItem = awaitItem()
+            if (firstItem == NotificationSettings.DEFAULT) {
+                // If we get the initial value, wait for the actual value
+                assertThat(awaitItem()).isEqualTo(customSettings)
+            } else {
+                // If we get the actual value immediately, that's fine too
+                assertThat(firstItem).isEqualTo(customSettings)
+            }
 
             settingsFlow.value = defaultSettings
             assertThat(awaitItem()).isEqualTo(defaultSettings)

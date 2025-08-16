@@ -131,3 +131,4 @@ sl pr submit
 - Keep PROJECT_STATUS.md updated as the single source of truth
 
 **Remember**: This is a production-quality codebase. Prioritize maintainability, testability, and adherence to established patterns over speed of implementation.
+- remember: all new behaviors should have at least one test.

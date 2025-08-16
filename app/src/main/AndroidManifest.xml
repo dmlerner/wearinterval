@@ -22,6 +22,11 @@
         android:theme="@style/Theme.WearInterval"
         tools:targetApi="31">
         
+        <!-- Wear OS standalone app flag -->
+        <meta-data
+            android:name="com.google.android.wearable.standalone"
+            android:value="true" />
+        
         <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
@@ -45,7 +50,13 @@
                 android:value="interval_timer" />
         </service>
 
-        <!-- Tile Service -->
+        <!-- 
+        Wear OS integration services are temporarily commented out for Phase 4.
+        They will be implemented in Phase 5 - Wear OS Integration.
+        -->
+        
+        <!-- Tile Service (TODO: Phase 5) -->
+        <!--
         <service
             android:name=".wearos.tile.TimerTileService"
             android:exported="true"
@@ -58,8 +69,10 @@
                 android:name="androidx.wear.tiles.PREVIEW"
                 android:resource="@drawable/tile_preview" />
         </service>
+        -->
 
-        <!-- Complication Service -->
+        <!-- Complication Service (TODO: Phase 5) -->
+        <!--
         <service
             android:name=".wearos.complication.TimerComplicationService"
             android:exported="true"
@@ -75,6 +88,7 @@
                 android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
                 android:value="300" />
         </service>
+        -->
 
     </application>
 
