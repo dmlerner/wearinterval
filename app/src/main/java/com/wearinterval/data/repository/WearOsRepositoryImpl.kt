@@ -1,0 +1,111 @@
+package com.wearinterval.data.repository
+
+import com.wearinterval.domain.model.TimerPhase
+import com.wearinterval.domain.repository.ComplicationData
+import com.wearinterval.domain.repository.ComplicationType
+import com.wearinterval.domain.repository.ConfigurationRepository
+import com.wearinterval.domain.repository.TileData
+import com.wearinterval.domain.repository.TimerRepository
+import com.wearinterval.domain.repository.WearOsRepository
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class WearOsRepositoryImpl @Inject constructor(
+    private val timerRepository: TimerRepository,
+    private val configurationRepository: ConfigurationRepository
+) : WearOsRepository {
+    
+    override suspend fun updateWearOsComponents(): Result<Unit> {
+        return try {
+            // TODO: Implement tile and complication updates in Phase 5
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    override suspend fun getTileData(): TileData {
+        return TileData(
+            timerState = timerRepository.timerState.value,
+            recentConfigurations = configurationRepository.recentConfigurations.value
+        )
+    }
+    
+    override suspend fun getComplicationData(type: ComplicationType): ComplicationData {
+        val timerState = timerRepository.timerState.value
+        
+        return when (type) {
+            is ComplicationType.ShortText -> {
+                val text = when (timerState.phase) {
+                    TimerPhase.Stopped -> "Ready"
+                    TimerPhase.Running -> formatTime(timerState.timeRemaining)
+                    TimerPhase.Resting -> "R:${formatTime(timerState.timeRemaining)}"
+                    TimerPhase.Paused -> "Paused"
+                    TimerPhase.AlarmActive -> "Alarm"
+                }
+                val title = if (timerState.phase != TimerPhase.Stopped) {
+                    timerState.displayCurrentLap
+                } else null
+                
+                ComplicationData.ShortText(text, title)
+            }
+            
+            is ComplicationType.LongText -> {
+                val text = when (timerState.phase) {
+                    TimerPhase.Stopped -> "${formatTime(timerState.configuration.workDuration)} × ${timerState.totalLaps}"
+                    TimerPhase.Running -> "${formatTime(timerState.timeRemaining)} - Lap ${timerState.displayCurrentLap}"
+                    TimerPhase.Resting -> "Rest: ${formatTime(timerState.timeRemaining)} - Lap ${timerState.displayCurrentLap}"
+                    TimerPhase.Paused -> "Paused - Lap ${timerState.displayCurrentLap}"
+                    TimerPhase.AlarmActive -> "Alarm - Tap to dismiss"
+                }
+                val title = if (timerState.phase == TimerPhase.Stopped) "Ready" else null
+                
+                ComplicationData.LongText(text, title)
+            }
+            
+            is ComplicationType.RangedValue -> {
+                val progress = timerState.progressPercentage
+                val text = formatTime(timerState.timeRemaining)
+                val title = timerState.displayCurrentLap
+                
+                ComplicationData.RangedValue(
+                    value = progress,
+                    min = 0f,
+                    max = 1f,
+                    text = text,
+                    title = title
+                )
+            }
+            
+            is ComplicationType.MonochromaticImage,
+            is ComplicationType.SmallImage -> {
+                val iconRes = when (timerState.phase) {
+                    TimerPhase.Stopped, TimerPhase.Paused -> android.R.drawable.ic_media_play
+                    TimerPhase.Running, TimerPhase.Resting -> android.R.drawable.ic_media_pause
+                    TimerPhase.AlarmActive -> android.R.drawable.ic_delete
+                }
+                val description = when (timerState.phase) {
+                    TimerPhase.Stopped -> "Start timer"
+                    TimerPhase.Paused -> "Resume timer"
+                    TimerPhase.Running, TimerPhase.Resting -> "Pause timer"
+                    TimerPhase.AlarmActive -> "Dismiss alarm"
+                }
+                
+                ComplicationData.Image(iconRes, description)
+            }
+        }
+    }
+    
+    private fun formatTime(duration: kotlin.time.Duration): String {
+        val totalSeconds = duration.inWholeSeconds
+        val minutes = totalSeconds / 60
+        val seconds = totalSeconds % 60
+        
+        return if (minutes > 0) {
+            "${minutes}:%02d".format(seconds)
+        } else {
+            "${seconds}s"
+        }
+    }
+}
