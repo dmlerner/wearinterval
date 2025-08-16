@@ -6,6 +6,8 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
+const val INFINITE_LAPS = 999
+
 data class TimerConfiguration(
     val id: String = UUID.randomUUID().toString(),
     val laps: Int,
@@ -14,7 +16,7 @@ data class TimerConfiguration(
     val lastUsed: Long = System.currentTimeMillis()
 ) {
     fun isValid(): Boolean {
-        return laps in 1..999 &&
+        return laps in 1..INFINITE_LAPS &&
                 workDuration >= 5.seconds &&
                 workDuration <= 10.minutes &&
                 restDuration >= 0.seconds &&
@@ -33,7 +35,7 @@ data class TimerConfiguration(
         return if (laps == 1) {
             TimeUtils.formatDuration(workDuration)
         } else {
-            val infiniteSymbol = if (laps == 999) "∞" else laps.toString()
+            val infiniteSymbol = if (laps == INFINITE_LAPS) "∞" else laps.toString()
             "$infiniteSymbol×${TimeUtils.formatDuration(workDuration)}"
         }
     }
@@ -54,7 +56,7 @@ data class TimerConfiguration(
             workDuration: Duration,
             restDuration: Duration
         ): TimerConfiguration {
-            val validLaps = laps.coerceIn(1, 999)
+            val validLaps = laps.coerceIn(1, INFINITE_LAPS)
             val validWorkDuration = workDuration.coerceIn(5.seconds, 10.minutes)
             val validRestDuration = restDuration.coerceIn(0.seconds, 10.minutes)
             
@@ -66,14 +68,19 @@ data class TimerConfiguration(
         }
         
         val COMMON_PRESETS = listOf(
+            // Single intervals (timers)
             TimerConfiguration(laps = 1, workDuration = 30.seconds, restDuration = 0.seconds),
             TimerConfiguration(laps = 1, workDuration = 60.seconds, restDuration = 0.seconds),
             TimerConfiguration(laps = 1, workDuration = 2.minutes, restDuration = 0.seconds),
+            
+            // Interval training
             TimerConfiguration(laps = 5, workDuration = 45.seconds, restDuration = 15.seconds),
+            TimerConfiguration(laps = 8, workDuration = 25.seconds, restDuration = 5.seconds),
             TimerConfiguration(laps = 10, workDuration = 30.seconds, restDuration = 30.seconds),
             TimerConfiguration(laps = 20, workDuration = 20.seconds, restDuration = 10.seconds),
-            TimerConfiguration(laps = 8, workDuration = 25.seconds, restDuration = 5.seconds),
-            TimerConfiguration(laps = 999, workDuration = 25.seconds, restDuration = 5.seconds)
+            
+            // Infinite workout
+            TimerConfiguration(laps = INFINITE_LAPS, workDuration = 25.seconds, restDuration = 5.seconds)
         )
     }
 }

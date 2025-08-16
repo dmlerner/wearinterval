@@ -18,6 +18,11 @@ data class TimerState(
     
     val currentInterval: Duration get() = if (isResting) configuration.restDuration else configuration.workDuration
     
+    /**
+     * Progress percentage for the current interval (work or rest).
+     * Returns 1.0 (100%) for zero-duration intervals to indicate immediate completion.
+     * @return Float between 0.0 and 1.0 representing completion percentage
+     */
     val progressPercentage: Float get() {
         if (currentInterval == Duration.ZERO) return 1f
         return 1f - (timeRemaining.inWholeMilliseconds.toFloat() / currentInterval.inWholeMilliseconds.toFloat())
@@ -29,7 +34,7 @@ data class TimerState(
         return lapProgress.toFloat() / totalLaps.toFloat()
     }
     
-    val isInfinite: Boolean get() = totalLaps == 999
+    val isInfinite: Boolean get() = totalLaps == INFINITE_LAPS
     
     val displayCurrentLap: String get() = if (isInfinite) currentLap.toString() else "$currentLap/$totalLaps"
     

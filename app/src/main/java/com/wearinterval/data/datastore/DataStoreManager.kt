@@ -46,7 +46,7 @@ class DataStoreManager @Inject constructor(
             NotificationSettings(
                 vibrationEnabled = preferences[VIBRATION_ENABLED] ?: true,
                 soundEnabled = preferences[SOUND_ENABLED] ?: true,
-                flashEnabled = preferences[FLASH_ENABLED] ?: false,
+                flashEnabled = preferences[FLASH_ENABLED] ?: true,
                 autoMode = preferences[AUTO_MODE] ?: true
             )
         }

@@ -8,7 +8,7 @@ import android.content.Context
 @Database(
     entities = [TimerConfigurationEntity::class],
     version = 1,
-    exportSchema = false
+    exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
     
