@@ -1,6 +1,6 @@
-.gradle
-app/build
-build
+.gradle/
+app/build/
+build/
 local.properties
 *.apk
 *.aab
@@ -13,9 +13,9 @@ local.properties
 *.kotlin_module
 *.log
 *.tmp
-.idea
+.idea/
 *.iml
-.vscode
+.vscode/
 .DS_Store
 Thumbs.db
 gradle/wrapper/gradle-wrapper.jar
