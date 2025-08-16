@@ -50,10 +50,10 @@ class ConfigurationRepositoryImpl @Inject constructor(
                 lastUsed = System.currentTimeMillis()
             )
             
-            dataStoreManager.updateCurrentConfiguration(validatedConfig)
             configurationDao.insertConfiguration(
                 TimerConfigurationEntity.fromDomain(validatedConfig)
             )
+            dataStoreManager.updateCurrentConfiguration(validatedConfig)
             
             cleanupOldConfigurations()
             
@@ -67,8 +67,8 @@ class ConfigurationRepositoryImpl @Inject constructor(
         return try {
             val updatedConfig = config.withUpdatedTimestamp()
             
-            dataStoreManager.updateCurrentConfiguration(updatedConfig)
             configurationDao.updateLastUsed(updatedConfig.id, updatedConfig.lastUsed)
+            dataStoreManager.updateCurrentConfiguration(updatedConfig)
             
             Result.success(Unit)
         } catch (e: Exception) {

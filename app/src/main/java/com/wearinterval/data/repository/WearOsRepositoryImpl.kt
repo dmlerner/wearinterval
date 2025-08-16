@@ -7,6 +7,8 @@ import com.wearinterval.domain.repository.ConfigurationRepository
 import com.wearinterval.domain.repository.TileData
 import com.wearinterval.domain.repository.TimerRepository
 import com.wearinterval.domain.repository.WearOsRepository
+import com.wearinterval.util.TimeUtils
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -27,20 +29,20 @@ class WearOsRepositoryImpl @Inject constructor(
     
     override suspend fun getTileData(): TileData {
         return TileData(
-            timerState = timerRepository.timerState.value,
-            recentConfigurations = configurationRepository.recentConfigurations.value
+            timerState = timerRepository.timerState.first(),
+            recentConfigurations = configurationRepository.recentConfigurations.first()
         )
     }
     
     override suspend fun getComplicationData(type: ComplicationType): ComplicationData {
-        val timerState = timerRepository.timerState.value
+        val timerState = timerRepository.timerState.first()
         
         return when (type) {
             is ComplicationType.ShortText -> {
                 val text = when (timerState.phase) {
                     TimerPhase.Stopped -> "Ready"
-                    TimerPhase.Running -> formatTime(timerState.timeRemaining)
-                    TimerPhase.Resting -> "R:${formatTime(timerState.timeRemaining)}"
+                    TimerPhase.Running -> TimeUtils.formatTimeCompact(timerState.timeRemaining)
+                    TimerPhase.Resting -> "R:${TimeUtils.formatTimeCompact(timerState.timeRemaining)}"
                     TimerPhase.Paused -> "Paused"
                     TimerPhase.AlarmActive -> "Alarm"
                 }
@@ -53,9 +55,9 @@ class WearOsRepositoryImpl @Inject constructor(
             
             is ComplicationType.LongText -> {
                 val text = when (timerState.phase) {
-                    TimerPhase.Stopped -> "${formatTime(timerState.configuration.workDuration)} × ${timerState.totalLaps}"
-                    TimerPhase.Running -> "${formatTime(timerState.timeRemaining)} - Lap ${timerState.displayCurrentLap}"
-                    TimerPhase.Resting -> "Rest: ${formatTime(timerState.timeRemaining)} - Lap ${timerState.displayCurrentLap}"
+                    TimerPhase.Stopped -> "${TimeUtils.formatTimeCompact(timerState.configuration.workDuration)} × ${timerState.totalLaps}"
+                    TimerPhase.Running -> "${TimeUtils.formatTimeCompact(timerState.timeRemaining)} - Lap ${timerState.displayCurrentLap}"
+                    TimerPhase.Resting -> "Rest: ${TimeUtils.formatTimeCompact(timerState.timeRemaining)} - Lap ${timerState.displayCurrentLap}"
                     TimerPhase.Paused -> "Paused - Lap ${timerState.displayCurrentLap}"
                     TimerPhase.AlarmActive -> "Alarm - Tap to dismiss"
                 }
@@ -66,7 +68,7 @@ class WearOsRepositoryImpl @Inject constructor(
             
             is ComplicationType.RangedValue -> {
                 val progress = timerState.progressPercentage
-                val text = formatTime(timerState.timeRemaining)
+                val text = TimeUtils.formatTimeCompact(timerState.timeRemaining)
                 val title = timerState.displayCurrentLap
                 
                 ComplicationData.RangedValue(
@@ -94,18 +96,6 @@ class WearOsRepositoryImpl @Inject constructor(
                 
                 ComplicationData.Image(iconRes, description)
             }
-        }
-    }
-    
-    private fun formatTime(duration: kotlin.time.Duration): String {
-        val totalSeconds = duration.inWholeSeconds
-        val minutes = totalSeconds / 60
-        val seconds = totalSeconds % 60
-        
-        return if (minutes > 0) {
-            "${minutes}:%02d".format(seconds)
-        } else {
-            "${seconds}s"
         }
     }
 }

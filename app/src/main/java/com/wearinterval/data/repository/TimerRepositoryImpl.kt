@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.cancel
 
 @OptIn(ExperimentalCoroutinesApi::class)
 
@@ -32,7 +33,7 @@ class TimerRepositoryImpl @Inject constructor(
     private val configurationRepository: ConfigurationRepository
 ) : TimerRepository {
     
-    private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     
     private var timerService: TimerService? = null
     private val _isServiceBound = MutableStateFlow(false)
@@ -41,13 +42,13 @@ class TimerRepositoryImpl @Inject constructor(
     
     override val timerState: StateFlow<TimerState> = _isServiceBound.flatMapLatest { bound ->
         if (bound && timerService != null) {
-            timerService!!.timerState
+            timerService?.timerState ?: flowOf(TimerState.stopped())
         } else {
             flowOf(TimerState.stopped())
         }
     }.stateIn(
         scope = repositoryScope,
-        started = SharingStarted.Eagerly,
+        started = SharingStarted.Lazily,
         initialValue = TimerState.stopped()
     )
     
@@ -139,5 +140,10 @@ class TimerRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             // Service was already unbound
         }
+    }
+    
+    fun cleanup() {
+        unbindService()
+        repositoryScope.cancel()
     }
 }

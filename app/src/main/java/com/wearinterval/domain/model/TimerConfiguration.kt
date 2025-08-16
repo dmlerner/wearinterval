@@ -1,5 +1,6 @@
 package com.wearinterval.domain.model
 
+import com.wearinterval.util.TimeUtils
 import java.util.UUID
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -22,30 +23,18 @@ data class TimerConfiguration(
     
     fun displayString(): String {
         val lapText = if (laps == 1) "" else "$laps x "
-        val workText = formatDuration(workDuration)
-        val restText = if (restDuration > 0.seconds) " + ${formatDuration(restDuration)}" else ""
+        val workText = TimeUtils.formatDuration(workDuration)
+        val restText = if (restDuration > 0.seconds) " + ${TimeUtils.formatDuration(restDuration)}" else ""
         
         return "$lapText$workText$restText"
     }
     
     fun shortDisplayString(): String {
         return if (laps == 1) {
-            formatDuration(workDuration)
+            TimeUtils.formatDuration(workDuration)
         } else {
             val infiniteSymbol = if (laps == 999) "∞" else laps.toString()
-            "$infiniteSymbol×${formatDuration(workDuration)}"
-        }
-    }
-    
-    private fun formatDuration(duration: Duration): String {
-        val totalSeconds = duration.inWholeSeconds
-        val minutes = totalSeconds / 60
-        val seconds = totalSeconds % 60
-        
-        return when {
-            minutes == 0L -> "${seconds}s"
-            seconds == 0L -> "${minutes}:00"
-            else -> "${minutes}:%02d".format(seconds)
+            "$infiniteSymbol×${TimeUtils.formatDuration(workDuration)}"
         }
     }
     
