@@ -9,9 +9,6 @@
 *.exec
 *.ec
 
-# Local configuration files
-local.properties
-
 # IDE files
 .idea/
 *.iml
@@ -28,3 +25,7 @@ lint-results*.html
 
 # Gradle wrapper JAR (regeneratable)
 gradle/wrapper/gradle-wrapper.jar
+
+# Pre-existing documentation files (outside project scope)
+WEARINTERVAL_MVVM_REPOSITORY_ARCHITECTURE.md
+WEAROS_SHARED_VIEWMODEL_PATTERN.md
