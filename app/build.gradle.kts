@@ -166,6 +166,7 @@ spotless {
                 "max_line_length" to "140",
                 "ktlint_standard_discouraged-comment-location" to "disabled",
                 "ktlint_standard_function-naming" to "disabled",
+                "ktlint_standard_filename" to "disabled",
             ),
         )
     }
