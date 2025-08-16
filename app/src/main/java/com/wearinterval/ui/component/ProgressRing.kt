@@ -17,6 +17,19 @@ import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 
+// Constants for component sizing and spacing
+private object ProgressRingDefaults {
+    val DEFAULT_SIZE = 120.dp
+    val DEFAULT_STROKE_WIDTH = 8.dp
+    val DUAL_RING_SIZE = 140.dp
+    val DUAL_RING_OUTER_STROKE = 6.dp
+    val DUAL_RING_INNER_STROKE = 4.dp
+    val DUAL_RING_GAP = 12.dp
+    const val BACKGROUND_ALPHA = 0.3f
+    const val DUAL_RING_BACKGROUND_ALPHA = 0.2f
+    const val START_ANGLE_TOP = -90f
+}
+
 /**
  * A circular progress ring component for WearInterval.
  *
@@ -33,11 +46,11 @@ import androidx.wear.compose.material.Text
 fun ProgressRing(
     progress: Float,
     modifier: Modifier = Modifier,
-    size: Dp = 120.dp,
-    strokeWidth: Dp = 8.dp,
-    backgroundColor: Color = Color.Gray.copy(alpha = 0.3f),
+    size: Dp = ProgressRingDefaults.DEFAULT_SIZE,
+    strokeWidth: Dp = ProgressRingDefaults.DEFAULT_STROKE_WIDTH,
+    backgroundColor: Color = Color.Gray.copy(alpha = ProgressRingDefaults.BACKGROUND_ALPHA),
     progressColor: Color = Color.Blue,
-    startAngle: Float = -90f, // Start from top
+    startAngle: Float = ProgressRingDefaults.START_ANGLE_TOP, // Start from top
     content: @Composable () -> Unit = {},
 ) {
     val density = LocalDensity.current
@@ -108,14 +121,14 @@ fun DualProgressRings(
     outerProgress: Float,
     innerProgress: Float,
     modifier: Modifier = Modifier,
-    size: Dp = 140.dp,
+    size: Dp = ProgressRingDefaults.DUAL_RING_SIZE,
     outerColor: Color = Color.Blue,
     innerColor: Color = Color.Green,
     content: @Composable () -> Unit = {},
 ) {
-    val outerStrokeWidth = 6.dp
-    val innerStrokeWidth = 4.dp
-    val ringGap = 12.dp // Gap between the rings
+    val outerStrokeWidth = ProgressRingDefaults.DUAL_RING_OUTER_STROKE
+    val innerStrokeWidth = ProgressRingDefaults.DUAL_RING_INNER_STROKE
+    val ringGap = ProgressRingDefaults.DUAL_RING_GAP // Gap between the rings
 
     Box(
         modifier = modifier.size(size),
@@ -127,7 +140,7 @@ fun DualProgressRings(
             size = size,
             strokeWidth = outerStrokeWidth,
             progressColor = outerColor,
-            backgroundColor = outerColor.copy(alpha = 0.2f),
+            backgroundColor = outerColor.copy(alpha = ProgressRingDefaults.DUAL_RING_BACKGROUND_ALPHA),
         )
 
         // Inner progress ring (current interval progress)
@@ -136,7 +149,7 @@ fun DualProgressRings(
             size = size - (outerStrokeWidth * 2) - ringGap,
             strokeWidth = innerStrokeWidth,
             progressColor = innerColor,
-            backgroundColor = innerColor.copy(alpha = 0.2f),
+            backgroundColor = innerColor.copy(alpha = ProgressRingDefaults.DUAL_RING_BACKGROUND_ALPHA),
         )
 
         // Center content

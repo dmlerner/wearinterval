@@ -33,6 +33,18 @@ import com.wearinterval.util.TimeUtils
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
+// Constants for MainScreen UI
+private object MainScreenDefaults {
+    const val FLASH_DURATION_MS = 500L
+    val TIMER_DISPLAY_SIZE = 140.dp
+    val COMPONENT_SPACING = 12.dp
+    val CONTROL_BUTTON_SPACING = 16.dp
+    val CONTROL_BUTTONS_SPACING = 4.dp
+    val PLAY_BUTTON_SIZE = 56.dp
+    val STOP_BUTTON_SIZE = 48.dp
+    val ALARM_SPACING = 16.dp
+}
+
 @Composable
 fun MainScreen(
     onNavigateToConfig: () -> Unit,
@@ -62,7 +74,7 @@ private fun MainContent(
     // Handle screen flash effect
     if (uiState.flashScreen) {
         LaunchedEffect(uiState.flashScreen) {
-            delay(500) // Flash for 500ms as per design spec
+            delay(MainScreenDefaults.FLASH_DURATION_MS) // Flash for 500ms as per design spec
             onEvent(MainEvent.FlashScreenDismissed)
         }
     }
@@ -109,7 +121,7 @@ private fun TimerInterface(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(MainScreenDefaults.COMPONENT_SPACING),
     ) {
         // Timer display with dual progress rings
         TimerDisplay(uiState = uiState)
@@ -143,13 +155,13 @@ private fun TimerDisplay(uiState: MainUiState) {
     DualProgressRings(
         outerProgress = uiState.overallProgressPercentage,
         innerProgress = uiState.intervalProgressPercentage,
-        size = 140.dp,
+        size = MainScreenDefaults.TIMER_DISPLAY_SIZE,
         outerColor = outerRingColor,
         innerColor = innerRingColor,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(MainScreenDefaults.CONTROL_BUTTONS_SPACING),
         ) {
             // Main time display
             Text(
@@ -191,14 +203,14 @@ private fun TimerDisplay(uiState: MainUiState) {
 @Composable
 private fun TimerControls(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(MainScreenDefaults.CONTROL_BUTTON_SPACING),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Play/Pause button
         Button(
             onClick = { onEvent(MainEvent.PlayPauseClicked) },
             modifier = Modifier
-                .size(56.dp)
+                .size(MainScreenDefaults.PLAY_BUTTON_SIZE)
                 .clip(CircleShape)
                 .semantics {
                     contentDescription = when {
@@ -224,7 +236,7 @@ private fun TimerControls(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
         Button(
             onClick = { onEvent(MainEvent.StopClicked) },
             modifier = Modifier
-                .size(48.dp)
+                .size(MainScreenDefaults.STOP_BUTTON_SIZE)
                 .clip(CircleShape)
                 .semantics { contentDescription = "Stop" },
             enabled = uiState.isStopButtonEnabled,
@@ -249,7 +261,7 @@ private fun AlarmScreen(uiState: MainUiState, onDismiss: () -> Unit) {
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(MainScreenDefaults.ALARM_SPACING),
         ) {
             Text(
                 text = "ALARM",
