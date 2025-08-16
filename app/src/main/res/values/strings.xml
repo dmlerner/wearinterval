@@ -1,0 +1,38 @@
+<resources>
+    <string name="app_name">WearInterval</string>
+    <string name="tile_label">Timer</string>
+    <string name="complication_label">Interval Timer</string>
+    
+    <!-- Timer States -->
+    <string name="timer_ready">Ready</string>
+    <string name="timer_running">Running</string>
+    <string name="timer_paused">Paused</string>
+    <string name="timer_resting">Rest</string>
+    <string name="timer_alarm">Tap to dismiss</string>
+    
+    <!-- Controls -->
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="stop">Stop</string>
+    
+    <!-- Settings -->
+    <string name="vibration">Vibration</string>
+    <string name="sound">Sound</string>
+    <string name="flash">Flash</string>
+    <string name="auto_mode">Auto mode</string>
+    
+    <!-- Configuration -->
+    <string name="laps">Laps</string>
+    <string name="work_duration">Work</string>
+    <string name="rest_duration">Rest</string>
+    
+    <!-- Content Descriptions -->
+    <string name="cd_play_pause_button">Play or pause timer</string>
+    <string name="cd_stop_button">Stop timer</string>
+    <string name="cd_vibration_toggle">Toggle vibration</string>
+    <string name="cd_sound_toggle">Toggle sound</string>
+    <string name="cd_flash_toggle">Toggle screen flash</string>
+    <string name="cd_auto_mode_toggle">Toggle auto mode</string>
+    <string name="cd_timer_progress">Timer progress</string>
+    <string name="cd_lap_progress">Lap progress</string>
+</resources>

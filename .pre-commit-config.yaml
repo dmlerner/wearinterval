@@ -1,0 +1,30 @@
+repos:
+  - repo: local
+    hooks:
+      - id: build-check
+        name: Verify project builds
+        entry: ./gradlew assemble
+        language: system
+        pass_filenames: false
+        stages: [commit]
+        
+      - id: unit-tests
+        name: Run unit tests
+        entry: ./gradlew testDebugUnitTest
+        language: system
+        pass_filenames: false
+        stages: [commit]
+        
+      - id: test-coverage
+        name: Check test coverage
+        entry: ./gradlew jacocoTestReport
+        language: system
+        pass_filenames: false
+        stages: [commit]
+        
+      - id: lint
+        name: Run Android lint
+        entry: ./gradlew lintDebug
+        language: system
+        pass_filenames: false
+        stages: [commit]

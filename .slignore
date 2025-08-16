@@ -1,0 +1,30 @@
+# Build artifacts and generated files
+**/.gradle/
+**/build/
+*.apk
+*.aab
+*.class
+*.dex
+*.ap_
+*.exec
+*.ec
+
+# Local configuration files
+local.properties
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# Lint and test reports
+lint-results*.xml
+lint-results*.html
+
+# Build caches
+.kotlin/
+.android/
+
+# Gradle wrapper JAR (regeneratable)
+gradle/wrapper/gradle-wrapper.jar

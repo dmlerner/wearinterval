@@ -1,0 +1,5 @@
+<resources>
+    <style name="Theme.WearInterval" parent="android:Theme.DeviceDefault.Light">
+        <!-- Wear OS specific theme configurations -->
+    </style>
+</resources>
