@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.wearinterval.ui.navigation.WearIntervalNavigation
+import com.wearinterval.ui.theme.WearIntervalTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -13,7 +15,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            // TODO: Add navigation and theme
+            WearIntervalTheme {
+                WearIntervalNavigation()
+            }
         }
     }
 }
