@@ -155,7 +155,7 @@ ksp {
 // Spotless configuration for code formatting
 spotless {
     kotlin {
-        target("src/**/*.kt")
+        target("src/**/*.kt", "*.kt")
         targetExclude("**/build/**/*.kt")
         ktlint("1.0.1").editorConfigOverride(
             mapOf(
