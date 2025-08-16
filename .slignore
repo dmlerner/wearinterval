@@ -1,6 +1,7 @@
-# Build artifacts and generated files
-**/.gradle/
-**/build/
+.gradle
+app/build
+build
+local.properties
 *.apk
 *.aab
 *.class
@@ -8,24 +9,14 @@
 *.ap_
 *.exec
 *.ec
-
-# IDE files
-.idea/
+*.jar
+*.kotlin_module
+*.log
+*.tmp
+.idea
 *.iml
-.vscode/
+.vscode
 .DS_Store
-
-# Lint and test reports
-lint-results*.xml
-lint-results*.html
-
-# Build caches
-.kotlin/
-.android/
-
-# Gradle wrapper JAR (regeneratable)
+Thumbs.db
 gradle/wrapper/gradle-wrapper.jar
-
-# Pre-existing documentation files (outside project scope)
-WEARINTERVAL_MVVM_REPOSITORY_ARCHITECTURE.md
 WEAROS_SHARED_VIEWMODEL_PATTERN.md
