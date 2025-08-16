@@ -15,9 +15,9 @@ import javax.inject.Singleton
 @Singleton
 class WearOsRepositoryImpl @Inject constructor(
     private val timerRepository: TimerRepository,
-    private val configurationRepository: ConfigurationRepository
+    private val configurationRepository: ConfigurationRepository,
 ) : WearOsRepository {
-    
+
     override suspend fun updateWearOsComponents(): Result<Unit> {
         return try {
             // TODO: Implement tile and complication updates in Phase 5
@@ -26,17 +26,17 @@ class WearOsRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
-    
+
     override suspend fun getTileData(): TileData {
         return TileData(
             timerState = timerRepository.timerState.first(),
-            recentConfigurations = configurationRepository.recentConfigurations.first()
+            recentConfigurations = configurationRepository.recentConfigurations.first(),
         )
     }
-    
+
     override suspend fun getComplicationData(type: ComplicationType): ComplicationData {
         val timerState = timerRepository.timerState.first()
-        
+
         return when (type) {
             is ComplicationType.ShortText -> {
                 val text = when (timerState.phase) {
@@ -48,40 +48,45 @@ class WearOsRepositoryImpl @Inject constructor(
                 }
                 val title = if (timerState.phase != TimerPhase.Stopped) {
                     timerState.displayCurrentLap
-                } else null
-                
+                } else {
+                    null
+                }
+
                 ComplicationData.ShortText(text, title)
             }
-            
+
             is ComplicationType.LongText -> {
                 val text = when (timerState.phase) {
                     TimerPhase.Stopped -> "${TimeUtils.formatTimeCompact(timerState.configuration.workDuration)} × ${timerState.totalLaps}"
                     TimerPhase.Running -> "${TimeUtils.formatTimeCompact(timerState.timeRemaining)} - Lap ${timerState.displayCurrentLap}"
-                    TimerPhase.Resting -> "Rest: ${TimeUtils.formatTimeCompact(timerState.timeRemaining)} - Lap ${timerState.displayCurrentLap}"
+                    TimerPhase.Resting -> "Rest: ${TimeUtils.formatTimeCompact(
+                        timerState.timeRemaining,
+                    )} - Lap ${timerState.displayCurrentLap}"
                     TimerPhase.Paused -> "Paused - Lap ${timerState.displayCurrentLap}"
                     TimerPhase.AlarmActive -> "Alarm - Tap to dismiss"
                 }
                 val title = if (timerState.phase == TimerPhase.Stopped) "Ready" else null
-                
+
                 ComplicationData.LongText(text, title)
             }
-            
+
             is ComplicationType.RangedValue -> {
                 val progress = timerState.progressPercentage
                 val text = TimeUtils.formatTimeCompact(timerState.timeRemaining)
                 val title = timerState.displayCurrentLap
-                
+
                 ComplicationData.RangedValue(
                     value = progress,
                     min = 0f,
                     max = 1f,
                     text = text,
-                    title = title
+                    title = title,
                 )
             }
-            
+
             is ComplicationType.MonochromaticImage,
-            is ComplicationType.SmallImage -> {
+            is ComplicationType.SmallImage,
+            -> {
                 val iconRes = when (timerState.phase) {
                     TimerPhase.Stopped, TimerPhase.Paused -> android.R.drawable.ic_media_play
                     TimerPhase.Running, TimerPhase.Resting -> android.R.drawable.ic_media_pause
@@ -93,7 +98,7 @@ class WearOsRepositoryImpl @Inject constructor(
                     TimerPhase.Running, TimerPhase.Resting -> "Pause timer"
                     TimerPhase.AlarmActive -> "Dismiss alarm"
                 }
-                
+
                 ComplicationData.Image(iconRes, description)
             }
         }

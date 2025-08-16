@@ -24,7 +24,7 @@ class SettingsScreenTest {
             vibrationEnabled = true,
             soundEnabled = false,
             autoModeEnabled = true,
-            flashEnabled = false
+            flashEnabled = false,
         )
 
         // When
@@ -33,7 +33,7 @@ class SettingsScreenTest {
                 SettingsContent(
                     uiState = uiState,
                     onEvent = {},
-                    onNavigateBack = {}
+                    onNavigateBack = {},
                 )
             }
         }
@@ -42,15 +42,15 @@ class SettingsScreenTest {
         composeTestRule
             .onNodeWithContentDescription("Toggle vibration")
             .assertIsDisplayed()
-        
+
         composeTestRule
             .onNodeWithContentDescription("Toggle sound")
             .assertIsDisplayed()
-        
+
         composeTestRule
             .onNodeWithContentDescription("Toggle auto mode")
             .assertIsDisplayed()
-        
+
         composeTestRule
             .onNodeWithContentDescription("Toggle screen flash")
             .assertIsDisplayed()
@@ -67,7 +67,7 @@ class SettingsScreenTest {
                 SettingsContent(
                     uiState = uiState,
                     onEvent = { eventReceived = it },
-                    onNavigateBack = {}
+                    onNavigateBack = {},
                 )
             }
         }
@@ -92,7 +92,7 @@ class SettingsScreenTest {
                 SettingsContent(
                     uiState = uiState,
                     onEvent = { eventReceived = it },
-                    onNavigateBack = {}
+                    onNavigateBack = {},
                 )
             }
         }
@@ -117,7 +117,7 @@ class SettingsScreenTest {
                 SettingsContent(
                     uiState = uiState,
                     onEvent = { eventReceived = it },
-                    onNavigateBack = {}
+                    onNavigateBack = {},
                 )
             }
         }
@@ -142,7 +142,7 @@ class SettingsScreenTest {
                 SettingsContent(
                     uiState = uiState,
                     onEvent = { eventReceived = it },
-                    onNavigateBack = {}
+                    onNavigateBack = {},
                 )
             }
         }
@@ -167,7 +167,7 @@ class SettingsScreenTest {
                 SettingsContent(
                     uiState = uiState,
                     onEvent = { eventsReceived.add(it) },
-                    onNavigateBack = {}
+                    onNavigateBack = {},
                 )
             }
         }
@@ -176,15 +176,15 @@ class SettingsScreenTest {
         composeTestRule
             .onNodeWithContentDescription("Toggle vibration")
             .performClick()
-        
+
         composeTestRule
             .onNodeWithContentDescription("Toggle sound")
             .performClick()
-        
+
         composeTestRule
             .onNodeWithContentDescription("Toggle auto mode")
             .performClick()
-        
+
         composeTestRule
             .onNodeWithContentDescription("Toggle screen flash")
             .performClick()
@@ -194,7 +194,7 @@ class SettingsScreenTest {
             SettingsEvent.ToggleVibration,
             SettingsEvent.ToggleSound,
             SettingsEvent.ToggleAutoMode,
-            SettingsEvent.ToggleFlash
+            SettingsEvent.ToggleFlash,
         )
     }
 }

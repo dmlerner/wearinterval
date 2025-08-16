@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
     val uiState: StateFlow<SettingsUiState> = settingsRepository.notificationSettings
@@ -22,13 +22,13 @@ class SettingsViewModel @Inject constructor(
                 vibrationEnabled = settings.vibrationEnabled,
                 soundEnabled = settings.soundEnabled,
                 autoModeEnabled = settings.autoMode,
-                flashEnabled = settings.flashEnabled
+                flashEnabled = settings.flashEnabled,
             )
         }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = SettingsUiState()
+            initialValue = SettingsUiState(),
         )
 
     fun onEvent(event: SettingsEvent) {
@@ -36,16 +36,16 @@ class SettingsViewModel @Inject constructor(
             val currentSettings = settingsRepository.notificationSettings.value
             val updatedSettings = when (event) {
                 SettingsEvent.ToggleVibration -> currentSettings.copy(
-                    vibrationEnabled = !currentSettings.vibrationEnabled
+                    vibrationEnabled = !currentSettings.vibrationEnabled,
                 )
                 SettingsEvent.ToggleSound -> currentSettings.copy(
-                    soundEnabled = !currentSettings.soundEnabled
+                    soundEnabled = !currentSettings.soundEnabled,
                 )
                 SettingsEvent.ToggleAutoMode -> currentSettings.copy(
-                    autoMode = !currentSettings.autoMode
+                    autoMode = !currentSettings.autoMode,
                 )
                 SettingsEvent.ToggleFlash -> currentSettings.copy(
-                    flashEnabled = !currentSettings.flashEnabled
+                    flashEnabled = !currentSettings.flashEnabled,
                 )
             }
             settingsRepository.updateSettings(updatedSettings)

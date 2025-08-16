@@ -16,24 +16,16 @@ import dagger.hilt.components.SingletonComponent
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
-    
+
     @Binds
-    abstract fun bindSettingsRepository(
-        settingsRepositoryImpl: SettingsRepositoryImpl
-    ): SettingsRepository
-    
+    abstract fun bindSettingsRepository(settingsRepositoryImpl: SettingsRepositoryImpl): SettingsRepository
+
     @Binds
-    abstract fun bindConfigurationRepository(
-        configurationRepositoryImpl: ConfigurationRepositoryImpl
-    ): ConfigurationRepository
-    
+    abstract fun bindConfigurationRepository(configurationRepositoryImpl: ConfigurationRepositoryImpl): ConfigurationRepository
+
     @Binds
-    abstract fun bindTimerRepository(
-        timerRepositoryImpl: TimerRepositoryImpl
-    ): TimerRepository
-    
+    abstract fun bindTimerRepository(timerRepositoryImpl: TimerRepositoryImpl): TimerRepository
+
     @Binds
-    abstract fun bindWearOsRepository(
-        wearOsRepositoryImpl: WearOsRepositoryImpl
-    ): WearOsRepository
+    abstract fun bindWearOsRepository(wearOsRepositoryImpl: WearOsRepositoryImpl): WearOsRepository
 }

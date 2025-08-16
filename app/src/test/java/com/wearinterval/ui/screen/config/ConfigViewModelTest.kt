@@ -43,7 +43,7 @@ class ConfigViewModelTest {
         val testConfig = TimerConfiguration(
             laps = 10,
             workDuration = 45.seconds,
-            restDuration = 15.seconds
+            restDuration = 15.seconds,
         )
 
         // When
@@ -72,7 +72,7 @@ class ConfigViewModelTest {
         // Then
         coVerify {
             mockConfigRepository.updateConfiguration(
-                initialConfig.copy(laps = 6)
+                initialConfig.copy(laps = 6),
             )
         }
     }
@@ -89,7 +89,7 @@ class ConfigViewModelTest {
         // Then
         coVerify {
             mockConfigRepository.updateConfiguration(
-                initialConfig.copy(laps = 4)
+                initialConfig.copy(laps = 4),
             )
         }
     }
@@ -121,7 +121,7 @@ class ConfigViewModelTest {
         // Then
         coVerify {
             mockConfigRepository.updateConfiguration(
-                initialConfig.copy(workDuration = 35.seconds)
+                initialConfig.copy(workDuration = 35.seconds),
             )
         }
     }
@@ -138,7 +138,7 @@ class ConfigViewModelTest {
         // Then
         coVerify {
             mockConfigRepository.updateConfiguration(
-                initialConfig.copy(workDuration = 25.seconds)
+                initialConfig.copy(workDuration = 25.seconds),
             )
         }
     }
@@ -170,7 +170,7 @@ class ConfigViewModelTest {
         // Then
         coVerify {
             mockConfigRepository.updateConfiguration(
-                initialConfig.copy(restDuration = 15.seconds)
+                initialConfig.copy(restDuration = 15.seconds),
             )
         }
     }
@@ -187,7 +187,7 @@ class ConfigViewModelTest {
         // Then
         coVerify {
             mockConfigRepository.updateConfiguration(
-                initialConfig.copy(restDuration = 5.seconds)
+                initialConfig.copy(restDuration = 5.seconds),
             )
         }
     }
@@ -213,7 +213,7 @@ class ConfigViewModelTest {
         val customConfig = TimerConfiguration(
             laps = 20,
             workDuration = 2.minutes,
-            restDuration = 30.seconds
+            restDuration = 30.seconds,
         )
         currentConfigFlow.value = customConfig
 
@@ -231,8 +231,10 @@ class ConfigViewModelTest {
         // Given
         val testConfig = TimerConfiguration(
             laps = 15,
-            workDuration = 75.seconds,  // 1 minute 15 seconds
-            restDuration = 90.seconds   // 1 minute 30 seconds
+            // 1 minute 15 seconds
+            workDuration = 75.seconds,
+            // 1 minute 30 seconds
+            restDuration = 90.seconds,
         )
 
         // When
@@ -254,8 +256,9 @@ class ConfigViewModelTest {
         // Given
         val testConfig = TimerConfiguration(
             laps = 1,
-            workDuration = 5.minutes + 45.seconds,  // 5:45
-            restDuration = 0.seconds
+            // 5:45
+            workDuration = 5.minutes + 45.seconds,
+            restDuration = 0.seconds,
         )
 
         // When

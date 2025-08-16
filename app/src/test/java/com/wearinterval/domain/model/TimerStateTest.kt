@@ -2,7 +2,6 @@ package com.wearinterval.domain.model
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
-import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class TimerStateTest {
@@ -10,7 +9,7 @@ class TimerStateTest {
     private val testConfig = TimerConfiguration(
         laps = 5,
         workDuration = 60.seconds,
-        restDuration = 30.seconds
+        restDuration = 30.seconds,
     )
 
     @Test
@@ -20,11 +19,11 @@ class TimerStateTest {
             timeRemaining = 30.seconds,
             currentLap = 1,
             totalLaps = 5,
-            configuration = testConfig
+            configuration = testConfig,
         )
-        
+
         val restingState = runningState.copy(phase = TimerPhase.Resting)
-        
+
         assertThat(runningState.isRunning).isTrue()
         assertThat(restingState.isRunning).isTrue()
     }
@@ -34,7 +33,7 @@ class TimerStateTest {
         val stoppedState = TimerState.stopped(testConfig)
         val pausedState = stoppedState.copy(phase = TimerPhase.Paused)
         val alarmState = stoppedState.copy(phase = TimerPhase.AlarmActive)
-        
+
         assertThat(stoppedState.isRunning).isFalse()
         assertThat(pausedState.isRunning).isFalse()
         assertThat(alarmState.isRunning).isFalse()
@@ -47,11 +46,11 @@ class TimerStateTest {
             timeRemaining = 15.seconds,
             currentLap = 1,
             totalLaps = 5,
-            configuration = testConfig
+            configuration = testConfig,
         )
-        
+
         val runningState = restingState.copy(phase = TimerPhase.Running)
-        
+
         assertThat(restingState.isResting).isTrue()
         assertThat(runningState.isResting).isFalse()
     }
@@ -63,9 +62,9 @@ class TimerStateTest {
             timeRemaining = 30.seconds,
             currentLap = 1,
             totalLaps = 5,
-            configuration = testConfig
+            configuration = testConfig,
         )
-        
+
         // 30 seconds remaining of 60 second work interval = 50% progress
         assertThat(state.progressPercentage).isWithin(0.01f).of(0.5f)
     }
@@ -77,9 +76,9 @@ class TimerStateTest {
             timeRemaining = 10.seconds,
             currentLap = 1,
             totalLaps = 5,
-            configuration = testConfig
+            configuration = testConfig,
         )
-        
+
         // 10 seconds remaining of 30 second rest interval = 66.67% progress
         assertThat(state.progressPercentage).isWithin(0.01f).of(0.667f)
     }
@@ -92,9 +91,9 @@ class TimerStateTest {
             timeRemaining = 0.seconds,
             currentLap = 1,
             totalLaps = 5,
-            configuration = configWithNoRest
+            configuration = configWithNoRest,
         )
-        
+
         assertThat(state.progressPercentage).isEqualTo(1f)
     }
 
@@ -105,9 +104,9 @@ class TimerStateTest {
             timeRemaining = 30.seconds,
             currentLap = 3,
             totalLaps = 5,
-            configuration = testConfig
+            configuration = testConfig,
         )
-        
+
         // Lap 3 of 5, during work phase = (3-1)/5 = 0.4
         assertThat(state.lapProgressPercentage).isWithin(0.01f).of(0.4f)
     }
@@ -119,9 +118,9 @@ class TimerStateTest {
             timeRemaining = 15.seconds,
             currentLap = 3,
             totalLaps = 5,
-            configuration = testConfig
+            configuration = testConfig,
         )
-        
+
         // Lap 3 of 5, during rest phase = 3/5 = 0.6
         assertThat(state.lapProgressPercentage).isWithin(0.01f).of(0.6f)
     }
@@ -130,14 +129,14 @@ class TimerStateTest {
     fun `isInfinite returns true for 999 laps`() {
         val infiniteConfig = testConfig.copy(laps = 999)
         val state = TimerState.stopped(infiniteConfig)
-        
+
         assertThat(state.isInfinite).isTrue()
     }
 
     @Test
     fun `isInfinite returns false for finite laps`() {
         val state = TimerState.stopped(testConfig)
-        
+
         assertThat(state.isInfinite).isFalse()
     }
 
@@ -148,9 +147,9 @@ class TimerStateTest {
             timeRemaining = 30.seconds,
             currentLap = 3,
             totalLaps = 5,
-            configuration = testConfig
+            configuration = testConfig,
         )
-        
+
         assertThat(state.displayCurrentLap).isEqualTo("3/5")
     }
 
@@ -162,16 +161,16 @@ class TimerStateTest {
             timeRemaining = 30.seconds,
             currentLap = 15,
             totalLaps = 999,
-            configuration = infiniteConfig
+            configuration = infiniteConfig,
         )
-        
+
         assertThat(state.displayCurrentLap).isEqualTo("15")
     }
 
     @Test
     fun `stopped creates proper default state`() {
         val state = TimerState.stopped(testConfig)
-        
+
         assertThat(state.phase).isEqualTo(TimerPhase.Stopped)
         assertThat(state.timeRemaining).isEqualTo(testConfig.workDuration)
         assertThat(state.currentLap).isEqualTo(1)
@@ -187,9 +186,9 @@ class TimerStateTest {
             timeRemaining = 30.seconds,
             currentLap = 1,
             totalLaps = 5,
-            configuration = testConfig
+            configuration = testConfig,
         )
-        
+
         assertThat(state.currentInterval).isEqualTo(testConfig.workDuration)
     }
 
@@ -200,9 +199,9 @@ class TimerStateTest {
             timeRemaining = 15.seconds,
             currentLap = 1,
             totalLaps = 5,
-            configuration = testConfig
+            configuration = testConfig,
         )
-        
+
         assertThat(state.currentInterval).isEqualTo(testConfig.restDuration)
     }
 
@@ -210,10 +209,10 @@ class TimerStateTest {
     fun `phase specific boolean properties work correctly`() {
         val stoppedState = TimerState.stopped(testConfig)
         val alarmState = stoppedState.copy(phase = TimerPhase.AlarmActive)
-        
+
         assertThat(stoppedState.isStopped).isTrue()
         assertThat(stoppedState.isAlarmActive).isFalse()
-        
+
         assertThat(alarmState.isStopped).isFalse()
         assertThat(alarmState.isAlarmActive).isTrue()
     }

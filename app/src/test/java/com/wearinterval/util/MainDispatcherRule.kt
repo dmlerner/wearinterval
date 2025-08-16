@@ -10,10 +10,10 @@ import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 
-@OptIn(ExperimentalCoroutinesApi::class)
 // Test rule to set main dispatcher for testing
+@OptIn(ExperimentalCoroutinesApi::class)
 class MainDispatcherRule(
-    private val testDispatcher: TestDispatcher = UnconfinedTestDispatcher()
+    private val testDispatcher: TestDispatcher = UnconfinedTestDispatcher(),
 ) : TestRule {
     override fun apply(base: Statement, description: Description): Statement = object : Statement() {
         @Throws(Throwable::class)

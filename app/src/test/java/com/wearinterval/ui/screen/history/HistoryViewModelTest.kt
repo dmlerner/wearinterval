@@ -8,12 +8,9 @@ import com.wearinterval.util.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.runs
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -35,27 +32,27 @@ class HistoryViewModelTest {
             id = "1",
             laps = 5,
             workDuration = 90.seconds,
-            restDuration = 30.seconds
+            restDuration = 30.seconds,
         ),
         TimerConfiguration(
             id = "2",
             laps = 10,
             workDuration = 2.minutes,
-            restDuration = 45.seconds
+            restDuration = 45.seconds,
         ),
         TimerConfiguration(
             id = "3",
             laps = 3,
             workDuration = 45.seconds,
-            restDuration = 0.seconds
-        )
+            restDuration = 0.seconds,
+        ),
     )
 
     @Before
     fun setup() {
-        every { mockConfigurationRepository.recentConfigurations } returns 
+        every { mockConfigurationRepository.recentConfigurations } returns
             MutableStateFlow(emptyList())
-        
+
         viewModel = HistoryViewModel(mockConfigurationRepository)
     }
 
@@ -64,10 +61,10 @@ class HistoryViewModelTest {
         // Given - Fresh viewModel with empty flow
         val emptyFlow = MutableStateFlow(emptyList<TimerConfiguration>())
         every { mockConfigurationRepository.recentConfigurations } returns emptyFlow
-        
+
         // Create fresh viewModel
         val testViewModel = HistoryViewModel(mockConfigurationRepository)
-        
+
         testViewModel.uiState.test {
             val initialState = awaitItem()
             assertThat(initialState.isLoading).isFalse()

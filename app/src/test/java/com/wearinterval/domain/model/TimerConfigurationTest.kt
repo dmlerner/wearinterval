@@ -2,8 +2,6 @@ package com.wearinterval.domain.model
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -14,9 +12,9 @@ class TimerConfigurationTest {
         val config = TimerConfiguration(
             laps = 5,
             workDuration = 45.seconds,
-            restDuration = 15.seconds
+            restDuration = 15.seconds,
         )
-        
+
         assertThat(config.isValid()).isTrue()
     }
 
@@ -25,15 +23,15 @@ class TimerConfigurationTest {
         val tooFewLaps = TimerConfiguration(
             laps = 0,
             workDuration = 60.seconds,
-            restDuration = 0.seconds
+            restDuration = 0.seconds,
         )
-        
+
         val tooManyLaps = TimerConfiguration(
             laps = 1000,
             workDuration = 60.seconds,
-            restDuration = 0.seconds
+            restDuration = 0.seconds,
         )
-        
+
         assertThat(tooFewLaps.isValid()).isFalse()
         assertThat(tooManyLaps.isValid()).isFalse()
     }
@@ -43,15 +41,15 @@ class TimerConfigurationTest {
         val tooShort = TimerConfiguration(
             laps = 1,
             workDuration = 3.seconds,
-            restDuration = 0.seconds
+            restDuration = 0.seconds,
         )
-        
+
         val tooLong = TimerConfiguration(
             laps = 1,
             workDuration = 15.minutes,
-            restDuration = 0.seconds
+            restDuration = 0.seconds,
         )
-        
+
         assertThat(tooShort.isValid()).isFalse()
         assertThat(tooLong.isValid()).isFalse()
     }
@@ -61,15 +59,15 @@ class TimerConfigurationTest {
         val negativeRest = TimerConfiguration(
             laps = 1,
             workDuration = 60.seconds,
-            restDuration = (-5).seconds
+            restDuration = (-5).seconds,
         )
-        
+
         val tooLongRest = TimerConfiguration(
             laps = 1,
             workDuration = 60.seconds,
-            restDuration = 15.minutes
+            restDuration = 15.minutes,
         )
-        
+
         assertThat(negativeRest.isValid()).isFalse()
         assertThat(tooLongRest.isValid()).isFalse()
     }
@@ -79,9 +77,9 @@ class TimerConfigurationTest {
         val config = TimerConfiguration(
             laps = 1,
             workDuration = 90.seconds,
-            restDuration = 0.seconds
+            restDuration = 0.seconds,
         )
-        
+
         assertThat(config.displayString()).isEqualTo("1:30")
     }
 
@@ -90,9 +88,9 @@ class TimerConfigurationTest {
         val config = TimerConfiguration(
             laps = 5,
             workDuration = 45.seconds,
-            restDuration = 0.seconds
+            restDuration = 0.seconds,
         )
-        
+
         assertThat(config.displayString()).isEqualTo("5 x 45s")
     }
 
@@ -101,9 +99,9 @@ class TimerConfigurationTest {
         val config = TimerConfiguration(
             laps = 8,
             workDuration = 30.seconds,
-            restDuration = 15.seconds
+            restDuration = 15.seconds,
         )
-        
+
         assertThat(config.displayString()).isEqualTo("8 x 30s + 15s")
     }
 
@@ -112,9 +110,9 @@ class TimerConfigurationTest {
         val config = TimerConfiguration(
             laps = 999,
             workDuration = 25.seconds,
-            restDuration = 5.seconds
+            restDuration = 5.seconds,
         )
-        
+
         assertThat(config.displayString()).isEqualTo("999 x 25s + 5s")
     }
 
@@ -123,9 +121,9 @@ class TimerConfigurationTest {
         val config = TimerConfiguration(
             laps = 1,
             workDuration = 2.minutes,
-            restDuration = 30.seconds
+            restDuration = 30.seconds,
         )
-        
+
         assertThat(config.shortDisplayString()).isEqualTo("2:00")
     }
 
@@ -134,9 +132,9 @@ class TimerConfigurationTest {
         val config = TimerConfiguration(
             laps = 10,
             workDuration = 45.seconds,
-            restDuration = 15.seconds
+            restDuration = 15.seconds,
         )
-        
+
         assertThat(config.shortDisplayString()).isEqualTo("10×45s")
     }
 
@@ -145,9 +143,9 @@ class TimerConfigurationTest {
         val config = TimerConfiguration(
             laps = 999,
             workDuration = 30.seconds,
-            restDuration = 10.seconds
+            restDuration = 10.seconds,
         )
-        
+
         assertThat(config.shortDisplayString()).isEqualTo("∞×30s")
     }
 
@@ -158,9 +156,9 @@ class TimerConfigurationTest {
             60.seconds to "1:00",
             90.seconds to "1:30",
             2.minutes to "2:00",
-            125.seconds to "2:05"
+            125.seconds to "2:05",
         )
-        
+
         configs.forEach { (duration, expected) ->
             val config = TimerConfiguration(laps = 1, workDuration = duration, restDuration = 0.seconds)
             assertThat(config.displayString()).isEqualTo(expected)
@@ -174,11 +172,11 @@ class TimerConfigurationTest {
             laps = 1,
             workDuration = 60.seconds,
             restDuration = 0.seconds,
-            lastUsed = originalTime
+            lastUsed = originalTime,
         )
-        
+
         val updated = config.withUpdatedTimestamp()
-        
+
         assertThat(updated.lastUsed).isGreaterThan(originalTime)
         assertThat(updated.id).isEqualTo(config.id)
         assertThat(updated.laps).isEqualTo(config.laps)
@@ -191,9 +189,9 @@ class TimerConfigurationTest {
         val config = TimerConfiguration.validate(
             laps = 0,
             workDuration = 2.seconds,
-            restDuration = 15.minutes
+            restDuration = 15.minutes,
         )
-        
+
         assertThat(config.laps).isEqualTo(1)
         assertThat(config.workDuration).isEqualTo(5.seconds)
         assertThat(config.restDuration).isEqualTo(10.minutes)
@@ -204,9 +202,9 @@ class TimerConfigurationTest {
         val config = TimerConfiguration.validate(
             laps = 5,
             workDuration = 45.seconds,
-            restDuration = 15.seconds
+            restDuration = 15.seconds,
         )
-        
+
         assertThat(config.laps).isEqualTo(5)
         assertThat(config.workDuration).isEqualTo(45.seconds)
         assertThat(config.restDuration).isEqualTo(15.seconds)
@@ -217,19 +215,19 @@ class TimerConfigurationTest {
         val maxValid = TimerConfiguration.validate(
             laps = 999,
             workDuration = 10.minutes,
-            restDuration = 10.minutes
+            restDuration = 10.minutes,
         )
-        
+
         val minValid = TimerConfiguration.validate(
             laps = 1,
             workDuration = 5.seconds,
-            restDuration = 0.seconds
+            restDuration = 0.seconds,
         )
-        
+
         assertThat(maxValid.laps).isEqualTo(999)
         assertThat(maxValid.workDuration).isEqualTo(10.minutes)
         assertThat(maxValid.restDuration).isEqualTo(10.minutes)
-        
+
         assertThat(minValid.laps).isEqualTo(1)
         assertThat(minValid.workDuration).isEqualTo(5.seconds)
         assertThat(minValid.restDuration).isEqualTo(0.seconds)
@@ -253,20 +251,20 @@ class TimerConfigurationTest {
     @Test
     fun `COMMON_PRESETS include expected configurations`() {
         val presets = TimerConfiguration.COMMON_PRESETS
-        
+
         // Check for single work intervals - compare meaningful fields only
-        val hasThirtySecond = presets.any { 
-            it.laps == 1 && it.workDuration == 30.seconds && it.restDuration == 0.seconds 
+        val hasThirtySecond = presets.any {
+            it.laps == 1 && it.workDuration == 30.seconds && it.restDuration == 0.seconds
         }
         assertThat(hasThirtySecond).isTrue()
-        
+
         // Check for infinite intervals
         val infinitePreset = presets.find { it.laps == 999 }
         assertThat(infinitePreset).isNotNull()
-        
+
         // Check for tabata-style workout - compare meaningful fields only
-        val hasTabata = presets.any { 
-            it.laps == 8 && it.workDuration == 25.seconds && it.restDuration == 5.seconds 
+        val hasTabata = presets.any {
+            it.laps == 8 && it.workDuration == 25.seconds && it.restDuration == 5.seconds
         }
         assertThat(hasTabata).isTrue()
     }
@@ -278,19 +276,19 @@ class TimerConfigurationTest {
             laps = 5,
             workDuration = 45.seconds,
             restDuration = 15.seconds,
-            lastUsed = 1000L
+            lastUsed = 1000L,
         )
-        
+
         val config2 = TimerConfiguration(
             id = "test-id",
             laps = 5,
             workDuration = 45.seconds,
             restDuration = 15.seconds,
-            lastUsed = 1000L
+            lastUsed = 1000L,
         )
-        
+
         val config3 = config1.copy(laps = 10)
-        
+
         assertThat(config1).isEqualTo(config2)
         assertThat(config1).isNotEqualTo(config3)
     }

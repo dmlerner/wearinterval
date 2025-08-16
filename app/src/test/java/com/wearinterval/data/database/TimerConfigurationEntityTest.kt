@@ -7,7 +7,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class TimerConfigurationEntityTest {
-    
+
     @Test
     fun `toDomain converts entity to domain model correctly`() {
         // Given
@@ -16,12 +16,12 @@ class TimerConfigurationEntityTest {
             laps = 10,
             workDurationSeconds = 90,
             restDurationSeconds = 30,
-            lastUsed = 1234567890L
+            lastUsed = 1234567890L,
         )
-        
+
         // When
         val domainModel = entity.toDomain()
-        
+
         // Then
         assertThat(domainModel.id).isEqualTo("test-id")
         assertThat(domainModel.laps).isEqualTo(10)
@@ -29,7 +29,7 @@ class TimerConfigurationEntityTest {
         assertThat(domainModel.restDuration).isEqualTo(30.seconds)
         assertThat(domainModel.lastUsed).isEqualTo(1234567890L)
     }
-    
+
     @Test
     fun `fromDomain converts domain model to entity correctly`() {
         // Given
@@ -38,12 +38,12 @@ class TimerConfigurationEntityTest {
             laps = 5,
             workDuration = 2.minutes,
             restDuration = 45.seconds,
-            lastUsed = 9876543210L
+            lastUsed = 9876543210L,
         )
-        
+
         // When
         val entity = TimerConfigurationEntity.fromDomain(domainModel)
-        
+
         // Then
         assertThat(entity.id).isEqualTo("domain-id")
         assertThat(entity.laps).isEqualTo(5)
@@ -51,7 +51,7 @@ class TimerConfigurationEntityTest {
         assertThat(entity.restDurationSeconds).isEqualTo(45)
         assertThat(entity.lastUsed).isEqualTo(9876543210L)
     }
-    
+
     @Test
     fun `roundtrip conversion preserves data integrity`() {
         // Given
@@ -60,17 +60,17 @@ class TimerConfigurationEntityTest {
             laps = 15,
             workDuration = 3.minutes + 30.seconds,
             restDuration = 1.minutes + 15.seconds,
-            lastUsed = 1111111111L
+            lastUsed = 1111111111L,
         )
-        
+
         // When
         val entity = TimerConfigurationEntity.fromDomain(original)
         val converted = entity.toDomain()
-        
+
         // Then
         assertThat(converted).isEqualTo(original)
     }
-    
+
     @Test
     fun `handles zero rest duration correctly`() {
         // Given
@@ -79,18 +79,18 @@ class TimerConfigurationEntityTest {
             laps = 1,
             workDuration = 60.seconds,
             restDuration = 0.seconds,
-            lastUsed = 1000L
+            lastUsed = 1000L,
         )
-        
+
         // When
         val entity = TimerConfigurationEntity.fromDomain(domainModel)
         val converted = entity.toDomain()
-        
+
         // Then
         assertThat(entity.restDurationSeconds).isEqualTo(0)
         assertThat(converted.restDuration).isEqualTo(0.seconds)
     }
-    
+
     @Test
     fun `handles large duration values correctly`() {
         // Given
@@ -99,17 +99,17 @@ class TimerConfigurationEntityTest {
             laps = 999,
             workDuration = 10.minutes,
             restDuration = 10.minutes,
-            lastUsed = Long.MAX_VALUE
+            lastUsed = Long.MAX_VALUE,
         )
-        
+
         // When
         val entity = TimerConfigurationEntity.fromDomain(domainModel)
         val converted = entity.toDomain()
-        
+
         // Then
         assertThat(converted).isEqualTo(domainModel)
     }
-    
+
     @Test
     fun `entity constructor creates valid entity`() {
         // When
@@ -118,9 +118,9 @@ class TimerConfigurationEntityTest {
             laps = 8,
             workDurationSeconds = 45,
             restDurationSeconds = 15,
-            lastUsed = 2000L
+            lastUsed = 2000L,
         )
-        
+
         // Then
         assertThat(entity.id).isNotEmpty()
         assertThat(entity.laps).isGreaterThan(0)

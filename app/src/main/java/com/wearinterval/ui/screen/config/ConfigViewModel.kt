@@ -15,7 +15,7 @@ import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
 class ConfigViewModel @Inject constructor(
-    private val configurationRepository: ConfigurationRepository
+    private val configurationRepository: ConfigurationRepository,
 ) : ViewModel() {
 
     val uiState: StateFlow<ConfigUiState> = configurationRepository.currentConfiguration
@@ -25,13 +25,13 @@ class ConfigViewModel @Inject constructor(
                 workMinutes = config.workDuration.inWholeMinutes.toInt(),
                 workSeconds = (config.workDuration.inWholeSeconds % 60).toInt(),
                 restMinutes = config.restDuration.inWholeMinutes.toInt(),
-                restSeconds = (config.restDuration.inWholeSeconds % 60).toInt()
+                restSeconds = (config.restDuration.inWholeSeconds % 60).toInt(),
             )
         }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = ConfigUiState()
+            initialValue = ConfigUiState(),
         )
 
     fun onEvent(event: ConfigEvent) {
@@ -50,7 +50,7 @@ class ConfigViewModel @Inject constructor(
                 }
                 ConfigEvent.IncreaseWorkDuration -> {
                     currentConfig.copy(
-                        workDuration = currentConfig.workDuration + 5.seconds
+                        workDuration = currentConfig.workDuration + 5.seconds,
                     )
                 }
                 ConfigEvent.DecreaseWorkDuration -> {
@@ -63,7 +63,7 @@ class ConfigViewModel @Inject constructor(
                 }
                 ConfigEvent.IncreaseRestDuration -> {
                     currentConfig.copy(
-                        restDuration = currentConfig.restDuration + 5.seconds
+                        restDuration = currentConfig.restDuration + 5.seconds,
                     )
                 }
                 ConfigEvent.DecreaseRestDuration -> {
@@ -78,7 +78,7 @@ class ConfigViewModel @Inject constructor(
                     TimerConfiguration.DEFAULT
                 }
             }
-            
+
             configurationRepository.updateConfiguration(updatedConfig)
         }
     }

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -28,38 +27,31 @@ import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 
 @Composable
-fun ConfigScreen(
-    onNavigateBack: () -> Unit,
-    viewModel: ConfigViewModel = hiltViewModel()
-) {
+fun ConfigScreen(onNavigateBack: () -> Unit, viewModel: ConfigViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     ConfigContent(
         uiState = uiState,
         onEvent = viewModel::onEvent,
-        onNavigateBack = onNavigateBack
+        onNavigateBack = onNavigateBack,
     )
 }
 
 @Composable
-private fun ConfigContent(
-    uiState: ConfigUiState,
-    onEvent: (ConfigEvent) -> Unit,
-    onNavigateBack: () -> Unit
-) {
+private fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Unit, onNavigateBack: () -> Unit) {
     Box(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             // Three-column picker layout
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 // Laps Column
                 ConfigPickerColumn(
@@ -68,7 +60,7 @@ private fun ConfigContent(
                     onIncrement = { onEvent(ConfigEvent.IncreaseLaps) },
                     onDecrement = { onEvent(ConfigEvent.DecreaseLaps) },
                     incrementDescription = "Increase laps",
-                    decrementDescription = "Decrease laps"
+                    decrementDescription = "Decrease laps",
                 )
 
                 // Work Duration Column
@@ -78,7 +70,7 @@ private fun ConfigContent(
                     onIncrement = { onEvent(ConfigEvent.IncreaseWorkDuration) },
                     onDecrement = { onEvent(ConfigEvent.DecreaseWorkDuration) },
                     incrementDescription = "Increase work duration",
-                    decrementDescription = "Decrease work duration"
+                    decrementDescription = "Decrease work duration",
                 )
 
                 // Rest Duration Column
@@ -88,26 +80,26 @@ private fun ConfigContent(
                     onIncrement = { onEvent(ConfigEvent.IncreaseRestDuration) },
                     onDecrement = { onEvent(ConfigEvent.DecreaseRestDuration) },
                     incrementDescription = "Increase rest duration",
-                    decrementDescription = "Decrease rest duration"
+                    decrementDescription = "Decrease rest duration",
                 )
             }
 
             // Reset button row
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.Center,
             ) {
                 Button(
                     onClick = { onEvent(ConfigEvent.Reset) },
                     modifier = Modifier
                         .size(40.dp)
                         .semantics { contentDescription = "Reset to default" },
-                    colors = ButtonDefaults.secondaryButtonColors()
+                    colors = ButtonDefaults.secondaryButtonColors(),
                 ) {
                     Text(
                         text = "↻",
                         style = MaterialTheme.typography.title3,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     )
                 }
             }
@@ -123,12 +115,12 @@ private fun ConfigPickerColumn(
     onDecrement: () -> Unit,
     incrementDescription: String,
     decrementDescription: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier.width(60.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         // Increment button (+ button)
         Button(
@@ -137,12 +129,12 @@ private fun ConfigPickerColumn(
                 .size(32.dp)
                 .clip(CircleShape)
                 .semantics { contentDescription = incrementDescription },
-            colors = ButtonDefaults.primaryButtonColors()
+            colors = ButtonDefaults.primaryButtonColors(),
         ) {
             Text(
                 text = "+",
                 style = MaterialTheme.typography.caption1,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
         }
 
@@ -151,7 +143,7 @@ private fun ConfigPickerColumn(
             text = title,
             style = MaterialTheme.typography.caption2,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colors.onSurfaceVariant
+            color = MaterialTheme.colors.onSurfaceVariant,
         )
 
         // Value display
@@ -160,7 +152,7 @@ private fun ConfigPickerColumn(
             style = MaterialTheme.typography.body2,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colors.onSurface,
-            maxLines = 1
+            maxLines = 1,
         )
 
         // Decrement button (- button)
@@ -170,12 +162,12 @@ private fun ConfigPickerColumn(
                 .size(32.dp)
                 .clip(CircleShape)
                 .semantics { contentDescription = decrementDescription },
-            colors = ButtonDefaults.secondaryButtonColors()
+            colors = ButtonDefaults.secondaryButtonColors(),
         ) {
             Text(
                 text = "−",
                 style = MaterialTheme.typography.caption1,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
         }
     }
@@ -191,10 +183,10 @@ private fun ConfigContentPreview() {
                 workMinutes = 1,
                 workSeconds = 30,
                 restMinutes = 0,
-                restSeconds = 15
+                restSeconds = 15,
             ),
             onEvent = {},
-            onNavigateBack = {}
+            onNavigateBack = {},
         )
     }
 }
@@ -204,7 +196,7 @@ private fun ConfigContentPreview() {
 private fun ConfigPickerColumnPreview() {
     MaterialTheme {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             ConfigPickerColumn(
                 title = "Laps",
@@ -212,7 +204,7 @@ private fun ConfigPickerColumnPreview() {
                 onIncrement = {},
                 onDecrement = {},
                 incrementDescription = "Increase laps",
-                decrementDescription = "Decrease laps"
+                decrementDescription = "Decrease laps",
             )
             ConfigPickerColumn(
                 title = "Work",
@@ -220,7 +212,7 @@ private fun ConfigPickerColumnPreview() {
                 onIncrement = {},
                 onDecrement = {},
                 incrementDescription = "Increase work",
-                decrementDescription = "Decrease work"
+                decrementDescription = "Decrease work",
             )
             ConfigPickerColumn(
                 title = "Rest",
@@ -228,7 +220,7 @@ private fun ConfigPickerColumnPreview() {
                 onIncrement = {},
                 onDecrement = {},
                 incrementDescription = "Increase rest",
-                decrementDescription = "Decrease rest"
+                decrementDescription = "Decrease rest",
             )
         }
     }

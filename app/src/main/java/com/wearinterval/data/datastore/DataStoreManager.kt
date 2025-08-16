@@ -21,17 +21,17 @@ import kotlin.time.Duration.Companion.seconds
 
 @Singleton
 class DataStoreManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
 ) {
     private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("settings")
-    
+
     companion object {
         // NotificationSettings keys
         private val VIBRATION_ENABLED = booleanPreferencesKey("vibration_enabled")
         private val SOUND_ENABLED = booleanPreferencesKey("sound_enabled")
         private val FLASH_ENABLED = booleanPreferencesKey("flash_enabled")
         private val AUTO_MODE = booleanPreferencesKey("auto_mode")
-        
+
         // Current configuration keys
         private val CURRENT_CONFIG_ID = stringPreferencesKey("current_config_id")
         private val CURRENT_CONFIG_LAPS = intPreferencesKey("current_config_laps")
@@ -39,7 +39,7 @@ class DataStoreManager @Inject constructor(
         private val CURRENT_CONFIG_REST_DURATION = longPreferencesKey("current_config_rest_duration")
         private val CURRENT_CONFIG_LAST_USED = longPreferencesKey("current_config_last_used")
     }
-    
+
     val notificationSettings: Flow<NotificationSettings> = context.dataStore.data
         .catch { emit(androidx.datastore.preferences.core.emptyPreferences()) }
         .map { preferences ->
@@ -47,22 +47,28 @@ class DataStoreManager @Inject constructor(
                 vibrationEnabled = preferences[VIBRATION_ENABLED] ?: true,
                 soundEnabled = preferences[SOUND_ENABLED] ?: true,
                 flashEnabled = preferences[FLASH_ENABLED] ?: true,
-                autoMode = preferences[AUTO_MODE] ?: true
+                autoMode = preferences[AUTO_MODE] ?: true,
             )
         }
-    
+
     val currentConfiguration: Flow<TimerConfiguration> = context.dataStore.data
         .catch { emit(androidx.datastore.preferences.core.emptyPreferences()) }
         .map { preferences ->
             TimerConfiguration(
                 id = preferences[CURRENT_CONFIG_ID] ?: TimerConfiguration.DEFAULT.id,
                 laps = preferences[CURRENT_CONFIG_LAPS] ?: TimerConfiguration.DEFAULT.laps,
-                workDuration = (preferences[CURRENT_CONFIG_WORK_DURATION] ?: TimerConfiguration.DEFAULT.workDuration.inWholeSeconds).seconds,
-                restDuration = (preferences[CURRENT_CONFIG_REST_DURATION] ?: TimerConfiguration.DEFAULT.restDuration.inWholeSeconds).seconds,
-                lastUsed = preferences[CURRENT_CONFIG_LAST_USED] ?: TimerConfiguration.DEFAULT.lastUsed
+                workDuration = (
+                    preferences[CURRENT_CONFIG_WORK_DURATION]
+                        ?: TimerConfiguration.DEFAULT.workDuration.inWholeSeconds
+                    ).seconds,
+                restDuration = (
+                    preferences[CURRENT_CONFIG_REST_DURATION]
+                        ?: TimerConfiguration.DEFAULT.restDuration.inWholeSeconds
+                    ).seconds,
+                lastUsed = preferences[CURRENT_CONFIG_LAST_USED] ?: TimerConfiguration.DEFAULT.lastUsed,
             )
         }
-    
+
     suspend fun updateNotificationSettings(settings: NotificationSettings) {
         context.dataStore.edit { preferences ->
             preferences[VIBRATION_ENABLED] = settings.vibrationEnabled
@@ -71,7 +77,7 @@ class DataStoreManager @Inject constructor(
             preferences[AUTO_MODE] = settings.autoMode
         }
     }
-    
+
     suspend fun updateCurrentConfiguration(config: TimerConfiguration) {
         context.dataStore.edit { preferences ->
             preferences[CURRENT_CONFIG_ID] = config.id

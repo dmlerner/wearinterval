@@ -19,30 +19,30 @@ sealed class ComplicationType {
 
 data class TileData(
     val timerState: TimerState,
-    val recentConfigurations: List<TimerConfiguration>
+    val recentConfigurations: List<TimerConfiguration>,
 )
 
 sealed class ComplicationData {
     data class ShortText(
         val text: String,
-        val title: String?
+        val title: String?,
     ) : ComplicationData()
-    
+
     data class LongText(
         val text: String,
-        val title: String?
+        val title: String?,
     ) : ComplicationData()
-    
+
     data class RangedValue(
         val value: Float,
         val min: Float,
         val max: Float,
         val text: String,
-        val title: String?
+        val title: String?,
     ) : ComplicationData()
-    
+
     data class Image(
         val iconRes: Int,
-        val contentDescription: String
+        val contentDescription: String,
     ) : ComplicationData()
 }

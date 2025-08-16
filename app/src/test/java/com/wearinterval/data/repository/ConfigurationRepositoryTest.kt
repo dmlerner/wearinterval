@@ -6,11 +6,11 @@ import com.wearinterval.data.database.ConfigurationDao
 import com.wearinterval.data.database.TimerConfigurationEntity
 import com.wearinterval.data.datastore.DataStoreManager
 import com.wearinterval.domain.model.TimerConfiguration
+import com.wearinterval.util.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import com.wearinterval.util.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
@@ -22,60 +22,60 @@ import kotlin.time.Duration.Companion.seconds
 
 @ExperimentalCoroutinesApi
 class ConfigurationRepositoryTest {
-    
+
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
-    
+
     private val mockDataStoreManager = mockk<DataStoreManager>(relaxed = true)
     private val mockConfigurationDao = mockk<ConfigurationDao>(relaxed = true)
     private lateinit var repository: ConfigurationRepositoryImpl
-    
+
     private val defaultConfig = TimerConfiguration.DEFAULT
     private val customConfig = TimerConfiguration(
         id = "custom-id",
         laps = 5,
         workDuration = 45.seconds,
         restDuration = 15.seconds,
-        lastUsed = 1000L
+        lastUsed = 1000L,
     )
-    
+
     private val recentConfigs = listOf(
         TimerConfigurationEntity.fromDomain(customConfig),
-        TimerConfigurationEntity.fromDomain(defaultConfig)
+        TimerConfigurationEntity.fromDomain(defaultConfig),
     )
-    
+
     @Before
     fun setup() {
         every { mockDataStoreManager.currentConfiguration } returns MutableStateFlow(defaultConfig)
         every { mockConfigurationDao.getRecentConfigurationsFlow(4) } returns MutableStateFlow(recentConfigs)
         coEvery { mockConfigurationDao.getConfigurationCount() } returns 2
-        
+
         repository = ConfigurationRepositoryImpl(mockDataStoreManager, mockConfigurationDao)
     }
-    
+
     @Test
     fun `currentConfiguration exposes DataStore flow`() = runTest {
         // Given
         val configFlow = MutableStateFlow(customConfig)
         every { mockDataStoreManager.currentConfiguration } returns configFlow
         repository = ConfigurationRepositoryImpl(mockDataStoreManager, mockConfigurationDao)
-        
+
         // When/Then
         repository.currentConfiguration.test {
             assertThat(awaitItem()).isEqualTo(customConfig)
-            
+
             configFlow.value = defaultConfig
             assertThat(awaitItem()).isEqualTo(defaultConfig)
         }
     }
-    
+
     @Test
     fun `recentConfigurations exposes DAO flow as domain models`() = runTest {
         // Given
         val entitiesFlow = MutableStateFlow(recentConfigs)
         every { mockConfigurationDao.getRecentConfigurationsFlow(4) } returns entitiesFlow
         repository = ConfigurationRepositoryImpl(mockDataStoreManager, mockConfigurationDao)
-        
+
         // When/Then
         repository.recentConfigurations.test {
             val configs = awaitItem()
@@ -85,67 +85,73 @@ class ConfigurationRepositoryTest {
             assertThat(configs[0].laps).isEqualTo(customConfig.laps)
             assertThat(configs[0].workDuration).isEqualTo(customConfig.workDuration)
             assertThat(configs[0].restDuration).isEqualTo(customConfig.restDuration)
-            
+
             assertThat(configs[1].id).isEqualTo(defaultConfig.id)
             assertThat(configs[1].laps).isEqualTo(defaultConfig.laps)
             assertThat(configs[1].workDuration).isEqualTo(defaultConfig.workDuration)
             assertThat(configs[1].restDuration).isEqualTo(defaultConfig.restDuration)
         }
     }
-    
+
     @Test
     fun `updateConfiguration validates and saves to both DataStore and Room`() = runTest {
         // Given
         val invalidConfig = TimerConfiguration(
             laps = 1000, // Invalid - over max
             workDuration = 1.seconds, // Invalid - under min
-            restDuration = 15.minutes // Invalid - over max
+            restDuration = 15.minutes, // Invalid - over max
         )
-        
+
         coEvery { mockDataStoreManager.updateCurrentConfiguration(any()) } returns Unit
         coEvery { mockConfigurationDao.insertConfiguration(any()) } returns Unit
-        
+
         // When
         val result = repository.updateConfiguration(invalidConfig)
-        
+
         // Then
         assertThat(result.isSuccess).isTrue()
-        
-        coVerify { 
-            mockDataStoreManager.updateCurrentConfiguration(match { config ->
-                config.laps == 999 && // Corrected to max
-                config.workDuration == 5.seconds && // Corrected to min
-                config.restDuration == 10.minutes // Corrected to max
-            })
+
+        coVerify {
+            mockDataStoreManager.updateCurrentConfiguration(
+                match { config ->
+                    config.laps == 999 && // Corrected to max
+                        config.workDuration == 5.seconds && // Corrected to min
+                        config.restDuration == 10.minutes // Corrected to max
+                },
+            )
         }
-        
-        coVerify { 
-            mockConfigurationDao.insertConfiguration(match { entity ->
-                entity.laps == 999 &&
-                entity.workDurationSeconds == 5L &&
-                entity.restDurationSeconds == 600L
-            })
+
+        coVerify {
+            mockConfigurationDao.insertConfiguration(
+                match { entity ->
+                    entity.laps == 999 &&
+                        entity.workDurationSeconds == 5L &&
+                        entity.restDurationSeconds == 600L
+                },
+            )
         }
     }
-    
+
     @Test
     fun `updateConfiguration updates timestamp`() = runTest {
         // Given
         val originalTime = customConfig.lastUsed
         coEvery { mockDataStoreManager.updateCurrentConfiguration(any()) } returns Unit
         coEvery { mockConfigurationDao.insertConfiguration(any()) } returns Unit
-        
+
         // When
         repository.updateConfiguration(customConfig)
-        
+
         // Then
-        coVerify { 
-            mockDataStoreManager.updateCurrentConfiguration(match { config ->
-                config.lastUsed > originalTime
-            })
+        coVerify {
+            mockDataStoreManager.updateCurrentConfiguration(
+                match { config ->
+                    config.lastUsed > originalTime
+                },
+            )
         }
     }
-    
+
     @Test
     fun `updateConfiguration triggers cleanup when over limit`() = runTest {
         // Given
@@ -153,91 +159,96 @@ class ConfigurationRepositoryTest {
         coEvery { mockDataStoreManager.updateCurrentConfiguration(any()) } returns Unit
         coEvery { mockConfigurationDao.insertConfiguration(any()) } returns Unit
         coEvery { mockConfigurationDao.cleanupOldConfigurations(20) } returns Unit
-        
+
         // When
         repository.updateConfiguration(customConfig)
-        
+
         // Then
         coVerify { mockConfigurationDao.cleanupOldConfigurations(20) }
     }
-    
+
     @Test
     fun `updateConfiguration fails when DataStore throws exception`() = runTest {
         // Given
         val exception = RuntimeException("DataStore error")
         coEvery { mockDataStoreManager.updateCurrentConfiguration(any()) } throws exception
-        
+
         // When
         val result = repository.updateConfiguration(customConfig)
-        
+
         // Then
         assertThat(result.isFailure).isTrue()
         assertThat(result.exceptionOrNull()).isEqualTo(exception)
     }
-    
+
     @Test
     fun `selectRecentConfiguration updates DataStore and DAO timestamp`() = runTest {
         // Given
         val originalTime = customConfig.lastUsed
         coEvery { mockDataStoreManager.updateCurrentConfiguration(any()) } returns Unit
         coEvery { mockConfigurationDao.updateLastUsed(any(), any()) } returns Unit
-        
+
         // When
         val result = repository.selectRecentConfiguration(customConfig)
-        
+
         // Then
         assertThat(result.isSuccess).isTrue()
-        
-        coVerify { 
-            mockDataStoreManager.updateCurrentConfiguration(match { config ->
-                config.lastUsed > originalTime
-            })
+
+        coVerify {
+            mockDataStoreManager.updateCurrentConfiguration(
+                match { config ->
+                    config.lastUsed > originalTime
+                },
+            )
         }
-        
-        coVerify { 
-            mockConfigurationDao.updateLastUsed(customConfig.id, match { timestamp ->
-                timestamp > originalTime
-            })
+
+        coVerify {
+            mockConfigurationDao.updateLastUsed(
+                customConfig.id,
+                match { timestamp ->
+                    timestamp > originalTime
+                },
+            )
         }
     }
-    
+
     @Test
     fun `selectRecentConfiguration fails when DAO throws exception`() = runTest {
         // Given
         val exception = RuntimeException("DAO error")
         coEvery { mockDataStoreManager.updateCurrentConfiguration(any()) } returns Unit
         coEvery { mockConfigurationDao.updateLastUsed(any(), any()) } throws exception
-        
+
         // When
         val result = repository.selectRecentConfiguration(customConfig)
-        
+
         // Then
         assertThat(result.isFailure).isTrue()
         assertThat(result.exceptionOrNull()).isEqualTo(exception)
     }
-    
+
     @Test
     fun `deleteConfiguration removes from DAO`() = runTest {
         // Given
         coEvery { mockConfigurationDao.deleteConfiguration(customConfig.id) } returns Unit
-        
+
         // When
         val result = repository.deleteConfiguration(customConfig.id)
-        
+
         // Then
         assertThat(result.isSuccess).isTrue()
         coVerify { mockConfigurationDao.deleteConfiguration(customConfig.id) }
     }
-    
+
     @Test
     fun `deleteConfiguration fails when DAO throws exception`() = runTest {
         // Given
         val exception = RuntimeException("DAO error")
         coEvery { mockConfigurationDao.deleteConfiguration(customConfig.id) } throws exception
-        
+
         // When
         val result = repository.deleteConfiguration(customConfig.id)
-        
+
         // Then
         assertThat(result.isFailure).isTrue()
         assertThat(result.exceptionOrNull()).isEqualTo(exception)

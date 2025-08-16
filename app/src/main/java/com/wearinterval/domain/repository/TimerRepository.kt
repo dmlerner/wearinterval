@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 interface TimerRepository {
     val timerState: StateFlow<TimerState>
     val isServiceBound: StateFlow<Boolean>
-    
+
     suspend fun startTimer(): Result<Unit>
     suspend fun pauseTimer(): Result<Unit>
     suspend fun resumeTimer(): Result<Unit>

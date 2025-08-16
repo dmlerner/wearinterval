@@ -5,18 +5,18 @@ data class ConfigUiState(
     val workMinutes: Int = 1,
     val workSeconds: Int = 0,
     val restMinutes: Int = 0,
-    val restSeconds: Int = 0
+    val restSeconds: Int = 0,
 ) {
     val totalWorkTimeText: String
         get() = if (workMinutes > 0) {
-            "${workMinutes}:${workSeconds.toString().padStart(2, '0')}"
+            "$workMinutes:${workSeconds.toString().padStart(2, '0')}"
         } else {
             "${workSeconds}s"
         }
 
     val totalRestTimeText: String
         get() = if (restMinutes > 0) {
-            "${restMinutes}:${restSeconds.toString().padStart(2, '0')}"
+            "$restMinutes:${restSeconds.toString().padStart(2, '0')}"
         } else if (restSeconds > 0) {
             "${restSeconds}s"
         } else {

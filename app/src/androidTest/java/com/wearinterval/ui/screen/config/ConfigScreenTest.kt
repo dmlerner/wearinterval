@@ -1,7 +1,6 @@
 package com.wearinterval.ui.screen.config
 
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -27,7 +26,7 @@ class ConfigScreenTest {
             workMinutes = 1,
             workSeconds = 30,
             restMinutes = 0,
-            restSeconds = 15
+            restSeconds = 15,
         )
 
         // When
@@ -36,7 +35,7 @@ class ConfigScreenTest {
                 ConfigContent(
                     uiState = uiState,
                     onEvent = {},
-                    onNavigateBack = {}
+                    onNavigateBack = {},
                 )
             }
         }
@@ -63,7 +62,7 @@ class ConfigScreenTest {
                 ConfigContent(
                     uiState = uiState,
                     onEvent = {},
-                    onNavigateBack = {}
+                    onNavigateBack = {},
                 )
             }
         }
@@ -91,7 +90,7 @@ class ConfigScreenTest {
                 ConfigContent(
                     uiState = uiState,
                     onEvent = {},
-                    onNavigateBack = {}
+                    onNavigateBack = {},
                 )
             }
         }
@@ -119,7 +118,7 @@ class ConfigScreenTest {
                 ConfigContent(
                     uiState = uiState,
                     onEvent = {},
-                    onNavigateBack = {}
+                    onNavigateBack = {},
                 )
             }
         }
@@ -141,7 +140,7 @@ class ConfigScreenTest {
                 ConfigContent(
                     uiState = uiState,
                     onEvent = { eventReceived = it },
-                    onNavigateBack = {}
+                    onNavigateBack = {},
                 )
             }
         }
@@ -166,7 +165,7 @@ class ConfigScreenTest {
                 ConfigContent(
                     uiState = uiState,
                     onEvent = { eventReceived = it },
-                    onNavigateBack = {}
+                    onNavigateBack = {},
                 )
             }
         }
@@ -191,7 +190,7 @@ class ConfigScreenTest {
                 ConfigContent(
                     uiState = uiState,
                     onEvent = { eventReceived = it },
-                    onNavigateBack = {}
+                    onNavigateBack = {},
                 )
             }
         }
@@ -216,7 +215,7 @@ class ConfigScreenTest {
                 ConfigContent(
                     uiState = uiState,
                     onEvent = { eventReceived = it },
-                    onNavigateBack = {}
+                    onNavigateBack = {},
                 )
             }
         }
@@ -241,7 +240,7 @@ class ConfigScreenTest {
                 ConfigContent(
                     uiState = uiState,
                     onEvent = { eventReceived = it },
-                    onNavigateBack = {}
+                    onNavigateBack = {},
                 )
             }
         }
@@ -266,7 +265,7 @@ class ConfigScreenTest {
                 ConfigContent(
                     uiState = uiState,
                     onEvent = { eventReceived = it },
-                    onNavigateBack = {}
+                    onNavigateBack = {},
                 )
             }
         }
@@ -291,7 +290,7 @@ class ConfigScreenTest {
                 ConfigContent(
                     uiState = uiState,
                     onEvent = { eventReceived = it },
-                    onNavigateBack = {}
+                    onNavigateBack = {},
                 )
             }
         }
@@ -313,7 +312,7 @@ class ConfigScreenTest {
             workMinutes = 2,
             workSeconds = 45,
             restMinutes = 1,
-            restSeconds = 30
+            restSeconds = 30,
         )
 
         // When
@@ -322,7 +321,7 @@ class ConfigScreenTest {
                 ConfigContent(
                     uiState = uiState,
                     onEvent = {},
-                    onNavigateBack = {}
+                    onNavigateBack = {},
                 )
             }
         }
@@ -341,7 +340,7 @@ class ConfigScreenTest {
             workMinutes = 1,
             workSeconds = 0,
             restMinutes = 0,
-            restSeconds = 0
+            restSeconds = 0,
         )
 
         // When
@@ -350,7 +349,7 @@ class ConfigScreenTest {
                 ConfigContent(
                     uiState = uiState,
                     onEvent = {},
-                    onNavigateBack = {}
+                    onNavigateBack = {},
                 )
             }
         }

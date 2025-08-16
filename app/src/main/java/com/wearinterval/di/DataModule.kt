@@ -15,22 +15,22 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DataModule {
-    
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
         return Room.databaseBuilder(
             context,
             AppDatabase::class.java,
-            AppDatabase.DATABASE_NAME
+            AppDatabase.DATABASE_NAME,
         ).build()
     }
-    
+
     @Provides
     fun provideConfigurationDao(database: AppDatabase): ConfigurationDao {
         return database.configurationDao()
     }
-    
+
     @Provides
     @Singleton
     fun provideNotificationManager(@ApplicationContext context: Context): NotificationManager {

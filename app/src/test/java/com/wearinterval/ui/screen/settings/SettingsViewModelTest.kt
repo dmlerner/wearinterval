@@ -42,7 +42,7 @@ class SettingsViewModelTest {
             vibrationEnabled = false,
             soundEnabled = true,
             autoMode = false,
-            flashEnabled = true
+            flashEnabled = true,
         )
 
         // When
@@ -70,7 +70,7 @@ class SettingsViewModelTest {
         // Then
         coVerify {
             mockSettingsRepository.updateSettings(
-                initialSettings.copy(vibrationEnabled = true)
+                initialSettings.copy(vibrationEnabled = true),
             )
         }
     }
@@ -87,7 +87,7 @@ class SettingsViewModelTest {
         // Then
         coVerify {
             mockSettingsRepository.updateSettings(
-                initialSettings.copy(soundEnabled = true)
+                initialSettings.copy(soundEnabled = true),
             )
         }
     }
@@ -104,7 +104,7 @@ class SettingsViewModelTest {
         // Then
         coVerify {
             mockSettingsRepository.updateSettings(
-                initialSettings.copy(autoMode = true)
+                initialSettings.copy(autoMode = true),
             )
         }
     }
@@ -121,7 +121,7 @@ class SettingsViewModelTest {
         // Then
         coVerify {
             mockSettingsRepository.updateSettings(
-                initialSettings.copy(flashEnabled = true)
+                initialSettings.copy(flashEnabled = true),
             )
         }
     }
@@ -153,12 +153,12 @@ class SettingsViewModelTest {
         // Then
         coVerify {
             mockSettingsRepository.updateSettings(
-                initialSettings.copy(vibrationEnabled = !initialSettings.vibrationEnabled)
+                initialSettings.copy(vibrationEnabled = !initialSettings.vibrationEnabled),
             )
         }
         coVerify {
             mockSettingsRepository.updateSettings(
-                initialSettings.copy(soundEnabled = !initialSettings.soundEnabled)
+                initialSettings.copy(soundEnabled = !initialSettings.soundEnabled),
             )
         }
     }

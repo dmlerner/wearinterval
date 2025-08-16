@@ -14,7 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
-    private val configurationRepository: ConfigurationRepository
+    private val configurationRepository: ConfigurationRepository,
 ) : ViewModel() {
 
     val uiState: StateFlow<HistoryUiState> = configurationRepository.recentConfigurations
@@ -22,7 +22,7 @@ class HistoryViewModel @Inject constructor(
             HistoryUiState(
                 recentConfigurations = configurations,
                 isLoading = false,
-                error = null
+                error = null,
             )
         }
         .catch { error ->
@@ -30,14 +30,14 @@ class HistoryViewModel @Inject constructor(
                 HistoryUiState(
                     recentConfigurations = emptyList(),
                     isLoading = false,
-                    error = error.message ?: "Unknown error occurred"
-                )
+                    error = error.message ?: "Unknown error occurred",
+                ),
             )
         }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = HistoryUiState()
+            initialValue = HistoryUiState(),
         )
 
     fun onEvent(event: HistoryEvent) {

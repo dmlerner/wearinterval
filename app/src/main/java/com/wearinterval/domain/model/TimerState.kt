@@ -1,7 +1,6 @@
 package com.wearinterval.domain.model
 
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 
 data class TimerState(
     val phase: TimerPhase,
@@ -9,15 +8,15 @@ data class TimerState(
     val currentLap: Int,
     val totalLaps: Int,
     val isPaused: Boolean = false,
-    val configuration: TimerConfiguration
+    val configuration: TimerConfiguration,
 ) {
     val isRunning: Boolean get() = phase == TimerPhase.Running || phase == TimerPhase.Resting
     val isResting: Boolean get() = phase == TimerPhase.Resting
     val isStopped: Boolean get() = phase == TimerPhase.Stopped
     val isAlarmActive: Boolean get() = phase == TimerPhase.AlarmActive
-    
+
     val currentInterval: Duration get() = if (isResting) configuration.restDuration else configuration.workDuration
-    
+
     /**
      * Progress percentage for the current interval (work or rest).
      * Returns 1.0 (100%) for zero-duration intervals to indicate immediate completion.
@@ -27,24 +26,24 @@ data class TimerState(
         if (currentInterval == Duration.ZERO) return 1f
         return 1f - (timeRemaining.inWholeMilliseconds.toFloat() / currentInterval.inWholeMilliseconds.toFloat())
     }
-    
+
     val lapProgressPercentage: Float get() {
         if (totalLaps == 0) return 1f
         val lapProgress = if (isResting) currentLap else currentLap - 1
         return lapProgress.toFloat() / totalLaps.toFloat()
     }
-    
+
     val isInfinite: Boolean get() = totalLaps == INFINITE_LAPS
-    
+
     val displayCurrentLap: String get() = if (isInfinite) currentLap.toString() else "$currentLap/$totalLaps"
-    
+
     companion object {
         fun stopped(configuration: TimerConfiguration = TimerConfiguration.DEFAULT) = TimerState(
             phase = TimerPhase.Stopped,
             timeRemaining = configuration.workDuration,
             currentLap = 1,
             totalLaps = configuration.laps,
-            configuration = configuration
+            configuration = configuration,
         )
     }
 }

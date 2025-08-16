@@ -5,7 +5,7 @@ import com.wearinterval.domain.model.TimerConfiguration
 data class HistoryUiState(
     val recentConfigurations: List<TimerConfiguration> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
 ) {
     val hasConfigurations: Boolean
         get() = recentConfigurations.isNotEmpty()

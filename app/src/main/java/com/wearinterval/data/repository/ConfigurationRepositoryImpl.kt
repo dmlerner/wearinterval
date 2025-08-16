@@ -18,64 +18,64 @@ import javax.inject.Singleton
 @Singleton
 class ConfigurationRepositoryImpl @Inject constructor(
     private val dataStoreManager: DataStoreManager,
-    private val configurationDao: ConfigurationDao
+    private val configurationDao: ConfigurationDao,
 ) : ConfigurationRepository {
-    
+
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    
-    override val currentConfiguration: StateFlow<TimerConfiguration> = 
+
+    override val currentConfiguration: StateFlow<TimerConfiguration> =
         dataStoreManager.currentConfiguration.stateIn(
             scope = repositoryScope,
             started = SharingStarted.Eagerly,
-            initialValue = TimerConfiguration.DEFAULT
+            initialValue = TimerConfiguration.DEFAULT,
         )
-    
-    override val recentConfigurations: StateFlow<List<TimerConfiguration>> = 
+
+    override val recentConfigurations: StateFlow<List<TimerConfiguration>> =
         configurationDao.getRecentConfigurationsFlow(4)
             .map { entities -> entities.map { it.toDomain() } }
             .stateIn(
                 scope = repositoryScope,
                 started = SharingStarted.Eagerly,
-                initialValue = emptyList()
+                initialValue = emptyList(),
             )
-    
+
     override suspend fun updateConfiguration(config: TimerConfiguration): Result<Unit> {
         return try {
             val validatedConfig = TimerConfiguration.validate(
                 config.laps,
                 config.workDuration,
-                config.restDuration
+                config.restDuration,
             ).copy(
                 id = config.id,
-                lastUsed = System.currentTimeMillis()
+                lastUsed = System.currentTimeMillis(),
             )
-            
+
             configurationDao.insertConfiguration(
-                TimerConfigurationEntity.fromDomain(validatedConfig)
+                TimerConfigurationEntity.fromDomain(validatedConfig),
             )
             dataStoreManager.updateCurrentConfiguration(validatedConfig)
-            
+
             cleanupOldConfigurations()
-            
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-    
+
     override suspend fun selectRecentConfiguration(config: TimerConfiguration): Result<Unit> {
         return try {
             val updatedConfig = config.withUpdatedTimestamp()
-            
+
             configurationDao.updateLastUsed(updatedConfig.id, updatedConfig.lastUsed)
             dataStoreManager.updateCurrentConfiguration(updatedConfig)
-            
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-    
+
     override suspend fun deleteConfiguration(configId: String): Result<Unit> {
         return try {
             configurationDao.deleteConfiguration(configId)
@@ -84,7 +84,7 @@ class ConfigurationRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
-    
+
     private suspend fun cleanupOldConfigurations() {
         try {
             val count = configurationDao.getConfigurationCount()
@@ -95,7 +95,7 @@ class ConfigurationRepositoryImpl @Inject constructor(
             // Log error but don't fail the operation
         }
     }
-    
+
     companion object {
         private const val MAX_STORED_CONFIGURATIONS = 20
     }

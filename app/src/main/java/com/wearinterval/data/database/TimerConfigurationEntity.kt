@@ -12,7 +12,7 @@ data class TimerConfigurationEntity(
     val laps: Int,
     val workDurationSeconds: Long,
     val restDurationSeconds: Long,
-    val lastUsed: Long
+    val lastUsed: Long,
 ) {
     fun toDomain(): TimerConfiguration {
         return TimerConfiguration(
@@ -20,7 +20,7 @@ data class TimerConfigurationEntity(
             laps = laps,
             workDuration = workDurationSeconds.seconds,
             restDuration = restDurationSeconds.seconds,
-            lastUsed = lastUsed
+            lastUsed = lastUsed,
         )
     }
 
@@ -31,7 +31,7 @@ data class TimerConfigurationEntity(
                 laps = config.laps,
                 workDurationSeconds = config.workDuration.inWholeSeconds,
                 restDurationSeconds = config.restDuration.inWholeSeconds,
-                lastUsed = config.lastUsed
+                lastUsed = config.lastUsed,
             )
         }
     }
