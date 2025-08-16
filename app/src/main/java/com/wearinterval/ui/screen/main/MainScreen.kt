@@ -28,6 +28,7 @@ import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.model.TimerPhase
+import com.wearinterval.ui.component.DualProgressRings
 import com.wearinterval.util.TimeUtils
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
@@ -108,9 +109,9 @@ private fun TimerInterface(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        // Timer display
+        // Timer display with dual progress rings
         TimerDisplay(uiState = uiState)
 
         // Control buttons
@@ -119,7 +120,7 @@ private fun TimerInterface(
             onEvent = onEvent,
         )
 
-        // Navigation hint (temporary)
+        // Navigation hint
         Text(
             text = "← History • Config → • Settings ↑",
             style = MaterialTheme.typography.caption2,
@@ -131,39 +132,58 @@ private fun TimerInterface(
 
 @Composable
 private fun TimerDisplay(uiState: MainUiState) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+    // Determine colors based on timer state
+    val outerRingColor = MaterialTheme.colors.primary
+    val innerRingColor = if (uiState.isResting) {
+        MaterialTheme.colors.secondary // Yellow/amber for rest periods
+    } else {
+        MaterialTheme.colors.primaryVariant // Green for work periods
+    }
+
+    DualProgressRings(
+        outerProgress = uiState.overallProgressPercentage,
+        innerProgress = uiState.intervalProgressPercentage,
+        size = 140.dp,
+        outerColor = outerRingColor,
+        innerColor = innerRingColor,
     ) {
-        // Main time display
-        Text(
-            text = TimeUtils.formatDuration(uiState.timeRemaining),
-            style = MaterialTheme.typography.display1,
-            color = if (uiState.isResting) {
-                MaterialTheme.colors.secondary
-            } else {
-                MaterialTheme.colors.onSurface
-            },
-        )
-
-        // Lap indicator
-        Text(
-            text = if (uiState.totalLaps == 999) {
-                "Lap ${uiState.currentLap}"
-            } else {
-                "${uiState.currentLap}/${uiState.totalLaps}"
-            },
-            style = MaterialTheme.typography.body2,
-            color = MaterialTheme.colors.onSurfaceVariant,
-        )
-
-        // Phase indicator
-        if (uiState.isResting) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            // Main time display
             Text(
-                text = "REST",
-                style = MaterialTheme.typography.caption1,
-                color = MaterialTheme.colors.secondary,
+                text = TimeUtils.formatDuration(uiState.timeRemaining),
+                style = MaterialTheme.typography.display2,
+                color = if (uiState.isResting) {
+                    MaterialTheme.colors.secondary
+                } else {
+                    MaterialTheme.colors.onSurface
+                },
+                textAlign = TextAlign.Center,
             )
+
+            // Lap indicator
+            Text(
+                text = if (uiState.totalLaps == 999) {
+                    "Lap ${uiState.currentLap}"
+                } else {
+                    "${uiState.currentLap}/${uiState.totalLaps}"
+                },
+                style = MaterialTheme.typography.caption1,
+                color = MaterialTheme.colors.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+
+            // Phase indicator (only show during rest)
+            if (uiState.isResting) {
+                Text(
+                    text = "REST",
+                    style = MaterialTheme.typography.caption2,
+                    color = MaterialTheme.colors.secondary,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
     }
 }
