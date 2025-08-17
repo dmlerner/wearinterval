@@ -28,3 +28,10 @@ repos:
         language: system
         pass_filenames: false
         stages: [commit]
+        
+      - id: instrumented-tests
+        name: Run headless emulator tests
+        entry: ./scripts/headless-test.sh
+        language: system
+        pass_filenames: false
+        stages: [commit]
