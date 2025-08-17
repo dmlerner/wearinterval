@@ -205,13 +205,13 @@ private fun TimerControlsInside(uiState: MainUiState, onEvent: (MainEvent) -> Un
                 .semantics { contentDescription = "Stop" },
             enabled = uiState.isStopButtonEnabled,
             colors = ButtonDefaults.buttonColors(
-                backgroundColor = Color.Red,
+                backgroundColor = Constants.Colors.STOP_BUTTON_BACKGROUND,
             ),
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_stop),
                 contentDescription = "Stop",
-                tint = Color.White,
+                tint = Constants.Colors.STOP_BUTTON_ICON,
             )
         }
 
@@ -233,8 +233,8 @@ private fun TimerControlsInside(uiState: MainUiState, onEvent: (MainEvent) -> Un
             enabled = uiState.isPlayButtonEnabled,
             colors = ButtonDefaults.buttonColors(
                 backgroundColor = when {
-                    !uiState.isRunning -> Color.Green
-                    uiState.isPaused -> Color.Green
+                    !uiState.isRunning -> Constants.Colors.PLAY_BUTTON_BACKGROUND
+                    uiState.isPaused -> Constants.Colors.PLAY_BUTTON_BACKGROUND
                     else -> Color.Yellow
                 },
             ),
@@ -252,7 +252,7 @@ private fun TimerControlsInside(uiState: MainUiState, onEvent: (MainEvent) -> Un
                     uiState.isPaused -> "Resume"
                     else -> "Pause"
                 },
-                tint = Color.Black,
+                tint = Constants.Colors.PLAY_BUTTON_ICON,
             )
         }
     }

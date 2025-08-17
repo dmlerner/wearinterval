@@ -1,5 +1,6 @@
 package com.wearinterval.util
 
+import androidx.compose.ui.graphics.Color
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -70,6 +71,32 @@ object Constants {
         // History Screen
         const val HISTORY_ITEM_HEIGHT = 56
         const val HISTORY_BUTTON_CORNER_RADIUS = 20
+    }
+
+    // UI Colors
+    object Colors {
+        // Progress Ring Colors
+        val PROGRESS_RING_OUTER_COLOR = Color(0xFF00FF00) // Bright lime green for outer ring
+        val PROGRESS_RING_INNER_COLOR = Color(0xFF0099FF) // Electric bright blue for inner ring
+        val PROGRESS_RING_DEFAULT_BACKGROUND = Color.Gray
+        val PROGRESS_RING_DEFAULT_PROGRESS = Color.Blue
+
+        // Control Button Colors
+        val STOP_BUTTON_BACKGROUND = Color.Red
+        val STOP_BUTTON_ICON = Color.White
+        val PLAY_BUTTON_BACKGROUND = Color.Green
+        val PLAY_BUTTON_ICON = Color.Black
+
+        // ScrollablePicker Colors
+        val SCROLLABLE_PICKER_SELECTED = Color(0xFF2196F3) // Bright blue for selected items
+
+        // Background Colors
+        val CONFIG_SECTION_BACKGROUND = Color.White.copy(alpha = 0.08f) // Subtle background
+        val HISTORY_ITEM_BACKGROUND = Color(0xFF222222) // Dark background for history items
+
+        // Text Colors
+        val HISTORY_ITEM_TEXT = Color(0xFFBBBBBB) // Light gray text
+        val DIVIDER_COLOR = Color.Gray
     }
 
     // Notification Configuration

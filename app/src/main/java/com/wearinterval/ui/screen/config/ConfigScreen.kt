@@ -17,7 +17,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.contentDescription
@@ -132,7 +131,7 @@ private fun ConfigScrollPicker(
             .fillMaxHeight()
             .clip(RoundedCornerShape(Constants.Dimensions.SCROLL_PICKER_CORNER_RADIUS.dp))
             .background(
-                Color.White.copy(alpha = 0.08f), // Subtle white background for distinction
+                Constants.Colors.CONFIG_SECTION_BACKGROUND, // Subtle background for distinction
             )
             .padding(Constants.Dimensions.SCROLL_PICKER_CONTAINER_PADDING.dp),
     ) {

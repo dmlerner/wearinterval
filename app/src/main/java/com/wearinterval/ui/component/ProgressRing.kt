@@ -50,8 +50,8 @@ fun ProgressRing(
     modifier: Modifier = Modifier,
     size: Dp = ProgressRingDefaults.DEFAULT_SIZE,
     strokeWidth: Dp = ProgressRingDefaults.DEFAULT_STROKE_WIDTH,
-    backgroundColor: Color = Color.Gray.copy(alpha = ProgressRingDefaults.BACKGROUND_ALPHA),
-    progressColor: Color = Color.Blue,
+    backgroundColor: Color = Constants.Colors.PROGRESS_RING_DEFAULT_BACKGROUND.copy(alpha = ProgressRingDefaults.BACKGROUND_ALPHA),
+    progressColor: Color = Constants.Colors.PROGRESS_RING_DEFAULT_PROGRESS,
     startAngle: Float = ProgressRingDefaults.START_ANGLE_TOP, // Start from top
     content: @Composable () -> Unit = {},
 ) {
@@ -129,8 +129,8 @@ fun DualProgressRings(
     outerProgress: Float,
     innerProgress: Float,
     modifier: Modifier = Modifier,
-    outerColor: Color = Color(0xFF00FF00), // Bright green for outer ring
-    innerColor: Color = Color(0xFF0066FF), // Bright blue for inner ring
+    outerColor: Color = Constants.Colors.PROGRESS_RING_OUTER_COLOR,
+    innerColor: Color = Constants.Colors.PROGRESS_RING_INNER_COLOR,
     content: @Composable () -> Unit = {},
 ) {
     val outerStrokeWidth = ProgressRingDefaults.DUAL_RING_OUTER_STROKE
@@ -170,7 +170,7 @@ private fun ProgressRingPreview() {
     MaterialTheme {
         ProgressRing(
             progress = 0.75f,
-            progressColor = Color.Blue,
+            progressColor = Constants.Colors.PROGRESS_RING_DEFAULT_PROGRESS,
         ) {
             Text("75%")
         }
@@ -184,8 +184,8 @@ private fun DualProgressRingsPreview() {
         DualProgressRings(
             outerProgress = 0.6f, // 60% overall progress
             innerProgress = 0.8f, // 80% current interval progress
-            outerColor = Color(0xFF00FF00), // Bright green for outer ring
-            innerColor = Color(0xFF0066FF), // Bright blue for inner ring
+            outerColor = Constants.Colors.PROGRESS_RING_OUTER_COLOR,
+            innerColor = Constants.Colors.PROGRESS_RING_INNER_COLOR,
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,

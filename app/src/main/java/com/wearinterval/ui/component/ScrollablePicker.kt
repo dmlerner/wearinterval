@@ -137,7 +137,7 @@ fun ScrollablePicker(
                             MaterialTheme.typography.body2
                         },
                         color = if (isSelected) {
-                            androidx.compose.ui.graphics.Color(0xFF2196F3) // Bright blue for selected
+                            Constants.Colors.SCROLLABLE_PICKER_SELECTED // Bright blue for selected
                         } else {
                             MaterialTheme.colors.onSurface.copy(alpha = 0.4f) // More dimmed non-selected
                         },
