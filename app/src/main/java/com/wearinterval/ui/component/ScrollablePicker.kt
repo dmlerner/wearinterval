@@ -1,5 +1,6 @@
 package com.wearinterval.ui.component
 
+import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
@@ -19,8 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.MaterialTheme
@@ -35,7 +35,7 @@ fun ScrollablePicker(
     title: String,
     modifier: Modifier = Modifier,
 ) {
-    val hapticFeedback = LocalHapticFeedback.current
+    val view = LocalView.current
     val listState = rememberLazyListState()
     val snapBehavior = rememberSnapFlingBehavior(lazyListState = listState)
 
@@ -72,10 +72,11 @@ fun ScrollablePicker(
             previousCenterIndex.value != -1
         ) { // Don't vibrate on initial load
             isUserScrolling.value = true
-            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+            // Trigger haptic feedback using View-based approach for reliability
+            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             onSelectionChanged(centerIndex)
-            // Reset after a delay to allow the external state change to propagate
-            kotlinx.coroutines.delay(100)
+            // Reset after a shorter delay to reduce state conflicts
+            kotlinx.coroutines.delay(50)
             isUserScrolling.value = false
         }
         // Always update previous index

@@ -1,6 +1,8 @@
 package com.wearinterval.ui.screen.main
 
+import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -183,13 +186,18 @@ private fun TimerDisplay(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
 
 @Composable
 private fun TimerControlsInside(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
+    val view = LocalView.current
+
     Row(
         horizontalArrangement = Arrangement.spacedBy(MainScreenDefaults.CONTROL_BUTTONS_SPACING),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Play/Pause button (bigger for better usability)
         Button(
-            onClick = { onEvent(MainEvent.PlayPauseClicked) },
+            onClick = {
+                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                onEvent(MainEvent.PlayPauseClicked)
+            },
             modifier = Modifier
                 .size(MainScreenDefaults.PLAY_BUTTON_SIZE)
                 .clip(CircleShape)
@@ -215,7 +223,10 @@ private fun TimerControlsInside(uiState: MainUiState, onEvent: (MainEvent) -> Un
 
         // Stop button (bigger for better usability)
         Button(
-            onClick = { onEvent(MainEvent.StopClicked) },
+            onClick = {
+                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                onEvent(MainEvent.StopClicked)
+            },
             modifier = Modifier
                 .size(MainScreenDefaults.STOP_BUTTON_SIZE)
                 .clip(CircleShape)
@@ -233,10 +244,16 @@ private fun TimerControlsInside(uiState: MainUiState, onEvent: (MainEvent) -> Un
 
 @Composable
 private fun AlarmScreen(uiState: MainUiState, onDismiss: () -> Unit) {
+    val view = LocalView.current
+
     // Full-screen tap target for alarm dismissal
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .clickable {
+                view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                onDismiss()
+            }
             .semantics { contentDescription = "Tap to dismiss alarm" },
         contentAlignment = Alignment.Center,
     ) {

@@ -1,5 +1,6 @@
 package com.wearinterval.ui.screen.config
 
+import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -17,9 +18,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,8 +42,6 @@ fun ConfigScreen(viewModel: ConfigViewModel = hiltViewModel()) {
 
 @Composable
 internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Unit) {
-    val hapticFeedback = LocalHapticFeedback.current
-
     // Calculate current indices for each picker
     val lapsIndex = ConfigPickerValues.findLapsIndex(uiState.laps)
     val workDuration = (uiState.workMinutes * 60 + uiState.workSeconds).seconds
@@ -125,7 +123,7 @@ private fun ConfigScrollPicker(
     onLongPress: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val hapticFeedback = LocalHapticFeedback.current
+    val view = LocalView.current
 
     // Use full height with subtle background for visual distinction
     Box(
@@ -154,11 +152,11 @@ private fun ConfigScrollPicker(
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onTap = {
-                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                             onSingleTap()
                         },
                         onLongPress = {
-                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                             onLongPress()
                         },
                     )
