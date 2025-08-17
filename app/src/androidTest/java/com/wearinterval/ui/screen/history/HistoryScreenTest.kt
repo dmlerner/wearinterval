@@ -177,14 +177,25 @@ class HistoryScreenTest {
         composeTestRule.onNodeWithText("10 laps").assertIsDisplayed()
         composeTestRule.onNodeWithText("1 laps").assertIsDisplayed()
 
-        // Check work durations
+        // Check work durations - using content descriptions to avoid duplicates
         composeTestRule.onNodeWithText("1:30").assertIsDisplayed() // 90 seconds
         composeTestRule.onNodeWithText("2:00").assertIsDisplayed() // 2 minutes
-        composeTestRule.onNodeWithText("45s").assertIsDisplayed() // 45 seconds
 
         // Check rest durations (where applicable)
         composeTestRule.onNodeWithText("30s").assertIsDisplayed() // 30 seconds rest
-        composeTestRule.onNodeWithText("45s").assertIsDisplayed() // 45 seconds rest (this appears twice due to work/rest)
+
+        // Verify configurations using content descriptions (more specific)
+        composeTestRule
+            .onNodeWithContentDescription("Configuration: 5 laps, 1:30 work, 30s rest")
+            .assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithContentDescription("Configuration: 10 laps, 2:00 work, 45s rest")
+            .assertIsDisplayed()
+
+        composeTestRule
+            .onNodeWithContentDescription("Configuration: 1 laps, 45s work, 0s rest")
+            .assertIsDisplayed()
     }
 
     @Test

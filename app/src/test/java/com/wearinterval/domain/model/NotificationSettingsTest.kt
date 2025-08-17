@@ -134,12 +134,12 @@ class NotificationSettingsTest {
     }
 
     @Test
-    fun `DEFAULT has all notifications enabled with auto mode`() {
+    fun `DEFAULT has vibration and sound enabled with auto mode, flash disabled`() {
         val settings = NotificationSettings.DEFAULT
 
         assertThat(settings.vibrationEnabled).isTrue()
         assertThat(settings.soundEnabled).isTrue()
-        assertThat(settings.flashEnabled).isTrue()
+        assertThat(settings.flashEnabled).isFalse()
         assertThat(settings.autoMode).isTrue()
     }
 
@@ -190,7 +190,7 @@ class NotificationSettingsTest {
 
         assertThat(settings.vibrationEnabled).isFalse()
         assertThat(settings.soundEnabled).isFalse()
-        assertThat(settings.flashEnabled).isTrue() // unchanged
+        assertThat(settings.flashEnabled).isFalse() // unchanged from DEFAULT
         assertThat(settings.autoMode).isFalse()
     }
 

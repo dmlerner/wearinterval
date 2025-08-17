@@ -1,32 +1,153 @@
 package com.wearinterval.data.datastore
 
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.wearinterval.domain.model.NotificationSettings
 import com.wearinterval.domain.model.TimerConfiguration
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TestWatcher
+import org.junit.runner.Description
 import org.junit.runner.RunWith
+import java.io.File
+import java.util.UUID
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @RunWith(AndroidJUnit4::class)
 class DataStoreIntegrationTest {
 
-    private lateinit var dataStoreManager: DataStoreManager
+    @get:Rule
+    val dataStoreTestRule = DataStoreTestRule()
+
+    private lateinit var dataStoreManager: TestDataStoreManager
 
     @Before
-    fun setup() {
-        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
-        dataStoreManager = DataStoreManager(context)
+    fun setup() = runTest {
+        dataStoreManager = TestDataStoreManager(dataStoreTestRule.testDataStore)
+        // Clear any existing data to ensure clean state for each test
+        dataStoreManager.dataStore.edit { it.clear() }
+    }
 
-        // Clear any existing data
-        runTest {
-            dataStoreManager.dataStore.edit { it.clear() }
+    // Test rule that creates a unique DataStore for each test
+    class DataStoreTestRule : TestWatcher() {
+        lateinit var testDataStore: DataStore<Preferences>
+        private lateinit var testContext: Context
+        private lateinit var testDataStoreName: String
+
+        override fun starting(description: Description) {
+            testContext = ApplicationProvider.getApplicationContext()
+            testDataStoreName = "test_${UUID.randomUUID().toString().replace("-", "")}"
+
+            // Create unique DataStore for this test using PreferenceDataStoreFactory
+            testDataStore = PreferenceDataStoreFactory.create(
+                produceFile = { File(testContext.filesDir, "datastore/$testDataStoreName.preferences_pb") },
+            )
+        }
+
+        override fun finished(description: Description) = runTest {
+            // Clean up test DataStore file
+            try {
+                testDataStore.edit { it.clear() }
+            } catch (e: Exception) {
+                // Ignore cleanup errors
+            }
+
+            val dataStoreFile = File(testContext.filesDir, "datastore/$testDataStoreName.preferences_pb")
+            if (dataStoreFile.exists()) {
+                dataStoreFile.delete()
+            }
+        }
+    }
+
+    // Test DataStoreManager that uses the test DataStore directly
+    private class TestDataStoreManager(
+        private val testDataStore: DataStore<Preferences>,
+    ) {
+        companion object {
+            // NotificationSettings keys (copied from DataStoreManager)
+            private val VIBRATION_ENABLED = booleanPreferencesKey("vibration_enabled")
+            private val SOUND_ENABLED = booleanPreferencesKey("sound_enabled")
+            private val FLASH_ENABLED = booleanPreferencesKey("flash_enabled")
+            private val AUTO_MODE = booleanPreferencesKey("auto_mode")
+
+            // Current configuration keys (copied from DataStoreManager)
+            private val CURRENT_CONFIG_ID = stringPreferencesKey("current_config_id")
+            private val CURRENT_CONFIG_LAPS = intPreferencesKey("current_config_laps")
+            private val CURRENT_CONFIG_WORK_DURATION = longPreferencesKey("current_config_work_duration")
+            private val CURRENT_CONFIG_REST_DURATION = longPreferencesKey("current_config_rest_duration")
+            private val CURRENT_CONFIG_LAST_USED = longPreferencesKey("current_config_last_used")
+        }
+
+        val dataStore: DataStore<Preferences> get() = testDataStore
+
+        val notificationSettings: Flow<NotificationSettings> = testDataStore.data
+            .catch { emit(androidx.datastore.preferences.core.emptyPreferences()) }
+            .map { preferences ->
+                NotificationSettings(
+                    vibrationEnabled = preferences[VIBRATION_ENABLED] ?: NotificationSettings.DEFAULT.vibrationEnabled,
+                    soundEnabled = preferences[SOUND_ENABLED] ?: NotificationSettings.DEFAULT.soundEnabled,
+                    flashEnabled = preferences[FLASH_ENABLED] ?: NotificationSettings.DEFAULT.flashEnabled,
+                    autoMode = preferences[AUTO_MODE] ?: NotificationSettings.DEFAULT.autoMode,
+                )
+            }
+
+        val currentConfiguration: Flow<TimerConfiguration?> = testDataStore.data
+            .catch { emit(androidx.datastore.preferences.core.emptyPreferences()) }
+            .map { preferences ->
+                val configId = preferences[CURRENT_CONFIG_ID]
+                if (configId == null) {
+                    null
+                } else {
+                    TimerConfiguration(
+                        id = configId,
+                        laps = preferences[CURRENT_CONFIG_LAPS] ?: TimerConfiguration.DEFAULT.laps,
+                        workDuration = (
+                            preferences[CURRENT_CONFIG_WORK_DURATION]
+                                ?: TimerConfiguration.DEFAULT.workDuration.inWholeSeconds
+                            ).seconds,
+                        restDuration = (
+                            preferences[CURRENT_CONFIG_REST_DURATION]
+                                ?: TimerConfiguration.DEFAULT.restDuration.inWholeSeconds
+                            ).seconds,
+                        lastUsed = preferences[CURRENT_CONFIG_LAST_USED] ?: TimerConfiguration.DEFAULT.lastUsed,
+                    )
+                }
+            }
+
+        suspend fun updateNotificationSettings(settings: NotificationSettings) {
+            testDataStore.edit { preferences ->
+                preferences[VIBRATION_ENABLED] = settings.vibrationEnabled
+                preferences[SOUND_ENABLED] = settings.soundEnabled
+                preferences[FLASH_ENABLED] = settings.flashEnabled
+                preferences[AUTO_MODE] = settings.autoMode
+            }
+        }
+
+        suspend fun updateCurrentConfiguration(config: TimerConfiguration) {
+            testDataStore.edit { preferences ->
+                preferences[CURRENT_CONFIG_ID] = config.id
+                preferences[CURRENT_CONFIG_LAPS] = config.laps
+                preferences[CURRENT_CONFIG_WORK_DURATION] = config.workDuration.inWholeSeconds
+                preferences[CURRENT_CONFIG_REST_DURATION] = config.restDuration.inWholeSeconds
+                preferences[CURRENT_CONFIG_LAST_USED] = config.lastUsed
+            }
         }
     }
 

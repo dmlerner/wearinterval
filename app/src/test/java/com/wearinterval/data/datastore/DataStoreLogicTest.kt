@@ -38,7 +38,7 @@ class DataStoreLogicTest {
 
         assertThat(defaultSettings.vibrationEnabled).isTrue()
         assertThat(defaultSettings.soundEnabled).isTrue()
-        assertThat(defaultSettings.flashEnabled).isTrue()
+        assertThat(defaultSettings.flashEnabled).isFalse()
         assertThat(defaultSettings.autoMode).isTrue()
     }
 

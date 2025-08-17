@@ -3,7 +3,7 @@ package com.wearinterval.domain.model
 data class NotificationSettings(
     val vibrationEnabled: Boolean = true,
     val soundEnabled: Boolean = true,
-    val flashEnabled: Boolean = true,
+    val flashEnabled: Boolean = false,
     val autoMode: Boolean = true,
 ) {
     fun hasAnyNotification(): Boolean {

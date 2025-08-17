@@ -54,8 +54,8 @@ class MainScreenTest {
         composeTestRule.onNodeWithText("3/10").assertIsDisplayed()
 
         // Then - Control buttons
-        composeTestRule.onNodeWithContentDescription("Pause timer").assertIsDisplayed()
-        composeTestRule.onNodeWithContentDescription("Stop timer").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Pause").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Stop").assertIsDisplayed()
     }
 
     @Test
@@ -81,8 +81,8 @@ class MainScreenTest {
         }
 
         // Then
-        composeTestRule.onNodeWithContentDescription("Start timer").assertIsDisplayed()
-        composeTestRule.onNodeWithContentDescription("Start timer").assertIsEnabled()
+        composeTestRule.onNodeWithContentDescription("Play").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Play").assertIsEnabled()
     }
 
     @Test
@@ -108,8 +108,8 @@ class MainScreenTest {
         }
 
         // Then
-        composeTestRule.onNodeWithContentDescription("Pause timer").assertIsDisplayed()
-        composeTestRule.onNodeWithContentDescription("Pause timer").assertIsEnabled()
+        composeTestRule.onNodeWithContentDescription("Pause").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Pause").assertIsEnabled()
     }
 
     @Test
@@ -117,6 +117,7 @@ class MainScreenTest {
         // Given
         val uiState = MainUiState(
             timerPhase = TimerPhase.Paused,
+            isPaused = true,
             isPlayButtonEnabled = true,
             isStopButtonEnabled = true,
         )
@@ -135,8 +136,8 @@ class MainScreenTest {
         }
 
         // Then
-        composeTestRule.onNodeWithContentDescription("Resume timer").assertIsDisplayed()
-        composeTestRule.onNodeWithContentDescription("Resume timer").assertIsEnabled()
+        composeTestRule.onNodeWithContentDescription("Resume").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Resume").assertIsEnabled()
     }
 
     @Test
@@ -158,7 +159,7 @@ class MainScreenTest {
         }
 
         // When
-        composeTestRule.onNodeWithContentDescription("Start timer").performClick()
+        composeTestRule.onNodeWithContentDescription("Play").performClick()
 
         // Then
         assertThat(eventReceived).isEqualTo(MainEvent.PlayPauseClicked)
@@ -186,7 +187,7 @@ class MainScreenTest {
         }
 
         // When
-        composeTestRule.onNodeWithContentDescription("Stop timer").performClick()
+        composeTestRule.onNodeWithContentDescription("Stop").performClick()
 
         // Then
         assertThat(eventReceived).isEqualTo(MainEvent.StopClicked)
@@ -214,7 +215,7 @@ class MainScreenTest {
         }
 
         // Then
-        composeTestRule.onNodeWithContentDescription("Stop timer").assertIsNotEnabled()
+        composeTestRule.onNodeWithContentDescription("Stop").assertIsNotEnabled()
     }
 
     @Test
@@ -290,7 +291,7 @@ class MainScreenTest {
             }
         }
 
-        // Then - Should show just lap number for infinite
-        composeTestRule.onNodeWithText("15").assertIsDisplayed()
+        // Then - Should show "Lap 15" for infinite laps
+        composeTestRule.onNodeWithText("Lap 15").assertIsDisplayed()
     }
 }

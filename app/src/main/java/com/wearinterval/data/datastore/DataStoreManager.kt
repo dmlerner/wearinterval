@@ -20,13 +20,13 @@ import javax.inject.Singleton
 import kotlin.time.Duration.Companion.seconds
 
 @Singleton
-class DataStoreManager @Inject constructor(
+open class DataStoreManager @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
     private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("settings")
 
     // Expose dataStore for testing
-    val dataStore: DataStore<Preferences> get() = context.dataStore
+    open val dataStore: DataStore<Preferences> get() = context.dataStore
 
     companion object {
         // NotificationSettings keys
