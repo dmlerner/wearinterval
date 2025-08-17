@@ -202,21 +202,39 @@ run_instrumented_tests() {
 generate_coverage_report() {
     log_info "Generating combined coverage report..."
     
-    ./gradlew createDebugCoverageReport
+    ./gradlew combinedCoverageReport
     
     if [ $? -eq 0 ]; then
-        log_success "Coverage report generated"
+        log_success "Combined coverage report generated"
         
         # Try to find and display coverage summary
-        local coverage_file="app/build/reports/coverage/androidTest/debug/index.html"
+        local coverage_file="app/build/reports/jacoco/combinedCoverageReport/html/index.html"
         if [ -f "$coverage_file" ]; then
-            log_info "Coverage report available at: $coverage_file"
+            log_info "📊 Combined coverage report available at: $coverage_file"
+        fi
+        
+        # Also check for standard coverage locations
+        local alt_coverage="app/build/reports/coverage/androidTest/debug/index.html"
+        if [ -f "$alt_coverage" ]; then
+            log_info "📊 Android test coverage also at: $alt_coverage"
         fi
         
         return 0
     else
-        log_error "Failed to generate coverage report"
-        return 1
+        log_warning "Combined coverage task failed, trying standard jacoco report..."
+        ./gradlew jacocoTestReport
+        
+        if [ $? -eq 0 ]; then
+            log_success "Standard coverage report generated"
+            local std_coverage="app/build/reports/jacoco/jacocoTestReport/html/index.html"
+            if [ -f "$std_coverage" ]; then
+                log_info "📊 Standard coverage report at: $std_coverage"
+            fi
+            return 0
+        else
+            log_error "Failed to generate any coverage report"
+            return 1
+        fi
     fi
 }
 

@@ -49,6 +49,14 @@ android {
         unitTests {
             isIncludeAndroidResources = true
         }
+        execution = "ANDROIDX_TEST_ORCHESTRATOR"
+    }
+
+    buildTypes {
+        debug {
+            enableUnitTestCoverage = true
+            enableAndroidTestCoverage = true
+        }
     }
 }
 
@@ -67,7 +75,11 @@ tasks.withType<Test> {
     }
 }
 
+// Combined coverage report for both unit and instrumented tests
 tasks.register<JacocoReport>("jacocoTestReport") {
+    group = "verification"
+    description = "Generate combined JaCoCo coverage report for unit and instrumented tests"
+
     dependsOn("testDebugUnitTest")
 
     reports {
@@ -94,7 +106,73 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         )
     sourceDirectories.setFrom(sourceDirs.map { file(it) })
 
-    executionData.setFrom(fileTree(layout.buildDirectory.get()).include("**/*.exec", "**/*.ec"))
+    // Include both unit test and instrumented test execution data
+    executionData.setFrom(
+        fileTree(layout.buildDirectory.get()).include(
+            "**/*.exec",
+            "**/*.ec",
+            "**/coverage.ec",
+        ),
+    )
+}
+
+// Combined coverage report that includes instrumented tests when available
+tasks.register<JacocoReport>("combinedCoverageReport") {
+    group = "verification"
+    description = "Generate combined coverage report including instrumented tests when available"
+
+    dependsOn("testDebugUnitTest")
+    // Note: Don't depend on connectedDebugAndroidTest to allow offline usage
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+
+    val fileFilter =
+        listOf(
+            "**/R.class", "**/R$*.class", "**/BuildConfig.*", "**/Manifest*.*",
+            "**/*Test*.*", "android/**/*.*", "**/data/database/**/*.*",
+            "**/*_Hilt*.class", "**/hilt_aggregated_deps/**", "**/dagger/**",
+        )
+
+    val debugTree = fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/debug")
+    debugTree.exclude(fileFilter)
+    classDirectories.setFrom(debugTree)
+
+    val sourceDirs =
+        listOf(
+            "src/main/java",
+            "src/main/kotlin",
+        )
+    sourceDirectories.setFrom(sourceDirs.map { file(it) })
+
+    // Combine execution data from both test types
+    executionData.setFrom(
+        fileTree(layout.buildDirectory.get()).include(
+            "jacoco/testDebugUnitTest.exec",
+            "outputs/unit_test_code_coverage/**/*.exec",
+            "outputs/code_coverage/debugAndroidTest/connected/**/*.ec",
+        ),
+    )
+
+    finalizedBy("printCoverageResults")
+}
+
+// Task to print coverage summary
+tasks.register("printCoverageResults") {
+    group = "verification"
+    description = "Print coverage results summary"
+
+    doLast {
+        val coverageFile = file("${layout.buildDirectory.get()}/reports/jacoco/combinedCoverageReport/jacocoTestReport.xml")
+        if (coverageFile.exists()) {
+            println("📊 Combined Coverage Report Generated!")
+            println("📁 HTML Report: ${layout.buildDirectory.get()}/reports/jacoco/combinedCoverageReport/html/index.html")
+            println("📄 XML Report: ${coverageFile.absolutePath}")
+        }
+    }
 }
 
 dependencies {
@@ -148,6 +226,7 @@ dependencies {
     androidTestImplementation("com.google.truth:truth:1.4.4")
     androidTestImplementation("app.cash.turbine:turbine:1.1.0")
     androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+    androidTestUtil("androidx.test:orchestrator:1.5.0")
     kspAndroidTest("com.google.dagger:hilt-compiler:2.51.1")
 
     // Debug Tools
