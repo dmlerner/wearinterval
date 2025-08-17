@@ -76,7 +76,7 @@ class TimerRepositoryImpl @Inject constructor(
             val config = configurationRepository.currentConfiguration.value
 
             // Save configuration to history when timer starts
-            configurationRepository.updateConfiguration(
+            configurationRepository.saveToHistory(
                 config.copy(
                     id = UUID.randomUUID().toString(), // Generate new ID to create unique history entry
                     lastUsed = System.currentTimeMillis(),

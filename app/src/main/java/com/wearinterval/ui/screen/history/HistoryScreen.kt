@@ -71,17 +71,16 @@ internal fun HistoryContent(uiState: HistoryUiState, onEvent: (HistoryEvent) -> 
 
 @Composable
 private fun ConfigurationGrid(configurations: List<TimerConfiguration>, onConfigurationSelect: (TimerConfiguration) -> Unit) {
-    val totalItems = Constants.Dimensions.RECENT_CONFIGURATIONS_COUNT
+    val maxItems = Constants.Dimensions.RECENT_CONFIGURATIONS_COUNT
+    val actualItems = configurations.size
 
-    // Dynamic grid layout based on total items
-    val columns = when {
-        totalItems <= 2 -> totalItems
-        totalItems <= 4 -> 2
-        totalItems <= 6 -> 3
-        else -> 3 // Max 3 columns for watch screens
-    }
+    // Create grid based on actual items, but show empty slots up to maxItems for consistency
+    val totalSlots = maxItems
 
-    val rows = (totalItems + columns - 1) / columns // Ceiling division
+    // Dynamic grid layout - always use 2 columns for better balance on watch
+    val columns = 2
+
+    val rows = (totalSlots + columns - 1) / columns // Ceiling division
 
     Column(
         modifier = Modifier.padding(4.dp),
@@ -94,7 +93,7 @@ private fun ConfigurationGrid(configurations: List<TimerConfiguration>, onConfig
                 repeat(columns) { colIndex ->
                     val itemIndex = rowIndex * columns + colIndex
                     GridConfigurationItem(
-                        configuration = configurations.getOrNull(itemIndex),
+                        configuration = if (itemIndex < actualItems) configurations[itemIndex] else null,
                         onClick = onConfigurationSelect,
                     )
                 }

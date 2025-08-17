@@ -8,6 +8,7 @@ interface ConfigurationRepository {
     val recentConfigurations: StateFlow<List<TimerConfiguration>>
 
     suspend fun updateConfiguration(config: TimerConfiguration): Result<Unit>
+    suspend fun saveToHistory(config: TimerConfiguration): Result<Unit>
     suspend fun selectRecentConfiguration(config: TimerConfiguration): Result<Unit>
     suspend fun deleteConfiguration(configId: String): Result<Unit>
 }

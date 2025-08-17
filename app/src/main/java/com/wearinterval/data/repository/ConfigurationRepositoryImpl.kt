@@ -84,6 +84,30 @@ class ConfigurationRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun saveToHistory(config: TimerConfiguration): Result<Unit> {
+        return try {
+            val validatedConfig = TimerConfiguration.validate(
+                config.laps,
+                config.workDuration,
+                config.restDuration,
+            ).copy(
+                id = config.id, // Use provided ID (should be new UUID from timer start)
+                lastUsed = System.currentTimeMillis(),
+            )
+
+            // Force save to history without LRU deduplication
+            configurationDao.insertConfiguration(
+                TimerConfigurationEntity.fromDomain(validatedConfig),
+            )
+
+            cleanupRecentConfigurations()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun selectRecentConfiguration(config: TimerConfiguration): Result<Unit> {
         return try {
             // Check if a configuration with the same values already exists (LRU behavior)

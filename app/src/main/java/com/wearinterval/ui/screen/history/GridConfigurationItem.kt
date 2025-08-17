@@ -46,7 +46,7 @@ fun GridConfigurationItem(configuration: TimerConfiguration?, onClick: (TimerCon
                             contentDescription = "Timer configuration: ${configuration.displayString()}"
                         }
                 } else {
-                    Modifier // Transparent for empty slots
+                    Modifier.background(Constants.Colors.HISTORY_ITEM_BACKGROUND.copy(alpha = 0.3f)) // Semi-transparent for empty slots
                 },
             ),
         contentAlignment = Alignment.Center,
