@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -41,35 +42,52 @@ fun ScrollablePicker(
     val snapBehavior = rememberSnapFlingBehavior(lazyListState = listState)
 
     // Calculate the visible center index based on scroll position
-    val visibleItemsInfo = listState.layoutInfo.visibleItemsInfo
-    val centerIndex by remember {
-        derivedStateOf {
-            if (visibleItemsInfo.isEmpty()) {
-                0
-            } else {
-                val center = listState.layoutInfo.viewportEndOffset / 2
-                visibleItemsInfo.minByOrNull {
-                    kotlin.math.abs((it.offset + it.size / 2) - center)
-                }?.index ?: 0
+    val centerIndex by derivedStateOf {
+        val layoutInfo = listState.layoutInfo
+        if (layoutInfo.visibleItemsInfo.isEmpty()) {
+            0
+        } else {
+            val center = layoutInfo.viewportEndOffset / 2
+            val centerItem = layoutInfo.visibleItemsInfo.minByOrNull {
+                kotlin.math.abs((it.offset + it.size / 2) - center)
             }
+            // Adjust for padding items (first item is padding, so subtract 1)
+            val rawIndex = centerItem?.index ?: 1
+            val adjustedIndex = rawIndex - 1
+            val finalIndex = kotlin.math.max(0, kotlin.math.min(adjustedIndex, items.size - 1))
+            finalIndex
         }
     }
 
+    // Track if we're currently responding to a user scroll to prevent circular updates
+    val isUserScrolling = remember { mutableStateOf(false) }
+    // Track if we're programmatically scrolling due to external selectedIndex change
+    val isProgrammaticScroll = remember { mutableStateOf(false) }
+
     // Handle selection changes with haptic feedback
-    LaunchedEffect(centerIndex) {
-        snapshotFlow { centerIndex }
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
             .distinctUntilChanged()
-            .collect { index ->
-                if (index != selectedIndex) {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onSelectionChanged(index)
+            .collect { (firstIndex, offset) ->
+                if (!isProgrammaticScroll.value && centerIndex >= 0 && centerIndex < items.size) {
+                    isUserScrolling.value = true
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onSelectionChanged(centerIndex)
+                    // Reset after a delay to allow the external state change to propagate
+                    kotlinx.coroutines.delay(100)
+                    isUserScrolling.value = false
                 }
             }
     }
 
-    // Scroll to selected item when selectedIndex changes externally
+    // Scroll to selected item when selectedIndex changes externally (but not from user scrolling)
     LaunchedEffect(selectedIndex) {
-        listState.animateScrollToItem(selectedIndex)
+        if (!isUserScrolling.value && selectedIndex != centerIndex && selectedIndex >= 0 && selectedIndex < items.size) {
+            isProgrammaticScroll.value = true
+            listState.scrollToItem(selectedIndex)
+            kotlinx.coroutines.delay(100)
+            isProgrammaticScroll.value = false
+        }
     }
 
     Column(
@@ -87,15 +105,15 @@ fun ScrollablePicker(
             )
         }
 
-        // Scrollable picker
+        // Scrollable picker - use remaining height
         Box(
-            modifier = Modifier.height(120.dp),
+            modifier = Modifier.weight(1f),
             contentAlignment = Alignment.Center,
         ) {
             LazyColumn(
                 state = listState,
                 flingBehavior = snapBehavior,
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp), // More spacing for better selection visibility
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 // Add padding items at start and end for proper centering
@@ -108,19 +126,19 @@ fun ScrollablePicker(
                     Text(
                         text = item,
                         style = if (isSelected) {
-                            MaterialTheme.typography.body1
+                            MaterialTheme.typography.title3 // Larger, more prominent font
                         } else {
                             MaterialTheme.typography.body2
                         },
                         color = if (isSelected) {
-                            MaterialTheme.colors.primary
+                            androidx.compose.ui.graphics.Color(0xFF2196F3) // Bright blue for selected
                         } else {
-                            MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                            MaterialTheme.colors.onSurface.copy(alpha = 0.4f) // More dimmed non-selected
                         },
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp),
+                            .padding(vertical = 6.dp), // Slightly more padding
                     )
                 }
 

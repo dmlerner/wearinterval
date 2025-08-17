@@ -133,6 +133,14 @@ class TimerService : Service() {
         timerNotificationManager.dismissAlert()
     }
 
+    fun updateConfiguration(config: TimerConfiguration) {
+        // Only update if timer is stopped
+        if (_timerState.value.isStopped) {
+            _timerState.value = TimerState.stopped(config)
+            timerNotificationManager.updateTimerNotification(_timerState.value)
+        }
+    }
+
     fun dismissAlarm() {
         val currentState = _timerState.value
         if (currentState.phase == TimerPhase.AlarmActive) {

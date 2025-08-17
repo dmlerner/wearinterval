@@ -30,24 +30,28 @@ data class MainUiState(
         else -> configuration.workDuration
     }
 
-    val intervalProgressPercentage: Float get() = if (currentIntervalDuration > Duration.ZERO) {
-        // Progress starts full (1.0) and ticks down to empty (0.0) as time remaining decreases
-        (timeRemaining.inWholeMilliseconds.toFloat() / currentIntervalDuration.inWholeMilliseconds.toFloat()).coerceIn(0f, 1f)
-    } else {
-        0f
+    val intervalProgressPercentage: Float get() = when {
+        isStopped -> 1.0f // Show full ring when stopped (ready state)
+        currentIntervalDuration > Duration.ZERO -> {
+            // Progress starts full (1.0) and ticks down to empty (0.0) as time remaining decreases
+            (timeRemaining.inWholeMilliseconds.toFloat() / currentIntervalDuration.inWholeMilliseconds.toFloat()).coerceIn(0f, 1f)
+        }
+        else -> 0f
     }
 
-    val overallProgressPercentage: Float get() = if (totalLaps > 0) {
-        // Calculate overall remaining time as a percentage (starts full, ticks down like inner ring)
-        // Outer ring shows remaining workout time, ticks down slower by factor of total laps
-        val completedLapsProgress = (currentLap - 1).toFloat() / totalLaps.toFloat()
-        val currentLapProgress = (1f - intervalProgressPercentage) / totalLaps.toFloat()
-        val overallProgress = completedLapsProgress + currentLapProgress
+    val overallProgressPercentage: Float get() = when {
+        isStopped -> 1.0f // Show full ring when stopped (ready state)
+        totalLaps > 0 -> {
+            // Calculate overall remaining time as a percentage (starts full, ticks down like inner ring)
+            // Outer ring shows remaining workout time, ticks down slower by factor of total laps
+            val completedLapsProgress = (currentLap - 1).toFloat() / totalLaps.toFloat()
+            val currentLapProgress = (1f - intervalProgressPercentage) / totalLaps.toFloat()
+            val overallProgress = completedLapsProgress + currentLapProgress
 
-        // Return remaining percentage (1.0 = full workout remaining, 0.0 = workout complete)
-        (1f - overallProgress).coerceIn(0f, 1f)
-    } else {
-        0f
+            // Return remaining percentage (1.0 = full workout remaining, 0.0 = workout complete)
+            (1f - overallProgress).coerceIn(0f, 1f)
+        }
+        else -> 0f
     }
 }
 

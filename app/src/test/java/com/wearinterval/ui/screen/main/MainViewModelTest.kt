@@ -79,7 +79,38 @@ class MainViewModelTest {
     }
 
     @Test
-    fun `ui state reflects timer state changes`() = runTest {
+    fun `ui state reflects configuration changes when stopped`() = runTest {
+        viewModel.uiState.test {
+            // Skip initial state
+            awaitItem()
+
+            // Update configuration with new values
+            val customConfig = TimerConfiguration(
+                id = "custom-config",
+                laps = 10,
+                workDuration = 90.seconds,
+                restDuration = 30.seconds,
+                lastUsed = System.currentTimeMillis(),
+            )
+            configurationFlow.value = customConfig
+
+            val uiState = awaitItem()
+
+            // When stopped, UI should reflect the current configuration
+            assertThat(uiState.timerPhase).isEqualTo(TimerPhase.Stopped)
+            assertThat(uiState.configuration).isEqualTo(customConfig)
+            assertThat(uiState.configuration.laps).isEqualTo(10)
+            assertThat(uiState.configuration.workDuration).isEqualTo(90.seconds)
+            assertThat(uiState.configuration.restDuration).isEqualTo(30.seconds)
+
+            // Progress rings should show full when stopped (ready state)
+            assertThat(uiState.intervalProgressPercentage).isEqualTo(1.0f)
+            assertThat(uiState.overallProgressPercentage).isEqualTo(1.0f)
+        }
+    }
+
+    @Test
+    fun `ui state reflects timer state changes when running`() = runTest {
         viewModel.uiState.test {
             // Skip initial state
             awaitItem()

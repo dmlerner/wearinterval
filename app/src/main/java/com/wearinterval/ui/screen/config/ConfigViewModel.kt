@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.repository.ConfigurationRepository
+import com.wearinterval.domain.repository.TimerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +18,7 @@ import kotlin.time.Duration.Companion.seconds
 @HiltViewModel
 class ConfigViewModel @Inject constructor(
     private val configurationRepository: ConfigurationRepository,
+    private val timerRepository: TimerRepository,
 ) : ViewModel() {
 
     val uiState: StateFlow<ConfigUiState> = configurationRepository.currentConfiguration
@@ -72,6 +74,8 @@ class ConfigViewModel @Inject constructor(
             }
 
             configurationRepository.updateConfiguration(updatedConfig)
+            // Also update timer service if stopped so main screen reflects changes immediately
+            timerRepository.updateConfiguration(updatedConfig)
         }
     }
 }

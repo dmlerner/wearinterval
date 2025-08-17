@@ -1,5 +1,6 @@
 package com.wearinterval.domain.repository
 
+import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.model.TimerState
 import kotlinx.coroutines.flow.StateFlow
 
@@ -12,4 +13,5 @@ interface TimerRepository {
     suspend fun resumeTimer(): Result<Unit>
     suspend fun stopTimer(): Result<Unit>
     suspend fun dismissAlarm(): Result<Unit>
+    suspend fun updateConfiguration(config: TimerConfiguration): Result<Unit>
 }

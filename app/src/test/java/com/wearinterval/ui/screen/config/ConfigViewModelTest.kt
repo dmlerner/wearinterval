@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.repository.ConfigurationRepository
+import com.wearinterval.domain.repository.TimerRepository
 import com.wearinterval.util.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -25,6 +26,7 @@ class ConfigViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val mockConfigRepository = mockk<ConfigurationRepository>()
+    private val mockTimerRepository = mockk<TimerRepository>()
     private val currentConfigFlow = MutableStateFlow(TimerConfiguration.DEFAULT)
 
     private lateinit var viewModel: ConfigViewModel
@@ -33,8 +35,9 @@ class ConfigViewModelTest {
     fun setup() {
         every { mockConfigRepository.currentConfiguration } returns currentConfigFlow
         coEvery { mockConfigRepository.updateConfiguration(any()) } returns Result.success(Unit)
+        coEvery { mockTimerRepository.updateConfiguration(any()) } returns Result.success(Unit)
 
-        viewModel = ConfigViewModel(mockConfigRepository)
+        viewModel = ConfigViewModel(mockConfigRepository, mockTimerRepository)
     }
 
     @Test

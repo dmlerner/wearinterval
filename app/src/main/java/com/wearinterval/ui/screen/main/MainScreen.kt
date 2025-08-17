@@ -120,9 +120,12 @@ private fun TimerDisplay(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                // Main time display
+                // Main time display - show configured values when stopped, actual timer when running
                 Text(
-                    text = TimeUtils.formatDuration(uiState.timeRemaining),
+                    text = when {
+                        uiState.isStopped -> TimeUtils.formatDuration(uiState.configuration.workDuration)
+                        else -> TimeUtils.formatDuration(uiState.timeRemaining)
+                    },
                     style = MaterialTheme.typography.title1, // Smaller to fit with controls
                     color = if (uiState.isResting) {
                         MaterialTheme.colors.secondary
@@ -132,25 +135,41 @@ private fun TimerDisplay(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
                     textAlign = TextAlign.Center,
                 )
 
-                // Lap indicator
+                // Lap indicator - show configured laps when stopped, current progress when running
                 Text(
-                    text = if (uiState.totalLaps == 999) {
-                        "Lap ${uiState.currentLap}"
-                    } else {
-                        "${uiState.currentLap}/${uiState.totalLaps}"
+                    text = when {
+                        uiState.isStopped -> {
+                            if (uiState.configuration.laps == 999) {
+                                "∞ laps"
+                            } else {
+                                "${uiState.configuration.laps} laps"
+                            }
+                        }
+                        uiState.totalLaps == 999 -> "Lap ${uiState.currentLap}"
+                        else -> "${uiState.currentLap}/${uiState.totalLaps}"
                     },
                     style = MaterialTheme.typography.caption2,
                     color = MaterialTheme.colors.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
-                // Phase indicator (only show during rest)
-                if (uiState.isResting) {
-                    Text(
-                        text = "REST",
-                        style = MaterialTheme.typography.caption2,
-                        color = MaterialTheme.colors.secondary,
-                        textAlign = TextAlign.Center,
-                    )
+                // Phase indicator (show rest duration when stopped, "REST" when resting)
+                when {
+                    uiState.isStopped && uiState.configuration.restDuration.inWholeSeconds > 0 -> {
+                        Text(
+                            text = "Rest: ${TimeUtils.formatDuration(uiState.configuration.restDuration)}",
+                            style = MaterialTheme.typography.caption2,
+                            color = MaterialTheme.colors.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                    uiState.isResting -> {
+                        Text(
+                            text = "REST",
+                            style = MaterialTheme.typography.caption2,
+                            color = MaterialTheme.colors.secondary,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
                 }
                 // Control buttons inside the circle
                 TimerControlsInside(
