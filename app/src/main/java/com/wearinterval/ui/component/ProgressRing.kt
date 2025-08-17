@@ -128,8 +128,8 @@ fun DualProgressRings(
     outerProgress: Float,
     innerProgress: Float,
     modifier: Modifier = Modifier,
-    outerColor: Color = Color(0xFF00C853), // Bright green for outer ring
-    innerColor: Color = Color(0xFF2196F3), // Bright blue for inner ring
+    outerColor: Color = Color(0xFF00FF00), // Bright green for outer ring
+    innerColor: Color = Color(0xFF0066FF), // Bright blue for inner ring
     content: @Composable () -> Unit = {},
 ) {
     val outerStrokeWidth = ProgressRingDefaults.DUAL_RING_OUTER_STROKE
@@ -183,8 +183,8 @@ private fun DualProgressRingsPreview() {
         DualProgressRings(
             outerProgress = 0.6f, // 60% overall progress
             innerProgress = 0.8f, // 80% current interval progress
-            outerColor = Color(0xFF00C853), // Bright green for outer ring
-            innerColor = Color(0xFF2196F3), // Bright blue for inner ring
+            outerColor = Color(0xFF00FF00), // Bright green for outer ring
+            innerColor = Color(0xFF0066FF), // Bright blue for inner ring
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,

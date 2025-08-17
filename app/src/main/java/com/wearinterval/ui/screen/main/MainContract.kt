@@ -38,14 +38,14 @@ data class MainUiState(
     }
 
     val overallProgressPercentage: Float get() = if (totalLaps > 0) {
-        // Calculate progress within current lap based on interval completion
-        val currentLapProgress = 1f - intervalProgressPercentage
-
-        // Combine completed laps with progress in current lap
+        // Calculate overall remaining time as a percentage (starts full, ticks down like inner ring)
+        // Outer ring shows remaining workout time, ticks down slower by factor of total laps
         val completedLapsProgress = (currentLap - 1).toFloat() / totalLaps.toFloat()
-        val currentLapContribution = currentLapProgress / totalLaps.toFloat()
+        val currentLapProgress = (1f - intervalProgressPercentage) / totalLaps.toFloat()
+        val overallProgress = completedLapsProgress + currentLapProgress
 
-        (completedLapsProgress + currentLapContribution).coerceIn(0f, 1f)
+        // Return remaining percentage (1.0 = full workout remaining, 0.0 = workout complete)
+        (1f - overallProgress).coerceIn(0f, 1f)
     } else {
         0f
     }
