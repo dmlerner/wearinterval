@@ -71,7 +71,7 @@ fun ScrollablePicker(
             .collect { (firstIndex, offset) ->
                 if (!isProgrammaticScroll.value && centerIndex >= 0 && centerIndex < items.size) {
                     isUserScrolling.value = true
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                     onSelectionChanged(centerIndex)
                     // Reset after a delay to allow the external state change to propagate
                     kotlinx.coroutines.delay(100)
