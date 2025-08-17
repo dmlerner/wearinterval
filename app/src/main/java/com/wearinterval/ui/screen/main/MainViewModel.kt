@@ -23,6 +23,18 @@ class MainViewModel @Inject constructor(
 
     private val flashScreen = MutableStateFlow(false)
 
+    init {
+        android.util.Log.d("MainViewModel", "INIT: MainViewModel created")
+        viewModelScope.launch {
+            configurationRepository.currentConfiguration.collect { config ->
+                android.util.Log.d(
+                    "MainViewModel",
+                    "INIT: Config from repo: ${config.laps} laps, ${config.workDuration}, ${config.restDuration}",
+                )
+            }
+        }
+    }
+
     val uiState: StateFlow<MainUiState> = combine(
         timerRepository.timerState,
         configurationRepository.currentConfiguration,
@@ -31,7 +43,9 @@ class MainViewModel @Inject constructor(
     ) { timerState, configuration, isServiceBound, flash ->
         android.util.Log.d(
             "MainViewModel",
-            "TimerState: ${timerState.currentLap}/${timerState.totalLaps}, Config: ${configuration.laps}, Phase: ${timerState.phase}",
+            "COMBINE: TimerState: ${timerState.currentLap}/${timerState.totalLaps} (${timerState.timeRemaining}), " +
+                "Config: ${configuration.laps} laps (${configuration.workDuration}), " +
+                "Phase: ${timerState.phase}, ServiceBound: $isServiceBound",
         )
 
         // When stopped, always use configuration values to avoid race conditions

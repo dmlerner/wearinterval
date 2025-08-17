@@ -58,10 +58,16 @@ open class DataStoreManager @Inject constructor(
         .catch { emit(androidx.datastore.preferences.core.emptyPreferences()) }
         .map { preferences ->
             val configId = preferences[CURRENT_CONFIG_ID]
+            android.util.Log.d(
+                "DataStore",
+                "Raw preferences - ID: $configId, laps: ${preferences[CURRENT_CONFIG_LAPS]}, " +
+                    "work: ${preferences[CURRENT_CONFIG_WORK_DURATION]}, rest: ${preferences[CURRENT_CONFIG_REST_DURATION]}",
+            )
             if (configId == null) {
+                android.util.Log.d("DataStore", "No config ID found, returning null")
                 null
             } else {
-                TimerConfiguration(
+                val config = TimerConfiguration(
                     id = configId,
                     laps = preferences[CURRENT_CONFIG_LAPS] ?: TimerConfiguration.DEFAULT.laps,
                     workDuration = (
@@ -74,6 +80,8 @@ open class DataStoreManager @Inject constructor(
                         ).seconds,
                     lastUsed = preferences[CURRENT_CONFIG_LAST_USED] ?: TimerConfiguration.DEFAULT.lastUsed,
                 )
+                android.util.Log.d("DataStore", "Returning config: ${config.laps} laps, ${config.workDuration}, ${config.restDuration}")
+                config
             }
         }
 

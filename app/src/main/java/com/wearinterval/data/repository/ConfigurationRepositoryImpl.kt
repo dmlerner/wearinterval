@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,9 +26,37 @@ class ConfigurationRepositoryImpl @Inject constructor(
 
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    init {
+        // Ensure default configuration is persisted on first launch
+        repositoryScope.launch {
+            dataStoreManager.currentConfiguration
+                .take(1)
+                .collect { config ->
+                    if (config == null) {
+                        android.util.Log.d("ConfigRepo", "INIT: No saved config found, persisting DEFAULT configuration")
+                        dataStoreManager.updateCurrentConfiguration(TimerConfiguration.DEFAULT)
+                        android.util.Log.d(
+                            "ConfigRepo",
+                            "INIT: DEFAULT configuration persisted: ${TimerConfiguration.DEFAULT.laps} laps, " +
+                                "${TimerConfiguration.DEFAULT.workDuration}, ${TimerConfiguration.DEFAULT.restDuration}",
+                        )
+                    } else {
+                        android.util.Log.d(
+                            "ConfigRepo",
+                            "INIT: Existing config found: ${config.laps} laps, ${config.workDuration}, ${config.restDuration}",
+                        )
+                    }
+                }
+        }
+    }
+
     override val currentConfiguration: StateFlow<TimerConfiguration> =
         dataStoreManager.currentConfiguration
-            .map { it ?: TimerConfiguration.DEFAULT }
+            .map { config ->
+                val result = config ?: TimerConfiguration.DEFAULT
+                android.util.Log.d("ConfigRepo", "DataStore config: $config -> returning: ${result.laps} laps, ${result.workDuration}")
+                result
+            }
             .stateIn(
                 scope = repositoryScope,
                 started = SharingStarted.Eagerly,

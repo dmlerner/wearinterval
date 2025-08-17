@@ -21,8 +21,24 @@ class ConfigViewModel @Inject constructor(
     private val timerRepository: TimerRepository,
 ) : ViewModel() {
 
+    init {
+        android.util.Log.d("ConfigViewModel", "INIT: ConfigViewModel created")
+        viewModelScope.launch {
+            configurationRepository.currentConfiguration.collect { config ->
+                android.util.Log.d(
+                    "ConfigViewModel",
+                    "INIT: Config from repo: ${config.laps} laps, ${config.workDuration}, ${config.restDuration}",
+                )
+            }
+        }
+    }
+
     val uiState: StateFlow<ConfigUiState> = configurationRepository.currentConfiguration
         .map { config ->
+            android.util.Log.d(
+                "ConfigViewModel",
+                "MAP: Config received: ${config.laps} laps, ${config.workDuration}, ${config.restDuration}",
+            )
             ConfigUiState(
                 laps = config.laps,
                 workMinutes = config.workDuration.inWholeMinutes.toInt(),

@@ -19,9 +19,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -42,13 +44,25 @@ class TimerRepositoryImpl @Inject constructor(
 
     override val timerState: StateFlow<TimerState> = _isServiceBound.flatMapLatest { bound ->
         if (bound && timerService != null) {
-            timerService?.timerState ?: flowOf(TimerState.stopped())
+            combine(
+                timerService!!.timerState,
+                configurationRepository.currentConfiguration,
+            ) { serviceState, config ->
+                // Always ensure stopped state uses current configuration
+                if (serviceState.isStopped) {
+                    TimerState.stopped(config)
+                } else {
+                    serviceState
+                }
+            }
         } else {
-            flowOf(TimerState.stopped())
+            configurationRepository.currentConfiguration.map { config ->
+                TimerState.stopped(config)
+            }
         }
     }.stateIn(
         scope = repositoryScope,
-        started = SharingStarted.Lazily,
+        started = SharingStarted.Eagerly,
         initialValue = TimerState.stopped(),
     )
 
@@ -56,6 +70,14 @@ class TimerRepositoryImpl @Inject constructor(
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             val binder = service as TimerService.TimerBinder
             timerService = binder.getService()
+            // Force service to sync with current configuration immediately
+            repositoryScope.launch {
+                val currentConfig = configurationRepository.currentConfiguration.value
+                if (timerService?.timerState?.value?.isStopped == true) {
+                    // Service is stopped, ensure it has the latest config
+                    android.util.Log.d("TimerRepo", "Service connected, syncing config: ${currentConfig.laps} laps")
+                }
+            }
             _isServiceBound.value = true
         }
 

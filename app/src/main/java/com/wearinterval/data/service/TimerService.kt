@@ -60,6 +60,7 @@ class TimerService : Service() {
         super.onCreate()
         // Notification channels are handled by TimerNotificationManager
         initializeWakeLock()
+        initializeTimerState()
         observeConfigurationChanges()
     }
 
@@ -159,6 +160,13 @@ class TimerService : Service() {
             PowerManager.PARTIAL_WAKE_LOCK,
             "WearInterval:TimerService",
         )
+    }
+
+    private fun initializeTimerState() {
+        // Initialize with current configuration to ensure consistency - do this synchronously
+        val currentConfig = configurationRepository.currentConfiguration.value
+        _timerState.value = TimerState.stopped(currentConfig)
+        android.util.Log.d("TimerService", "Initialized state with config: ${currentConfig.laps} laps, ${currentConfig.workDuration}")
     }
 
     private fun observeConfigurationChanges() {
