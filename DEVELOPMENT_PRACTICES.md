@@ -1,5 +1,28 @@
 # WearInterval Development Practices
 
+## Android SDK Setup (Required)
+
+**IMPORTANT**: Set these environment variables before running tests:
+
+```bash
+export ANDROID_HOME="/home/david/Android/Sdk"
+export PATH="$ANDROID_HOME/tools/bin:$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+```
+
+### Quick Test Commands
+```bash
+# Run full test suite with coverage (includes instrumented tests)
+./scripts/headless-test.sh
+
+# Run unit tests only
+./gradlew testDebugUnitTest
+
+# Generate coverage report
+./gradlew combinedCoverageReport
+```
+
+**Current Coverage**: **66%** overall (up from 25% with instrumented tests)
+
 ## Overview
 This document establishes the development standards, testing practices, and code organization principles for the WearInterval project. These practices ensure high code quality, maintainability, and comprehensive test coverage.
 
