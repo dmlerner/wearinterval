@@ -1,5 +1,6 @@
 package com.wearinterval.ui.component
 
+import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
@@ -19,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.MaterialTheme
@@ -35,6 +37,7 @@ fun ScrollablePicker(
 ) {
     val listState = rememberLazyListState()
     val snapBehavior = rememberSnapFlingBehavior(lazyListState = listState)
+    val view = LocalView.current
 
     // Calculate the visible center index based on scroll position
     val centerIndex by derivedStateOf {
@@ -70,6 +73,8 @@ fun ScrollablePicker(
         ) { // Don't vibrate on initial load
             isUserScrolling.value = true
             onSelectionChanged(centerIndex)
+            // Provide haptic feedback for option change
+            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
             // Reset after a delay to allow the external state change to propagate
             kotlinx.coroutines.delay(100)
             isUserScrolling.value = false
