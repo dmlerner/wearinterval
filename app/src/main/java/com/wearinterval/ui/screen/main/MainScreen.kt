@@ -119,31 +119,15 @@ private fun TimerInterface(
     onNavigateToHistory: () -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(MainScreenDefaults.COMPONENT_SPACING),
-    ) {
-        // Timer display with dual progress rings
-        TimerDisplay(uiState = uiState)
-
-        // Control buttons
-        TimerControls(
-            uiState = uiState,
-            onEvent = onEvent,
-        )
-
-        // Navigation hint
-        Text(
-            text = "← History • Config → • Settings ↑",
-            style = MaterialTheme.typography.caption2,
-            color = MaterialTheme.colors.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
-    }
+    // Timer display with dual progress rings and controls inside - clean power user UI
+    TimerDisplay(
+        uiState = uiState,
+        onEvent = onEvent,
+    )
 }
 
 @Composable
-private fun TimerDisplay(uiState: MainUiState) {
+private fun TimerDisplay(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
     // Determine colors based on timer state
     val outerRingColor = MaterialTheme.colors.primary
     val innerRingColor = if (uiState.isResting) {
@@ -161,12 +145,12 @@ private fun TimerDisplay(uiState: MainUiState) {
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(MainScreenDefaults.CONTROL_BUTTONS_SPACING),
+            verticalArrangement = Arrangement.Center,
         ) {
             // Main time display
             Text(
                 text = TimeUtils.formatDuration(uiState.timeRemaining),
-                style = MaterialTheme.typography.display2,
+                style = MaterialTheme.typography.title1, // Smaller to fit with controls
                 color = if (uiState.isResting) {
                     MaterialTheme.colors.secondary
                 } else {
@@ -182,7 +166,7 @@ private fun TimerDisplay(uiState: MainUiState) {
                 } else {
                     "${uiState.currentLap}/${uiState.totalLaps}"
                 },
-                style = MaterialTheme.typography.caption1,
+                style = MaterialTheme.typography.caption2,
                 color = MaterialTheme.colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
@@ -196,21 +180,27 @@ private fun TimerDisplay(uiState: MainUiState) {
                     textAlign = TextAlign.Center,
                 )
             }
+
+            // Control buttons inside the circle
+            TimerControlsInside(
+                uiState = uiState,
+                onEvent = onEvent,
+            )
         }
     }
 }
 
 @Composable
-private fun TimerControls(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
+private fun TimerControlsInside(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(MainScreenDefaults.CONTROL_BUTTON_SPACING),
+        horizontalArrangement = Arrangement.spacedBy(6.dp), // Very compact spacing
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Play/Pause button
+        // Play/Pause button (very small for inside circle)
         Button(
             onClick = { onEvent(MainEvent.PlayPauseClicked) },
             modifier = Modifier
-                .size(MainScreenDefaults.PLAY_BUTTON_SIZE)
+                .size(24.dp) // Very small size for inside circle
                 .clip(CircleShape)
                 .semantics {
                     contentDescription = when {
@@ -228,15 +218,15 @@ private fun TimerControls(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
                 } else {
                     "▶"
                 },
-                style = MaterialTheme.typography.title2,
+                style = MaterialTheme.typography.caption2, // Very small text
             )
         }
 
-        // Stop button
+        // Stop button (very small for inside circle)
         Button(
             onClick = { onEvent(MainEvent.StopClicked) },
             modifier = Modifier
-                .size(MainScreenDefaults.STOP_BUTTON_SIZE)
+                .size(20.dp) // Very small size for inside circle
                 .clip(CircleShape)
                 .semantics { contentDescription = "Stop" },
             enabled = uiState.isStopButtonEnabled,
@@ -244,7 +234,7 @@ private fun TimerControls(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
         ) {
             Text(
                 text = "⏹",
-                style = MaterialTheme.typography.title2,
+                style = MaterialTheme.typography.caption2, // Very small text
             )
         }
     }
