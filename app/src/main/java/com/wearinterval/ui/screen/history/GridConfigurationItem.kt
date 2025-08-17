@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import com.wearinterval.domain.model.TimerConfiguration
+import com.wearinterval.util.Constants
 import kotlin.time.Duration.Companion.seconds
 
 @Composable

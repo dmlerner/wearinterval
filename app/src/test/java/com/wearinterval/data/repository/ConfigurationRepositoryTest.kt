@@ -253,4 +253,126 @@ class ConfigurationRepositoryTest {
         assertThat(result.isFailure).isTrue()
         assertThat(result.exceptionOrNull()).isEqualTo(exception)
     }
+
+    @Test
+    fun `updateConfiguration with existing values reuses existing ID (LRU behavior)`() = runTest {
+        // Given
+        val existingConfig = TimerConfigurationEntity("existing-id", 5, 45, 15, 1000L)
+        val newConfigWithSameValues = TimerConfiguration(
+            id = "new-id",
+            laps = 5,
+            workDuration = 45.seconds,
+            restDuration = 15.seconds,
+            lastUsed = 2000L,
+        )
+
+        coEvery { mockConfigurationDao.findConfigurationByValues(5, 45, 15) } returns existingConfig
+        coEvery { mockConfigurationDao.insertConfiguration(any()) } returns Unit
+        coEvery { mockDataStoreManager.updateCurrentConfiguration(any()) } returns Unit
+        coEvery { mockConfigurationDao.getConfigurationCount() } returns 3
+        coEvery { mockConfigurationDao.cleanupOldConfigurations(4) } returns Unit
+
+        // When
+        val result = repository.updateConfiguration(newConfigWithSameValues)
+
+        // Then
+        assertThat(result.isSuccess).isTrue()
+
+        // Verify that the existing ID is used (LRU behavior)
+        coVerify {
+            mockConfigurationDao.insertConfiguration(
+                match { entity ->
+                    entity.id == "existing-id" && // Uses existing ID
+                        entity.laps == 5 &&
+                        entity.workDurationSeconds == 45L &&
+                        entity.restDurationSeconds == 15L &&
+                        entity.lastUsed > 2000L // Updated timestamp
+                },
+            )
+        }
+    }
+
+    @Test
+    fun `updateConfiguration with new values creates new entry`() = runTest {
+        // Given
+        val newConfig = TimerConfiguration(
+            id = "new-id",
+            laps = 10,
+            workDuration = 2.minutes,
+            restDuration = 30.seconds,
+            lastUsed = 2000L,
+        )
+
+        coEvery { mockConfigurationDao.findConfigurationByValues(10, 120, 30) } returns null
+        coEvery { mockConfigurationDao.insertConfiguration(any()) } returns Unit
+        coEvery { mockDataStoreManager.updateCurrentConfiguration(any()) } returns Unit
+        coEvery { mockConfigurationDao.getConfigurationCount() } returns 3
+        coEvery { mockConfigurationDao.cleanupOldConfigurations(4) } returns Unit
+
+        // When
+        val result = repository.updateConfiguration(newConfig)
+
+        // Then
+        assertThat(result.isSuccess).isTrue()
+
+        // Verify that the new ID is used
+        coVerify {
+            mockConfigurationDao.insertConfiguration(
+                match { entity ->
+                    entity.id == "new-id" && // Uses new ID
+                        entity.laps == 10 &&
+                        entity.workDurationSeconds == 120L &&
+                        entity.restDurationSeconds == 30L
+                },
+            )
+        }
+    }
+
+    @Test
+    fun `selectRecentConfiguration with existing values reuses existing ID (LRU behavior)`() = runTest {
+        // Given
+        val existingConfig = TimerConfigurationEntity("existing-id", 5, 45, 15, 1000L)
+        val configToSelect = TimerConfiguration(
+            id = "different-id",
+            laps = 5,
+            workDuration = 45.seconds,
+            restDuration = 15.seconds,
+            lastUsed = 2000L,
+        )
+
+        coEvery { mockConfigurationDao.findConfigurationByValues(5, 45, 15) } returns existingConfig
+        coEvery { mockConfigurationDao.updateLastUsed(any(), any()) } returns Unit
+        coEvery { mockDataStoreManager.updateCurrentConfiguration(any()) } returns Unit
+
+        // When
+        val result = repository.selectRecentConfiguration(configToSelect)
+
+        // Then
+        assertThat(result.isSuccess).isTrue()
+
+        // Verify that the existing ID is used for timestamp update
+        coVerify {
+            mockConfigurationDao.updateLastUsed(
+                "existing-id", // Uses existing ID
+                match { timestamp -> timestamp > 2000L },
+            )
+        }
+    }
+
+    @Test
+    fun `updateConfiguration triggers cleanup when capacity exceeded`() = runTest {
+        // Given
+        coEvery { mockConfigurationDao.findConfigurationByValues(any(), any(), any()) } returns null
+        coEvery { mockConfigurationDao.insertConfiguration(any()) } returns Unit
+        coEvery { mockDataStoreManager.updateCurrentConfiguration(any()) } returns Unit
+        coEvery { mockConfigurationDao.getConfigurationCount() } returns 5 // Exceeds capacity of 4
+        coEvery { mockConfigurationDao.cleanupOldConfigurations(4) } returns Unit
+
+        // When
+        val result = repository.updateConfiguration(customConfig)
+
+        // Then
+        assertThat(result.isSuccess).isTrue()
+        coVerify { mockConfigurationDao.cleanupOldConfigurations(4) }
+    }
 }

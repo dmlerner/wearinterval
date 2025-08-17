@@ -202,10 +202,41 @@ class ConfigurationDaoTest {
     }
 
     @Test
+    fun findConfigurationByValuesReturnsCorrectMatch() = runTest {
+        // Given
+        val config1 = TimerConfigurationEntity("id1", 5, 60, 30, 1000L)
+        val config2 = TimerConfigurationEntity("id2", 8, 90, 45, 2000L)
+        dao.insertConfiguration(config1)
+        dao.insertConfiguration(config2)
+
+        // When
+        val found = dao.findConfigurationByValues(5, 60, 30)
+        val notFound = dao.findConfigurationByValues(10, 120, 60)
+
+        // Then
+        assertThat(found).isEqualTo(config1)
+        assertThat(notFound).isNull()
+    }
+
+    @Test
+    fun findConfigurationByValuesReturnsNullWhenNoMatch() = runTest {
+        // Given
+        val config = TimerConfigurationEntity("id1", 5, 60, 30, 1000L)
+        dao.insertConfiguration(config)
+
+        // When
+        val found = dao.findConfigurationByValues(5, 90, 30) // Different work duration
+
+        // Then
+        assertThat(found).isNull()
+    }
+
+    @Test
     fun emptyDatabaseReturnsEmptyResults() = runTest {
         // When/Then
         assertThat(dao.getRecentConfigurations(5)).isEmpty()
         assertThat(dao.getConfigurationCount()).isEqualTo(0)
         assertThat(dao.getConfigurationById("any-id")).isNull()
+        assertThat(dao.findConfigurationByValues(5, 60, 30)).isNull()
     }
 }

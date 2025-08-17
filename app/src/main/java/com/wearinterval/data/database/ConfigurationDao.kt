@@ -32,4 +32,10 @@ interface ConfigurationDao {
 
     @Query("SELECT * FROM timer_configurations WHERE id = :id")
     suspend fun getConfigurationById(id: String): TimerConfigurationEntity?
+
+    @Query(
+        "SELECT * FROM timer_configurations WHERE laps = :laps AND " +
+            "workDurationSeconds = :workDurationSeconds AND restDurationSeconds = :restDurationSeconds LIMIT 1",
+    )
+    suspend fun findConfigurationByValues(laps: Int, workDurationSeconds: Long, restDurationSeconds: Long): TimerConfigurationEntity?
 }

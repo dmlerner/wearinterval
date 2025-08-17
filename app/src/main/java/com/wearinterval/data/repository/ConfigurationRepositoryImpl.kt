@@ -47,17 +47,35 @@ class ConfigurationRepositoryImpl @Inject constructor(
                 config.laps,
                 config.workDuration,
                 config.restDuration,
-            ).copy(
-                id = config.id,
-                lastUsed = System.currentTimeMillis(),
             )
+
+            // Check if a configuration with the same values already exists (LRU behavior)
+            val existingConfig = configurationDao.findConfigurationByValues(
+                laps = validatedConfig.laps,
+                workDurationSeconds = validatedConfig.workDuration.inWholeSeconds,
+                restDurationSeconds = validatedConfig.restDuration.inWholeSeconds,
+            )
+
+            val finalConfig = if (existingConfig != null) {
+                // Use existing ID but update timestamp (LRU: move to front)
+                validatedConfig.copy(
+                    id = existingConfig.id,
+                    lastUsed = System.currentTimeMillis(),
+                )
+            } else {
+                // New configuration
+                validatedConfig.copy(
+                    id = config.id,
+                    lastUsed = System.currentTimeMillis(),
+                )
+            }
 
             configurationDao.insertConfiguration(
-                TimerConfigurationEntity.fromDomain(validatedConfig),
+                TimerConfigurationEntity.fromDomain(finalConfig),
             )
-            dataStoreManager.updateCurrentConfiguration(validatedConfig)
+            dataStoreManager.updateCurrentConfiguration(finalConfig)
 
-            cleanupOldConfigurations()
+            cleanupRecentConfigurations()
 
             Result.success(Unit)
         } catch (e: Exception) {
@@ -67,10 +85,26 @@ class ConfigurationRepositoryImpl @Inject constructor(
 
     override suspend fun selectRecentConfiguration(config: TimerConfiguration): Result<Unit> {
         return try {
-            val updatedConfig = config.withUpdatedTimestamp()
+            // Check if a configuration with the same values already exists (LRU behavior)
+            val existingConfig = configurationDao.findConfigurationByValues(
+                laps = config.laps,
+                workDurationSeconds = config.workDuration.inWholeSeconds,
+                restDurationSeconds = config.restDuration.inWholeSeconds,
+            )
 
-            configurationDao.updateLastUsed(updatedConfig.id, updatedConfig.lastUsed)
-            dataStoreManager.updateCurrentConfiguration(updatedConfig)
+            val finalConfig = if (existingConfig != null) {
+                // Use existing ID but update timestamp (LRU: move to front)
+                config.copy(
+                    id = existingConfig.id,
+                    lastUsed = System.currentTimeMillis(),
+                )
+            } else {
+                // This shouldn't happen if selecting from recent, but handle gracefully
+                config.withUpdatedTimestamp()
+            }
+
+            configurationDao.updateLastUsed(finalConfig.id, finalConfig.lastUsed)
+            dataStoreManager.updateCurrentConfiguration(finalConfig)
 
             Result.success(Unit)
         } catch (e: Exception) {
@@ -87,11 +121,11 @@ class ConfigurationRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun cleanupOldConfigurations() {
+    private suspend fun cleanupRecentConfigurations() {
         try {
             val count = configurationDao.getConfigurationCount()
-            if (count > MAX_STORED_CONFIGURATIONS) {
-                configurationDao.cleanupOldConfigurations(MAX_STORED_CONFIGURATIONS)
+            if (count > LRU_CAPACITY) {
+                configurationDao.cleanupOldConfigurations(LRU_CAPACITY)
             }
         } catch (e: Exception) {
             // Log error but don't fail the operation
@@ -99,6 +133,6 @@ class ConfigurationRepositoryImpl @Inject constructor(
     }
 
     companion object {
-        private const val MAX_STORED_CONFIGURATIONS = 20
+        private const val LRU_CAPACITY = 4
     }
 }
