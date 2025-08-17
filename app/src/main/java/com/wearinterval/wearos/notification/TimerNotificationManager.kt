@@ -298,4 +298,59 @@ class TimerNotificationManager @Inject constructor(
             // Graceful degradation
         }
     }
+
+    /**
+     * Triggers alert notification for interval completion.
+     */
+    fun triggerIntervalAlert(settings: NotificationSettings) {
+        if (settings.vibrationEnabled) {
+            triggerVibration(isAlarm = false)
+        }
+        if (settings.soundEnabled) {
+            playAlertSound(isAlarm = false)
+        }
+        if (settings.flashEnabled) {
+            triggerScreenFlash()
+        }
+    }
+
+    /**
+     * Triggers continuous alarm for manual mode interval completion.
+     */
+    fun triggerContinuousAlarm(settings: NotificationSettings) {
+        if (settings.vibrationEnabled) {
+            triggerVibration(isAlarm = true)
+        }
+        if (settings.soundEnabled) {
+            playAlertSound(isAlarm = true)
+        }
+        if (settings.flashEnabled) {
+            triggerScreenFlash()
+        }
+    }
+
+    /**
+     * Triggers workout completion notifications (triple beep/vibration).
+     */
+    fun triggerWorkoutComplete(settings: NotificationSettings) {
+        // Triple notification pattern for workout completion
+        if (settings.vibrationEnabled || settings.soundEnabled || settings.flashEnabled) {
+            repeat(3) { index ->
+                if (settings.vibrationEnabled) {
+                    triggerVibration(isAlarm = false)
+                }
+                if (settings.soundEnabled) {
+                    playAlertSound(isAlarm = false)
+                }
+                if (settings.flashEnabled) {
+                    triggerScreenFlash()
+                }
+
+                // Brief delay between notifications (except after the last one)
+                if (index < 2) {
+                    Thread.sleep(300)
+                }
+            }
+        }
+    }
 }

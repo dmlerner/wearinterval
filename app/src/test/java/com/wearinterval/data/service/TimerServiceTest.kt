@@ -1,12 +1,17 @@
 package com.wearinterval.data.service
 
+import android.os.PowerManager
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.wearinterval.domain.model.NotificationSettings
 import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.model.TimerPhase
 import com.wearinterval.domain.model.TimerState
+import com.wearinterval.domain.repository.SettingsRepository
 import com.wearinterval.wearos.notification.TimerNotificationManager
+import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
@@ -16,12 +21,25 @@ class TimerServiceTest {
 
     private lateinit var timerService: TimerService
     private lateinit var mockTimerNotificationManager: TimerNotificationManager
+    private lateinit var mockSettingsRepository: SettingsRepository
+    private lateinit var mockPowerManager: PowerManager
+    private lateinit var mockWakeLock: PowerManager.WakeLock
 
     @Before
     fun setup() {
         mockTimerNotificationManager = mockk(relaxed = true)
+        mockSettingsRepository = mockk(relaxed = true)
+        mockPowerManager = mockk(relaxed = true)
+        mockWakeLock = mockk(relaxed = true)
+
+        // Set up default settings
+        every { mockSettingsRepository.notificationSettings } returns MutableStateFlow(NotificationSettings.DEFAULT)
+        every { mockPowerManager.newWakeLock(any(), any()) } returns mockWakeLock
+
         timerService = TimerService().apply {
             timerNotificationManager = mockTimerNotificationManager
+            settingsRepository = mockSettingsRepository
+            powerManager = mockPowerManager
         }
     }
 
@@ -231,22 +249,25 @@ class TimerServiceTest {
     @Test
     fun dismissAlarmFromAlarmActiveState() = runTest {
         // Given
-        val config = TimerConfiguration.DEFAULT
+        val config = TimerConfiguration.DEFAULT.copy(laps = 1) // Single lap for completion
         timerService.startTimer(config)
 
-        // Manually set to alarm active state
+        // Manually set to alarm active state after final lap completion
         timerService.setTimerStateForTesting(
             timerService.timerState.value.copy(
                 phase = TimerPhase.AlarmActive,
+                isPaused = true,
+                currentLap = 2, // Past the final lap to trigger completion
             ),
         )
 
         // When/Then
         timerService.timerState.test {
-            skipItems(1)
+            skipItems(1) // Skip initial state
 
             timerService.dismissAlarm()
 
+            // In manual mode after final lap, dismissAlarm should stop the timer
             val state = awaitItem()
             assertThat(state.phase).isEqualTo(TimerPhase.Stopped)
         }

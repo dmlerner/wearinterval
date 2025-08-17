@@ -1,0 +1,137 @@
+package com.wearinterval.wearos.complication
+
+import androidx.wear.watchface.complications.data.ComplicationType
+import androidx.wear.watchface.complications.data.LongTextComplicationData
+import androidx.wear.watchface.complications.data.ShortTextComplicationData
+import androidx.wear.watchface.complications.datasource.ComplicationRequest
+import com.google.common.truth.Truth.assertThat
+import com.wearinterval.domain.repository.WearOsRepository
+import com.wearinterval.test.util.MainDispatcherRule
+import io.mockk.coEvery
+import io.mockk.mockk
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
+import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+
+@ExperimentalCoroutinesApi
+class WearIntervalComplicationServiceTest {
+
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val mockWearOsRepository = mockk<WearOsRepository>()
+    private lateinit var complicationService: WearIntervalComplicationService
+
+    @Before
+    fun setup() {
+        complicationService = WearIntervalComplicationService()
+        complicationService.wearOsRepository = mockWearOsRepository
+    }
+
+    @Test
+    fun `onComplicationRequest returns short text complication data`() = runTest {
+        // Given
+        val request = ComplicationRequest(
+            complicationInstanceId = 1,
+            complicationType = ComplicationType.SHORT_TEXT,
+            immediateResponseRequired = false
+        )
+
+        // When
+        val result = complicationService.onComplicationRequest(request)
+
+        // Then
+        assertThat(result).isInstanceOf(ShortTextComplicationData::class.java)
+        val shortTextResult = result as ShortTextComplicationData
+        assertThat(shortTextResult.text.getTextAt(null, 0)).isEqualTo("Timer")
+    }
+
+    @Test
+    fun `onComplicationRequest returns long text complication data`() = runTest {
+        // Given
+        val request = ComplicationRequest(
+            complicationInstanceId = 1,
+            complicationType = ComplicationType.LONG_TEXT,
+            immediateResponseRequired = false
+        )
+
+        // When
+        val result = complicationService.onComplicationRequest(request)
+
+        // Then
+        assertThat(result).isInstanceOf(LongTextComplicationData::class.java)
+        val longTextResult = result as LongTextComplicationData
+        assertThat(longTextResult.text.getTextAt(null, 0)).isEqualTo("WearInterval")
+    }
+
+    @Test
+    fun `onComplicationRequest returns fallback text for unsupported type`() = runTest {
+        // Given
+        val request = ComplicationRequest(
+            complicationInstanceId = 1,
+            complicationType = ComplicationType.EMPTY,
+            immediateResponseRequired = false
+        )
+
+        // When
+        val result = complicationService.onComplicationRequest(request)
+
+        // Then
+        assertThat(result).isInstanceOf(ShortTextComplicationData::class.java)
+        val shortTextResult = result as ShortTextComplicationData
+        assertThat(shortTextResult.text.getTextAt(null, 0)).isEqualTo("Timer")
+    }
+
+    @Test
+    fun `getPreviewData returns short text preview`() {
+        // When
+        val result = complicationService.getPreviewData(ComplicationType.SHORT_TEXT)
+
+        // Then
+        assertThat(result).isInstanceOf(ShortTextComplicationData::class.java)
+        val shortTextResult = result as ShortTextComplicationData
+        assertThat(shortTextResult.text.getTextAt(null, 0)).isEqualTo("45s")
+        assertThat(shortTextResult.title?.getTextAt(null, 0)).isEqualTo("3/20")
+    }
+
+    @Test
+    fun `getPreviewData returns long text preview`() {
+        // When
+        val result = complicationService.getPreviewData(ComplicationType.LONG_TEXT)
+
+        // Then
+        assertThat(result).isInstanceOf(LongTextComplicationData::class.java)
+        val longTextResult = result as LongTextComplicationData
+        assertThat(longTextResult.text.getTextAt(null, 0)).isEqualTo("45s - Lap 3/20")
+        assertThat(longTextResult.title?.getTextAt(null, 0)).isEqualTo("WearInterval")
+    }
+
+    @Test
+    fun `getPreviewData returns fallback text for unsupported type`() {
+        // When
+        val result = complicationService.getPreviewData(ComplicationType.EMPTY)
+
+        // Then
+        assertThat(result).isInstanceOf(ShortTextComplicationData::class.java)
+        val shortTextResult = result as ShortTextComplicationData
+        assertThat(shortTextResult.text.getTextAt(null, 0)).isEqualTo("Timer")
+    }
+
+    @Test
+    fun `onComplicationRequest handles repository errors gracefully`() = runTest {
+        // Given - we don't mock anything so repository could be null or throw
+        val request = ComplicationRequest(
+            complicationInstanceId = 1,
+            complicationType = ComplicationType.SHORT_TEXT,
+            immediateResponseRequired = false
+        )
+
+        // When/Then - should not throw exception
+        val result = complicationService.onComplicationRequest(request)
+        
+        // Should still return basic short text complication even if repository has issues
+        assertThat(result).isInstanceOf(ShortTextComplicationData::class.java)
+    }
+}

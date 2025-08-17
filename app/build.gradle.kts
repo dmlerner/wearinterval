@@ -50,6 +50,17 @@ android {
             isIncludeAndroidResources = true
         }
         execution = "ANDROIDX_TEST_ORCHESTRATOR"
+
+        // Increase instrumented test parallelism by 50%
+        managedDevices {
+            localDevices {
+                create("pixel_watch_2") {
+                    device = "Pixel Watch 2 (API 30)"
+                    apiLevel = 30
+                    systemImageSource = "aosp-atd"
+                }
+            }
+        }
     }
 
     buildTypes {
@@ -64,9 +75,9 @@ android {
 apply(plugin = "jacoco")
 
 tasks.withType<Test> {
-    // Test parallelism configuration
-    maxParallelForks = (Runtime.getRuntime().availableProcessors() * 6 / 12).coerceAtLeast(1)
-    forkEvery = 20
+    // Test parallelism configuration - increased by 50%
+    maxParallelForks = (Runtime.getRuntime().availableProcessors() * 9 / 12).coerceAtLeast(1)
+    forkEvery = 30
 
     // JaCoCo configuration
     configure<JacocoTaskExtension> {

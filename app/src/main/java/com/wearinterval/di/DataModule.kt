@@ -2,6 +2,7 @@ package com.wearinterval.di
 
 import android.app.NotificationManager
 import android.content.Context
+import android.os.PowerManager
 import android.os.Vibrator
 import androidx.room.Room
 import com.wearinterval.data.database.AppDatabase
@@ -42,5 +43,11 @@ object DataModule {
     @Singleton
     fun provideVibrator(@ApplicationContext context: Context): Vibrator {
         return context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+    }
+
+    @Provides
+    @Singleton
+    fun providePowerManager(@ApplicationContext context: Context): PowerManager {
+        return context.getSystemService(Context.POWER_SERVICE) as PowerManager
     }
 }
