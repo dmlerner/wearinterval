@@ -21,235 +21,210 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class WearIntervalThemeTest {
 
-    @get:Rule
-    val composeTestRule = createComposeRule()
+  @get:Rule val composeTestRule = createComposeRule()
 
-    @Test
-    fun wearIntervalTheme_appliesMaterialTheme() {
-        // Given
-        var capturedColors: Colors? = null
-        var capturedTypography: Typography? = null
-        var capturedShapes: Shapes? = null
+  @Test
+  fun wearIntervalTheme_appliesMaterialTheme() {
+    // Given
+    var capturedColors: Colors? = null
+    var capturedTypography: Typography? = null
+    var capturedShapes: Shapes? = null
 
-        // When
-        composeTestRule.setContent {
-            WearIntervalTheme {
-                capturedColors = MaterialTheme.colors
-                capturedTypography = MaterialTheme.typography
-                capturedShapes = MaterialTheme.shapes
-            }
-        }
-
-        // Then
-        assertThat(capturedColors).isNotNull()
-        assertThat(capturedTypography).isNotNull()
-        assertThat(capturedShapes).isNotNull()
+    // When
+    composeTestRule.setContent {
+      WearIntervalTheme {
+        capturedColors = MaterialTheme.colors
+        capturedTypography = MaterialTheme.typography
+        capturedShapes = MaterialTheme.shapes
+      }
     }
 
-    @Test
-    fun wearIntervalTheme_usesWearMaterialDefaults() {
-        // Given
-        var themeColors: Colors? = null
+    // Then
+    assertThat(capturedColors).isNotNull()
+    assertThat(capturedTypography).isNotNull()
+    assertThat(capturedShapes).isNotNull()
+  }
 
-        // When
-        composeTestRule.setContent {
-            WearIntervalTheme {
-                themeColors = MaterialTheme.colors
-            }
-        }
+  @Test
+  fun wearIntervalTheme_usesWearMaterialDefaults() {
+    // Given
+    var themeColors: Colors? = null
 
-        // Then - Should use Wear OS default dark theme colors
-        assertThat(themeColors).isNotNull()
-        assertThat(themeColors!!.primary).isNotEqualTo(Color.Unspecified)
-        assertThat(themeColors!!.secondary).isNotEqualTo(Color.Unspecified)
-        assertThat(themeColors!!.background).isNotEqualTo(Color.Unspecified)
-        assertThat(themeColors!!.surface).isNotEqualTo(Color.Unspecified)
+    // When
+    composeTestRule.setContent { WearIntervalTheme { themeColors = MaterialTheme.colors } }
+
+    // Then - Should use Wear OS default dark theme colors
+    assertThat(themeColors).isNotNull()
+    assertThat(themeColors!!.primary).isNotEqualTo(Color.Unspecified)
+    assertThat(themeColors!!.secondary).isNotEqualTo(Color.Unspecified)
+    assertThat(themeColors!!.background).isNotEqualTo(Color.Unspecified)
+    assertThat(themeColors!!.surface).isNotEqualTo(Color.Unspecified)
+  }
+
+  @Test
+  fun wearIntervalTheme_providesContentLambda() {
+    // Given
+    var contentExecuted = false
+
+    // When
+    composeTestRule.setContent { WearIntervalTheme { contentExecuted = true } }
+
+    // Then
+    assertThat(contentExecuted).isTrue()
+  }
+
+  @Test
+  fun wearIntervalTheme_preservesCompositionLocals() {
+    // Given
+    var densityInTheme: Density? = null
+    val testDensity = Density(2.0f)
+
+    // When
+    composeTestRule.setContent {
+      CompositionLocalProvider(LocalDensity provides testDensity) {
+        WearIntervalTheme { densityInTheme = LocalDensity.current }
+      }
     }
 
-    @Test
-    fun wearIntervalTheme_providesContentLambda() {
-        // Given
-        var contentExecuted = false
+    // Then - Theme should preserve parent composition locals
+    assertThat(densityInTheme).isEqualTo(testDensity)
+  }
 
-        // When
-        composeTestRule.setContent {
-            WearIntervalTheme {
-                contentExecuted = true
-            }
-        }
+  @Test
+  fun wearIntervalTheme_canBeNested() {
+    // Given
+    var outerColors: Colors? = null
+    var innerColors: Colors? = null
 
-        // Then
-        assertThat(contentExecuted).isTrue()
+    // When
+    composeTestRule.setContent {
+      WearIntervalTheme {
+        outerColors = MaterialTheme.colors
+        WearIntervalTheme { innerColors = MaterialTheme.colors }
+      }
     }
 
-    @Test
-    fun wearIntervalTheme_preservesCompositionLocals() {
-        // Given
-        var densityInTheme: Density? = null
-        val testDensity = Density(2.0f)
+    // Then - Nested themes should work correctly
+    assertThat(outerColors).isNotNull()
+    assertThat(innerColors).isNotNull()
+    assertThat(outerColors).isEqualTo(innerColors) // Should be same since we use default
+  }
 
-        // When
-        composeTestRule.setContent {
-            CompositionLocalProvider(LocalDensity provides testDensity) {
-                WearIntervalTheme {
-                    densityInTheme = LocalDensity.current
-                }
-            }
-        }
+  @Test
+  fun wearIntervalTheme_worksWithCommonContent() {
+    // Given
+    var contentRendered = false
 
-        // Then - Theme should preserve parent composition locals
-        assertThat(densityInTheme).isEqualTo(testDensity)
+    // When
+    composeTestRule.setContent {
+      WearIntervalTheme { Box(modifier = Modifier.fillMaxSize()) { contentRendered = true } }
     }
 
-    @Test
-    fun wearIntervalTheme_canBeNested() {
-        // Given
-        var outerColors: Colors? = null
-        var innerColors: Colors? = null
+    // Then
+    assertThat(contentRendered).isTrue()
+  }
 
-        // When
-        composeTestRule.setContent {
-            WearIntervalTheme {
-                outerColors = MaterialTheme.colors
-                WearIntervalTheme {
-                    innerColors = MaterialTheme.colors
-                }
-            }
-        }
+  @Test
+  fun wearIntervalTheme_providesTypographyScale() {
+    // Given
+    var typography: Typography? = null
 
-        // Then - Nested themes should work correctly
-        assertThat(outerColors).isNotNull()
-        assertThat(innerColors).isNotNull()
-        assertThat(outerColors).isEqualTo(innerColors) // Should be same since we use default
+    // When
+    composeTestRule.setContent { WearIntervalTheme { typography = MaterialTheme.typography } }
+
+    // Then - Should provide complete typography scale
+    assertThat(typography).isNotNull()
+    assertThat(typography!!.display1).isNotNull()
+    assertThat(typography!!.display2).isNotNull()
+    assertThat(typography!!.display3).isNotNull()
+    assertThat(typography!!.title1).isNotNull()
+    assertThat(typography!!.title2).isNotNull()
+    assertThat(typography!!.title3).isNotNull()
+    assertThat(typography!!.body1).isNotNull()
+    assertThat(typography!!.body2).isNotNull()
+    assertThat(typography!!.button).isNotNull()
+    assertThat(typography!!.caption1).isNotNull()
+    assertThat(typography!!.caption2).isNotNull()
+    assertThat(typography!!.caption3).isNotNull()
+  }
+
+  @Test
+  fun wearIntervalTheme_providesShapeDefinitions() {
+    // Given
+    var shapes: Shapes? = null
+
+    // When
+    composeTestRule.setContent { WearIntervalTheme { shapes = MaterialTheme.shapes } }
+
+    // Then - Should provide shape definitions
+    assertThat(shapes).isNotNull()
+    assertThat(shapes!!.small).isNotNull()
+    assertThat(shapes!!.medium).isNotNull()
+    assertThat(shapes!!.large).isNotNull()
+  }
+
+  @Test
+  fun wearIntervalTheme_handlesEmptyContent() {
+    // Given/When
+    composeTestRule.setContent {
+      WearIntervalTheme {
+        // Empty content
+      }
     }
 
-    @Test
-    fun wearIntervalTheme_worksWithCommonContent() {
-        // Given
-        var contentRendered = false
+    // Then - Should not crash with empty content
+    composeTestRule.waitForIdle()
+  }
 
-        // When
-        composeTestRule.setContent {
-            WearIntervalTheme {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    contentRendered = true
-                }
-            }
-        }
+  @Test
+  fun wearIntervalTheme_colorConsistency() {
+    // Given
+    var primaryColor: Color? = null
+    var onPrimaryColor: Color? = null
+    var backgroundColor: Color? = null
+    var onBackgroundColor: Color? = null
 
-        // Then
-        assertThat(contentRendered).isTrue()
+    // When
+    composeTestRule.setContent {
+      WearIntervalTheme {
+        val colors = MaterialTheme.colors
+        primaryColor = colors.primary
+        onPrimaryColor = colors.onPrimary
+        backgroundColor = colors.background
+        onBackgroundColor = colors.onBackground
+      }
     }
 
-    @Test
-    fun wearIntervalTheme_providesTypographyScale() {
-        // Given
-        var typography: Typography? = null
+    // Then - Colors should be consistent and appropriate for dark theme
+    assertThat(primaryColor).isNotNull()
+    assertThat(onPrimaryColor).isNotNull()
+    assertThat(backgroundColor).isNotNull()
+    assertThat(onBackgroundColor).isNotNull()
 
-        // When
-        composeTestRule.setContent {
-            WearIntervalTheme {
-                typography = MaterialTheme.typography
-            }
-        }
+    // All colors should be specified (not Color.Unspecified)
+    assertThat(primaryColor).isNotEqualTo(Color.Unspecified)
+    assertThat(onPrimaryColor).isNotEqualTo(Color.Unspecified)
+    assertThat(backgroundColor).isNotEqualTo(Color.Unspecified)
+    assertThat(onBackgroundColor).isNotEqualTo(Color.Unspecified)
+  }
 
-        // Then - Should provide complete typography scale
-        assertThat(typography).isNotNull()
-        assertThat(typography!!.display1).isNotNull()
-        assertThat(typography!!.display2).isNotNull()
-        assertThat(typography!!.display3).isNotNull()
-        assertThat(typography!!.title1).isNotNull()
-        assertThat(typography!!.title2).isNotNull()
-        assertThat(typography!!.title3).isNotNull()
-        assertThat(typography!!.body1).isNotNull()
-        assertThat(typography!!.body2).isNotNull()
-        assertThat(typography!!.button).isNotNull()
-        assertThat(typography!!.caption1).isNotNull()
-        assertThat(typography!!.caption2).isNotNull()
-        assertThat(typography!!.caption3).isNotNull()
+  @Test
+  fun wearIntervalTheme_accessibleThroughMaterialTheme() {
+    // Given
+    var themeColors: Colors? = null
+    var materialThemeColors: Colors? = null
+
+    // When
+    composeTestRule.setContent {
+      WearIntervalTheme {
+        themeColors = MaterialTheme.colors
+        materialThemeColors = MaterialTheme.colors
+      }
     }
 
-    @Test
-    fun wearIntervalTheme_providesShapeDefinitions() {
-        // Given
-        var shapes: Shapes? = null
-
-        // When
-        composeTestRule.setContent {
-            WearIntervalTheme {
-                shapes = MaterialTheme.shapes
-            }
-        }
-
-        // Then - Should provide shape definitions
-        assertThat(shapes).isNotNull()
-        assertThat(shapes!!.small).isNotNull()
-        assertThat(shapes!!.medium).isNotNull()
-        assertThat(shapes!!.large).isNotNull()
-    }
-
-    @Test
-    fun wearIntervalTheme_handlesEmptyContent() {
-        // Given/When
-        composeTestRule.setContent {
-            WearIntervalTheme {
-                // Empty content
-            }
-        }
-
-        // Then - Should not crash with empty content
-        composeTestRule.waitForIdle()
-    }
-
-    @Test
-    fun wearIntervalTheme_colorConsistency() {
-        // Given
-        var primaryColor: Color? = null
-        var onPrimaryColor: Color? = null
-        var backgroundColor: Color? = null
-        var onBackgroundColor: Color? = null
-
-        // When
-        composeTestRule.setContent {
-            WearIntervalTheme {
-                val colors = MaterialTheme.colors
-                primaryColor = colors.primary
-                onPrimaryColor = colors.onPrimary
-                backgroundColor = colors.background
-                onBackgroundColor = colors.onBackground
-            }
-        }
-
-        // Then - Colors should be consistent and appropriate for dark theme
-        assertThat(primaryColor).isNotNull()
-        assertThat(onPrimaryColor).isNotNull()
-        assertThat(backgroundColor).isNotNull()
-        assertThat(onBackgroundColor).isNotNull()
-
-        // All colors should be specified (not Color.Unspecified)
-        assertThat(primaryColor).isNotEqualTo(Color.Unspecified)
-        assertThat(onPrimaryColor).isNotEqualTo(Color.Unspecified)
-        assertThat(backgroundColor).isNotEqualTo(Color.Unspecified)
-        assertThat(onBackgroundColor).isNotEqualTo(Color.Unspecified)
-    }
-
-    @Test
-    fun wearIntervalTheme_accessibleThroughMaterialTheme() {
-        // Given
-        var themeColors: Colors? = null
-        var materialThemeColors: Colors? = null
-
-        // When
-        composeTestRule.setContent {
-            WearIntervalTheme {
-                themeColors = MaterialTheme.colors
-                materialThemeColors = MaterialTheme.colors
-            }
-        }
-
-        // Then
-        assertThat(themeColors).isNotNull()
-        assertThat(materialThemeColors).isNotNull()
-        assertThat(themeColors).isEqualTo(materialThemeColors)
-    }
+    // Then
+    assertThat(themeColors).isNotNull()
+    assertThat(materialThemeColors).isNotNull()
+    assertThat(themeColors).isEqualTo(materialThemeColors)
+  }
 }

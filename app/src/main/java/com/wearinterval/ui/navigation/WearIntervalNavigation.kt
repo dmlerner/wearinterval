@@ -14,29 +14,27 @@ import com.wearinterval.ui.screen.settings.SettingsScreen
 /**
  * Main navigation for the WearInterval app using HorizontalPager.
  *
- * Navigation flow:
- * Page 0: History (swipe left from main)
- * Page 1: Main (center page - primary screen)
- * Page 2: Config (swipe right from main)
- * Page 3: Settings (swipe right from config)
+ * Navigation flow: Page 0: History (swipe left from main) Page 1: Main (center page - primary
+ * screen) Page 2: Config (swipe right from main) Page 3: Settings (swipe right from config)
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun WearIntervalNavigation() {
-    val pagerState = rememberPagerState(
-        initialPage = 1, // Start on Main screen
-        pageCount = { 4 }, // History, Main, Config, Settings
+  val pagerState =
+    rememberPagerState(
+      initialPage = 1, // Start on Main screen
+      pageCount = { 4 }, // History, Main, Config, Settings
     )
 
-    HorizontalPager(
-        state = pagerState,
-        modifier = Modifier.fillMaxSize(),
-    ) { page ->
-        when (page) {
-            0 -> HistoryScreen()
-            1 -> MainScreen() // CENTER - primary screen
-            2 -> ConfigScreen() // Right swipe from main
-            3 -> SettingsScreen() // Far right
-        }
+  HorizontalPager(
+    state = pagerState,
+    modifier = Modifier.fillMaxSize(),
+  ) { page ->
+    when (page) {
+      0 -> HistoryScreen()
+      1 -> MainScreen() // CENTER - primary screen
+      2 -> ConfigScreen() // Right swipe from main
+      3 -> SettingsScreen() // Far right
     }
+  }
 }

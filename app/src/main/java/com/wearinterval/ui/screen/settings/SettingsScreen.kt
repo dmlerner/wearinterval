@@ -28,137 +28,135 @@ import androidx.wear.compose.material.Text
 
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+  val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    SettingsContent(
-        uiState = uiState,
-        onEvent = viewModel::onEvent,
-    )
+  SettingsContent(
+    uiState = uiState,
+    onEvent = viewModel::onEvent,
+  )
 }
 
 @Composable
 internal fun SettingsContent(uiState: SettingsUiState, onEvent: (SettingsEvent) -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colors.background),
-        contentAlignment = Alignment.Center,
+  Box(
+    modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.background),
+    contentAlignment = Alignment.Center,
+  ) {
+    Column(
+      verticalArrangement = Arrangement.spacedBy(12.dp),
+      horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            // First row: Vibration and Sound
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
-            ) {
-                SettingsToggleButton(
-                    text = "Vibration",
-                    isEnabled = uiState.vibrationEnabled,
-                    onClick = { onEvent(SettingsEvent.ToggleVibration) },
-                    contentDescription = "Toggle vibration",
-                )
+      // First row: Vibration and Sound
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+      ) {
+        SettingsToggleButton(
+          text = "Vibration",
+          isEnabled = uiState.vibrationEnabled,
+          onClick = { onEvent(SettingsEvent.ToggleVibration) },
+          contentDescription = "Toggle vibration",
+        )
 
-                SettingsToggleButton(
-                    text = "Sound",
-                    isEnabled = uiState.soundEnabled,
-                    onClick = { onEvent(SettingsEvent.ToggleSound) },
-                    contentDescription = "Toggle sound",
-                )
-            }
+        SettingsToggleButton(
+          text = "Sound",
+          isEnabled = uiState.soundEnabled,
+          onClick = { onEvent(SettingsEvent.ToggleSound) },
+          contentDescription = "Toggle sound",
+        )
+      }
 
-            // Second row: Auto Mode and Flash
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
-            ) {
-                SettingsToggleButton(
-                    text = "Auto",
-                    isEnabled = uiState.autoModeEnabled,
-                    onClick = { onEvent(SettingsEvent.ToggleAutoMode) },
-                    contentDescription = "Toggle auto mode",
-                )
+      // Second row: Auto Mode and Flash
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+      ) {
+        SettingsToggleButton(
+          text = "Auto",
+          isEnabled = uiState.autoModeEnabled,
+          onClick = { onEvent(SettingsEvent.ToggleAutoMode) },
+          contentDescription = "Toggle auto mode",
+        )
 
-                SettingsToggleButton(
-                    text = "Flash",
-                    isEnabled = uiState.flashEnabled,
-                    onClick = { onEvent(SettingsEvent.ToggleFlash) },
-                    contentDescription = "Toggle screen flash",
-                )
-            }
-        }
+        SettingsToggleButton(
+          text = "Flash",
+          isEnabled = uiState.flashEnabled,
+          onClick = { onEvent(SettingsEvent.ToggleFlash) },
+          contentDescription = "Toggle screen flash",
+        )
+      }
     }
+  }
 }
 
 @Composable
 private fun SettingsToggleButton(
-    text: String,
-    isEnabled: Boolean,
-    onClick: () -> Unit,
-    contentDescription: String,
-    modifier: Modifier = Modifier,
+  text: String,
+  isEnabled: Boolean,
+  onClick: () -> Unit,
+  contentDescription: String,
+  modifier: Modifier = Modifier,
 ) {
-    val view = LocalView.current
+  val view = LocalView.current
 
-    Button(
-        onClick = {
-            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-            onClick()
-        },
-        modifier = modifier
-            .size(72.dp)
-            .semantics { this.contentDescription = contentDescription },
-        colors = if (isEnabled) {
-            ButtonDefaults.primaryButtonColors()
-        } else {
-            ButtonDefaults.secondaryButtonColors()
-        },
-    ) {
-        Text(
-            text = text,
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.caption1,
-            maxLines = 1,
-        )
-    }
+  Button(
+    onClick = {
+      view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+      onClick()
+    },
+    modifier = modifier.size(72.dp).semantics { this.contentDescription = contentDescription },
+    colors =
+      if (isEnabled) {
+        ButtonDefaults.primaryButtonColors()
+      } else {
+        ButtonDefaults.secondaryButtonColors()
+      },
+  ) {
+    Text(
+      text = text,
+      textAlign = TextAlign.Center,
+      style = MaterialTheme.typography.caption1,
+      maxLines = 1,
+    )
+  }
 }
 
 @Preview
 @Composable
 private fun SettingsContentPreview() {
-    MaterialTheme {
-        SettingsContent(
-            uiState = SettingsUiState(
-                vibrationEnabled = true,
-                soundEnabled = false,
-                autoModeEnabled = true,
-                flashEnabled = false,
-            ),
-            onEvent = {},
-        )
-    }
+  MaterialTheme {
+    SettingsContent(
+      uiState =
+        SettingsUiState(
+          vibrationEnabled = true,
+          soundEnabled = false,
+          autoModeEnabled = true,
+          flashEnabled = false,
+        ),
+      onEvent = {},
+    )
+  }
 }
 
 @Preview
 @Composable
 private fun SettingsToggleButtonPreview() {
-    MaterialTheme {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            SettingsToggleButton(
-                text = "Vibration",
-                isEnabled = true,
-                onClick = {},
-                contentDescription = "Toggle vibration",
-            )
-            SettingsToggleButton(
-                text = "Sound",
-                isEnabled = false,
-                onClick = {},
-                contentDescription = "Toggle sound",
-            )
-        }
+  MaterialTheme {
+    Column(
+      verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+      SettingsToggleButton(
+        text = "Vibration",
+        isEnabled = true,
+        onClick = {},
+        contentDescription = "Toggle vibration",
+      )
+      SettingsToggleButton(
+        text = "Sound",
+        isEnabled = false,
+        onClick = {},
+        contentDescription = "Toggle sound",
+      )
     }
+  }
 }

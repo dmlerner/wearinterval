@@ -13,17 +13,18 @@ import org.junit.runners.model.Statement
 // Test rule to set main dispatcher for testing
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainDispatcherRule(
-    private val testDispatcher: TestDispatcher = UnconfinedTestDispatcher(),
+  private val testDispatcher: TestDispatcher = UnconfinedTestDispatcher(),
 ) : TestRule {
-    override fun apply(base: Statement, description: Description): Statement = object : Statement() {
-        @Throws(Throwable::class)
-        override fun evaluate() {
-            Dispatchers.setMain(testDispatcher)
-            try {
-                base.evaluate()
-            } finally {
-                Dispatchers.resetMain()
-            }
+  override fun apply(base: Statement, description: Description): Statement =
+    object : Statement() {
+      @Throws(Throwable::class)
+      override fun evaluate() {
+        Dispatchers.setMain(testDispatcher)
+        try {
+          base.evaluate()
+        } finally {
+          Dispatchers.resetMain()
         }
+      }
     }
 }

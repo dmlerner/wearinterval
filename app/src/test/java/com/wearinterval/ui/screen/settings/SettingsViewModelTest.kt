@@ -19,147 +19,147 @@ import org.junit.Test
 @ExperimentalCoroutinesApi
 class SettingsViewModelTest {
 
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
+  @get:Rule val mainDispatcherRule = MainDispatcherRule()
 
-    private val mockSettingsRepository = mockk<SettingsRepository>()
-    private val notificationSettingsFlow = MutableStateFlow(NotificationSettings.DEFAULT)
+  private val mockSettingsRepository = mockk<SettingsRepository>()
+  private val notificationSettingsFlow = MutableStateFlow(NotificationSettings.DEFAULT)
 
-    private lateinit var viewModel: SettingsViewModel
+  private lateinit var viewModel: SettingsViewModel
 
-    @Before
-    fun setup() {
-        every { mockSettingsRepository.notificationSettings } returns notificationSettingsFlow
-        coEvery { mockSettingsRepository.updateSettings(any()) } returns Result.success(Unit)
+  @Before
+  fun setup() {
+    every { mockSettingsRepository.notificationSettings } returns notificationSettingsFlow
+    coEvery { mockSettingsRepository.updateSettings(any()) } returns Result.success(Unit)
 
-        viewModel = SettingsViewModel(mockSettingsRepository)
+    viewModel = SettingsViewModel(mockSettingsRepository)
+  }
+
+  @Test
+  fun `ui state reflects current notification settings`() = runTest {
+    // Given
+    val testSettings =
+      NotificationSettings(
+        vibrationEnabled = false,
+        soundEnabled = true,
+        autoMode = false,
+        flashEnabled = true,
+      )
+
+    // When
+    notificationSettingsFlow.value = testSettings
+
+    // Then
+    viewModel.uiState.test {
+      val uiState = awaitItem()
+      assertThat(uiState.vibrationEnabled).isFalse()
+      assertThat(uiState.soundEnabled).isTrue()
+      assertThat(uiState.autoModeEnabled).isFalse()
+      assertThat(uiState.flashEnabled).isTrue()
     }
+  }
 
-    @Test
-    fun `ui state reflects current notification settings`() = runTest {
-        // Given
-        val testSettings = NotificationSettings(
-            vibrationEnabled = false,
-            soundEnabled = true,
-            autoMode = false,
-            flashEnabled = true,
-        )
+  @Test
+  fun `toggle vibration updates settings`() = runTest {
+    // Given
+    val initialSettings = NotificationSettings(vibrationEnabled = false)
+    notificationSettingsFlow.value = initialSettings
 
-        // When
-        notificationSettingsFlow.value = testSettings
+    // When
+    viewModel.onEvent(SettingsEvent.ToggleVibration)
 
-        // Then
-        viewModel.uiState.test {
-            val uiState = awaitItem()
-            assertThat(uiState.vibrationEnabled).isFalse()
-            assertThat(uiState.soundEnabled).isTrue()
-            assertThat(uiState.autoModeEnabled).isFalse()
-            assertThat(uiState.flashEnabled).isTrue()
-        }
+    // Then
+    coVerify {
+      mockSettingsRepository.updateSettings(
+        initialSettings.copy(vibrationEnabled = true),
+      )
     }
+  }
 
-    @Test
-    fun `toggle vibration updates settings`() = runTest {
-        // Given
-        val initialSettings = NotificationSettings(vibrationEnabled = false)
-        notificationSettingsFlow.value = initialSettings
+  @Test
+  fun `toggle sound updates settings`() = runTest {
+    // Given
+    val initialSettings = NotificationSettings(soundEnabled = false)
+    notificationSettingsFlow.value = initialSettings
 
-        // When
-        viewModel.onEvent(SettingsEvent.ToggleVibration)
+    // When
+    viewModel.onEvent(SettingsEvent.ToggleSound)
 
-        // Then
-        coVerify {
-            mockSettingsRepository.updateSettings(
-                initialSettings.copy(vibrationEnabled = true),
-            )
-        }
+    // Then
+    coVerify {
+      mockSettingsRepository.updateSettings(
+        initialSettings.copy(soundEnabled = true),
+      )
     }
+  }
 
-    @Test
-    fun `toggle sound updates settings`() = runTest {
-        // Given
-        val initialSettings = NotificationSettings(soundEnabled = false)
-        notificationSettingsFlow.value = initialSettings
+  @Test
+  fun `toggle auto progress updates settings`() = runTest {
+    // Given
+    val initialSettings = NotificationSettings(autoMode = false)
+    notificationSettingsFlow.value = initialSettings
 
-        // When
-        viewModel.onEvent(SettingsEvent.ToggleSound)
+    // When
+    viewModel.onEvent(SettingsEvent.ToggleAutoMode)
 
-        // Then
-        coVerify {
-            mockSettingsRepository.updateSettings(
-                initialSettings.copy(soundEnabled = true),
-            )
-        }
+    // Then
+    coVerify {
+      mockSettingsRepository.updateSettings(
+        initialSettings.copy(autoMode = true),
+      )
     }
+  }
 
-    @Test
-    fun `toggle auto progress updates settings`() = runTest {
-        // Given
-        val initialSettings = NotificationSettings(autoMode = false)
-        notificationSettingsFlow.value = initialSettings
+  @Test
+  fun `toggle screen flash updates settings`() = runTest {
+    // Given
+    val initialSettings = NotificationSettings(flashEnabled = false)
+    notificationSettingsFlow.value = initialSettings
 
-        // When
-        viewModel.onEvent(SettingsEvent.ToggleAutoMode)
+    // When
+    viewModel.onEvent(SettingsEvent.ToggleFlash)
 
-        // Then
-        coVerify {
-            mockSettingsRepository.updateSettings(
-                initialSettings.copy(autoMode = true),
-            )
-        }
+    // Then
+    coVerify {
+      mockSettingsRepository.updateSettings(
+        initialSettings.copy(flashEnabled = true),
+      )
     }
+  }
 
-    @Test
-    fun `toggle screen flash updates settings`() = runTest {
-        // Given
-        val initialSettings = NotificationSettings(flashEnabled = false)
-        notificationSettingsFlow.value = initialSettings
+  @Test
+  fun `ui state emits default settings initially`() = runTest {
+    // Given - setup with default settings
 
-        // When
-        viewModel.onEvent(SettingsEvent.ToggleFlash)
-
-        // Then
-        coVerify {
-            mockSettingsRepository.updateSettings(
-                initialSettings.copy(flashEnabled = true),
-            )
-        }
+    // When/Then
+    viewModel.uiState.test {
+      val uiState = awaitItem()
+      assertThat(uiState.vibrationEnabled).isEqualTo(NotificationSettings.DEFAULT.vibrationEnabled)
+      assertThat(uiState.soundEnabled).isEqualTo(NotificationSettings.DEFAULT.soundEnabled)
+      assertThat(uiState.autoModeEnabled).isEqualTo(NotificationSettings.DEFAULT.autoMode)
+      assertThat(uiState.flashEnabled).isEqualTo(NotificationSettings.DEFAULT.flashEnabled)
     }
+  }
 
-    @Test
-    fun `ui state emits default settings initially`() = runTest {
-        // Given - setup with default settings
+  @Test
+  fun `multiple toggle events work correctly`() = runTest {
+    // Given
+    val initialSettings = NotificationSettings()
+    notificationSettingsFlow.value = initialSettings
 
-        // When/Then
-        viewModel.uiState.test {
-            val uiState = awaitItem()
-            assertThat(uiState.vibrationEnabled).isEqualTo(NotificationSettings.DEFAULT.vibrationEnabled)
-            assertThat(uiState.soundEnabled).isEqualTo(NotificationSettings.DEFAULT.soundEnabled)
-            assertThat(uiState.autoModeEnabled).isEqualTo(NotificationSettings.DEFAULT.autoMode)
-            assertThat(uiState.flashEnabled).isEqualTo(NotificationSettings.DEFAULT.flashEnabled)
-        }
+    // When
+    viewModel.onEvent(SettingsEvent.ToggleVibration)
+    viewModel.onEvent(SettingsEvent.ToggleSound)
+
+    // Then
+    coVerify {
+      mockSettingsRepository.updateSettings(
+        initialSettings.copy(vibrationEnabled = !initialSettings.vibrationEnabled),
+      )
     }
-
-    @Test
-    fun `multiple toggle events work correctly`() = runTest {
-        // Given
-        val initialSettings = NotificationSettings()
-        notificationSettingsFlow.value = initialSettings
-
-        // When
-        viewModel.onEvent(SettingsEvent.ToggleVibration)
-        viewModel.onEvent(SettingsEvent.ToggleSound)
-
-        // Then
-        coVerify {
-            mockSettingsRepository.updateSettings(
-                initialSettings.copy(vibrationEnabled = !initialSettings.vibrationEnabled),
-            )
-        }
-        coVerify {
-            mockSettingsRepository.updateSettings(
-                initialSettings.copy(soundEnabled = !initialSettings.soundEnabled),
-            )
-        }
+    coVerify {
+      mockSettingsRepository.updateSettings(
+        initialSettings.copy(soundEnabled = !initialSettings.soundEnabled),
+      )
     }
+  }
 }

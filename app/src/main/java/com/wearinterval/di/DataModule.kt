@@ -18,36 +18,37 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object DataModule {
 
-    @Provides
-    @Singleton
-    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
-        return Room.databaseBuilder(
-            context,
-            AppDatabase::class.java,
-            AppDatabase.DATABASE_NAME,
-        ).build()
-    }
+  @Provides
+  @Singleton
+  fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
+    return Room.databaseBuilder(
+        context,
+        AppDatabase::class.java,
+        AppDatabase.DATABASE_NAME,
+      )
+      .build()
+  }
 
-    @Provides
-    fun provideConfigurationDao(database: AppDatabase): ConfigurationDao {
-        return database.configurationDao()
-    }
+  @Provides
+  fun provideConfigurationDao(database: AppDatabase): ConfigurationDao {
+    return database.configurationDao()
+  }
 
-    @Provides
-    @Singleton
-    fun provideNotificationManager(@ApplicationContext context: Context): NotificationManager {
-        return context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-    }
+  @Provides
+  @Singleton
+  fun provideNotificationManager(@ApplicationContext context: Context): NotificationManager {
+    return context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+  }
 
-    @Provides
-    @Singleton
-    fun provideVibrator(@ApplicationContext context: Context): Vibrator {
-        return context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-    }
+  @Provides
+  @Singleton
+  fun provideVibrator(@ApplicationContext context: Context): Vibrator {
+    return context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+  }
 
-    @Provides
-    @Singleton
-    fun providePowerManager(@ApplicationContext context: Context): PowerManager {
-        return context.getSystemService(Context.POWER_SERVICE) as PowerManager
-    }
+  @Provides
+  @Singleton
+  fun providePowerManager(@ApplicationContext context: Context): PowerManager {
+    return context.getSystemService(Context.POWER_SERVICE) as PowerManager
+  }
 }

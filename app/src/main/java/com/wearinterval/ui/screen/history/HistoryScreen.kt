@@ -32,245 +32,252 @@ import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+  val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    HistoryContent(
-        uiState = uiState,
-        onEvent = viewModel::onEvent,
-    )
+  HistoryContent(
+    uiState = uiState,
+    onEvent = viewModel::onEvent,
+  )
 }
 
 @Composable
 internal fun HistoryContent(uiState: HistoryUiState, onEvent: (HistoryEvent) -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colors.background)
-            .semantics { contentDescription = "Recent Timer Configurations" },
-        contentAlignment = Alignment.Center,
-    ) {
-        when {
-            uiState.isLoading -> {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(32.dp),
-                    strokeWidth = 3.dp,
-                )
-            }
-            !uiState.hasConfigurations -> {
-                EmptyHistoryContent()
-            }
-            else -> {
-                ConfigurationGrid(
-                    configurations = uiState.configurations,
-                    onConfigurationSelect = { config ->
-                        onEvent(HistoryEvent.ConfigurationSelected(config))
-                    },
-                )
-            }
-        }
+  Box(
+    modifier =
+      Modifier.fillMaxSize().background(MaterialTheme.colors.background).semantics {
+        contentDescription = "Recent Timer Configurations"
+      },
+    contentAlignment = Alignment.Center,
+  ) {
+    when {
+      uiState.isLoading -> {
+        CircularProgressIndicator(
+          modifier = Modifier.size(32.dp),
+          strokeWidth = 3.dp,
+        )
+      }
+      !uiState.hasConfigurations -> {
+        EmptyHistoryContent()
+      }
+      else -> {
+        ConfigurationGrid(
+          configurations = uiState.configurations,
+          onConfigurationSelect = { config -> onEvent(HistoryEvent.ConfigurationSelected(config)) },
+        )
+      }
     }
+  }
 }
 
 @Composable
-private fun ConfigurationGrid(configurations: List<TimerConfiguration>, onConfigurationSelect: (TimerConfiguration) -> Unit) {
-    val actualItems = configurations.size
+private fun ConfigurationGrid(
+  configurations: List<TimerConfiguration>,
+  onConfigurationSelect: (TimerConfiguration) -> Unit
+) {
+  val actualItems = configurations.size
 
-    // Dynamic grid layout - always use 2 columns for better balance on watch
-    val columns = 2
+  // Dynamic grid layout - always use 2 columns for better balance on watch
+  val columns = 2
 
-    // Only create as many rows as needed for actual items
-    val rows = if (actualItems == 0) 0 else (actualItems + columns - 1) / columns // Ceiling division
+  // Only create as many rows as needed for actual items
+  val rows = if (actualItems == 0) 0 else (actualItems + columns - 1) / columns // Ceiling division
 
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
+  Box(
+    modifier = Modifier.fillMaxSize(),
+    contentAlignment = Alignment.Center,
+  ) {
+    Column(
+      modifier = Modifier.padding(4.dp),
+      verticalArrangement = Arrangement.spacedBy(6.dp),
+      horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Column(
-            modifier = Modifier.padding(4.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+      repeat(rows) { rowIndex ->
+        Row(
+          horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            repeat(rows) { rowIndex ->
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    repeat(columns) { colIndex ->
-                        val itemIndex = rowIndex * columns + colIndex
-                        if (itemIndex < actualItems) {
-                            GridConfigurationItem(
-                                configuration = configurations[itemIndex],
-                                onClick = onConfigurationSelect,
-                            )
-                        } else {
-                            // Add spacer to maintain grid alignment for incomplete rows
-                            Box(
-                                modifier = Modifier
-                                    .width(62.dp)
-                                    .height(48.dp),
-                            )
-                        }
-                    }
-                }
+          repeat(columns) { colIndex ->
+            val itemIndex = rowIndex * columns + colIndex
+            if (itemIndex < actualItems) {
+              GridConfigurationItem(
+                configuration = configurations[itemIndex],
+                onClick = onConfigurationSelect,
+              )
+            } else {
+              // Add spacer to maintain grid alignment for incomplete rows
+              Box(
+                modifier = Modifier.width(62.dp).height(48.dp),
+              )
             }
+          }
         }
+      }
     }
+  }
 }
 
 @Composable
 private fun EmptyHistoryContent() {
-    Text(
-        text = "No recent sets.",
-        fontSize = 14.sp,
-        color = Constants.Colors.DIVIDER_COLOR,
-        textAlign = TextAlign.Center,
-        modifier = Modifier.semantics {
-            contentDescription = "No recent timer configurations"
-        },
-    )
+  Text(
+    text = "No recent sets.",
+    fontSize = 14.sp,
+    color = Constants.Colors.DIVIDER_COLOR,
+    textAlign = TextAlign.Center,
+    modifier = Modifier.semantics { contentDescription = "No recent timer configurations" },
+  )
 }
 
 @Preview
 @Composable
 private fun HistoryContentGridPreview() {
-    val sampleConfigurations = listOf(
-        TimerConfiguration(
-            laps = 20,
-            workDuration = 45.seconds,
-            restDuration = 15.seconds,
-        ),
-        TimerConfiguration(
-            laps = 1,
-            workDuration = 90.seconds,
-            restDuration = 0.seconds,
-        ),
-        TimerConfiguration(
-            laps = 5,
-            workDuration = 2.minutes,
-            restDuration = 0.seconds,
-        ),
-        TimerConfiguration(
-            laps = 999,
-            workDuration = 30.seconds,
-            restDuration = 10.seconds,
-        ),
+  val sampleConfigurations =
+    listOf(
+      TimerConfiguration(
+        laps = 20,
+        workDuration = 45.seconds,
+        restDuration = 15.seconds,
+      ),
+      TimerConfiguration(
+        laps = 1,
+        workDuration = 90.seconds,
+        restDuration = 0.seconds,
+      ),
+      TimerConfiguration(
+        laps = 5,
+        workDuration = 2.minutes,
+        restDuration = 0.seconds,
+      ),
+      TimerConfiguration(
+        laps = 999,
+        workDuration = 30.seconds,
+        restDuration = 10.seconds,
+      ),
     )
 
-    MaterialTheme {
-        HistoryContent(
-            uiState = HistoryUiState(
-                configurations = sampleConfigurations,
-                isLoading = false,
-            ),
-            onEvent = {},
-        )
-    }
+  MaterialTheme {
+    HistoryContent(
+      uiState =
+        HistoryUiState(
+          configurations = sampleConfigurations,
+          isLoading = false,
+        ),
+      onEvent = {},
+    )
+  }
 }
 
 @Preview
 @Composable
 private fun HistoryContentPartialGridPreview() {
-    val sampleConfigurations = listOf(
-        TimerConfiguration(
-            laps = 20,
-            workDuration = 45.seconds,
-            restDuration = 15.seconds,
-        ),
-        TimerConfiguration(
-            laps = 1,
-            workDuration = 90.seconds,
-            restDuration = 0.seconds,
-        ),
+  val sampleConfigurations =
+    listOf(
+      TimerConfiguration(
+        laps = 20,
+        workDuration = 45.seconds,
+        restDuration = 15.seconds,
+      ),
+      TimerConfiguration(
+        laps = 1,
+        workDuration = 90.seconds,
+        restDuration = 0.seconds,
+      ),
     )
 
-    MaterialTheme {
-        HistoryContent(
-            uiState = HistoryUiState(
-                configurations = sampleConfigurations,
-                isLoading = false,
-            ),
-            onEvent = {},
-        )
-    }
+  MaterialTheme {
+    HistoryContent(
+      uiState =
+        HistoryUiState(
+          configurations = sampleConfigurations,
+          isLoading = false,
+        ),
+      onEvent = {},
+    )
+  }
 }
 
 @Preview
 @Composable
 private fun HistoryContentSingleItemPreview() {
-    val singleConfiguration = listOf(
-        TimerConfiguration(
-            laps = 8,
-            workDuration = 30.seconds,
-            restDuration = 10.seconds,
-        ),
+  val singleConfiguration =
+    listOf(
+      TimerConfiguration(
+        laps = 8,
+        workDuration = 30.seconds,
+        restDuration = 10.seconds,
+      ),
     )
 
-    MaterialTheme {
-        HistoryContent(
-            uiState = HistoryUiState(
-                configurations = singleConfiguration,
-                isLoading = false,
-            ),
-            onEvent = {},
-        )
-    }
+  MaterialTheme {
+    HistoryContent(
+      uiState =
+        HistoryUiState(
+          configurations = singleConfiguration,
+          isLoading = false,
+        ),
+      onEvent = {},
+    )
+  }
 }
 
 @Preview
 @Composable
 private fun HistoryContentThreeItemsPreview() {
-    val threeConfigurations = listOf(
-        TimerConfiguration(
-            laps = 20,
-            workDuration = 45.seconds,
-            restDuration = 15.seconds,
-        ),
-        TimerConfiguration(
-            laps = 1,
-            workDuration = 90.seconds,
-            restDuration = 0.seconds,
-        ),
-        TimerConfiguration(
-            laps = 8,
-            workDuration = 30.seconds,
-            restDuration = 10.seconds,
-        ),
+  val threeConfigurations =
+    listOf(
+      TimerConfiguration(
+        laps = 20,
+        workDuration = 45.seconds,
+        restDuration = 15.seconds,
+      ),
+      TimerConfiguration(
+        laps = 1,
+        workDuration = 90.seconds,
+        restDuration = 0.seconds,
+      ),
+      TimerConfiguration(
+        laps = 8,
+        workDuration = 30.seconds,
+        restDuration = 10.seconds,
+      ),
     )
 
-    MaterialTheme {
-        HistoryContent(
-            uiState = HistoryUiState(
-                configurations = threeConfigurations,
-                isLoading = false,
-            ),
-            onEvent = {},
-        )
-    }
+  MaterialTheme {
+    HistoryContent(
+      uiState =
+        HistoryUiState(
+          configurations = threeConfigurations,
+          isLoading = false,
+        ),
+      onEvent = {},
+    )
+  }
 }
 
 @Preview
 @Composable
 private fun EmptyHistoryContentPreview() {
-    MaterialTheme {
-        HistoryContent(
-            uiState = HistoryUiState(
-                configurations = emptyList(),
-                isLoading = false,
-            ),
-            onEvent = {},
-        )
-    }
+  MaterialTheme {
+    HistoryContent(
+      uiState =
+        HistoryUiState(
+          configurations = emptyList(),
+          isLoading = false,
+        ),
+      onEvent = {},
+    )
+  }
 }
 
 @Preview
 @Composable
 private fun LoadingHistoryContentPreview() {
-    MaterialTheme {
-        HistoryContent(
-            uiState = HistoryUiState(
-                configurations = emptyList(),
-                isLoading = true,
-            ),
-            onEvent = {},
-        )
-    }
+  MaterialTheme {
+    HistoryContent(
+      uiState =
+        HistoryUiState(
+          configurations = emptyList(),
+          isLoading = true,
+        ),
+      onEvent = {},
+    )
+  }
 }

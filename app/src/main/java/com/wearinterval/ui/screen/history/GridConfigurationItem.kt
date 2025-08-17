@@ -26,66 +26,73 @@ import com.wearinterval.util.Constants
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
-fun GridConfigurationItem(configuration: TimerConfiguration?, onClick: (TimerConfiguration) -> Unit, modifier: Modifier = Modifier) {
-    val hapticFeedback = LocalHapticFeedback.current
+fun GridConfigurationItem(
+  configuration: TimerConfiguration?,
+  onClick: (TimerConfiguration) -> Unit,
+  modifier: Modifier = Modifier
+) {
+  val hapticFeedback = LocalHapticFeedback.current
 
-    Box(
-        modifier = modifier
-            .width(62.dp)
-            .height(48.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .then(
-                if (configuration != null) {
-                    Modifier
-                        .background(Constants.Colors.HISTORY_ITEM_BACKGROUND)
-                        .clickable {
-                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onClick(configuration)
-                        }
-                        .semantics {
-                            contentDescription = "Timer configuration: ${configuration.displayString()}"
-                        }
-                } else {
-                    Modifier.background(Constants.Colors.HISTORY_ITEM_BACKGROUND.copy(alpha = 0.3f)) // Semi-transparent for empty slots
-                },
-            ),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (configuration != null) {
-            Text(
-                text = configuration.displayString(),
-                fontSize = 14.sp, // Increased from 12sp to 14sp
-                color = Constants.Colors.HISTORY_ITEM_TEXT,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
+  Box(
+    modifier =
+      modifier
+        .width(62.dp)
+        .height(48.dp)
+        .clip(RoundedCornerShape(8.dp))
+        .then(
+          if (configuration != null) {
+            Modifier.background(Constants.Colors.HISTORY_ITEM_BACKGROUND)
+              .clickable {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                onClick(configuration)
+              }
+              .semantics {
+                contentDescription = "Timer configuration: ${configuration.displayString()}"
+              }
+          } else {
+            Modifier.background(
+              Constants.Colors.HISTORY_ITEM_BACKGROUND.copy(alpha = 0.3f)
+            ) // Semi-transparent for empty slots
+          },
+        ),
+    contentAlignment = Alignment.Center,
+  ) {
+    if (configuration != null) {
+      Text(
+        text = configuration.displayString(),
+        fontSize = 14.sp, // Increased from 12sp to 14sp
+        color = Constants.Colors.HISTORY_ITEM_TEXT,
+        textAlign = TextAlign.Center,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis,
+      )
     }
+  }
 }
 
 @Preview
 @Composable
 private fun GridConfigurationItemPreview() {
-    MaterialTheme {
-        GridConfigurationItem(
-            configuration = TimerConfiguration(
-                laps = 20,
-                workDuration = 45.seconds,
-                restDuration = 15.seconds,
-            ),
-            onClick = {},
-        )
-    }
+  MaterialTheme {
+    GridConfigurationItem(
+      configuration =
+        TimerConfiguration(
+          laps = 20,
+          workDuration = 45.seconds,
+          restDuration = 15.seconds,
+        ),
+      onClick = {},
+    )
+  }
 }
 
 @Preview
 @Composable
 private fun GridConfigurationItemEmptyPreview() {
-    MaterialTheme {
-        GridConfigurationItem(
-            configuration = null,
-            onClick = {},
-        )
-    }
+  MaterialTheme {
+    GridConfigurationItem(
+      configuration = null,
+      onClick = {},
+    )
+  }
 }

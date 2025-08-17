@@ -14,6 +14,7 @@ import com.wearinterval.domain.repository.SettingsRepository
 import com.wearinterval.util.Constants
 import com.wearinterval.wearos.notification.TimerNotificationManager
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -25,321 +26,349 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class TimerService : Service() {
 
-    @Inject
-    lateinit var timerNotificationManager: TimerNotificationManager
+  @Inject lateinit var timerNotificationManager: TimerNotificationManager
 
-    @Inject
-    lateinit var settingsRepository: SettingsRepository
+  @Inject lateinit var settingsRepository: SettingsRepository
 
-    @Inject
-    lateinit var configurationRepository: ConfigurationRepository
+  @Inject lateinit var configurationRepository: ConfigurationRepository
 
-    @Inject
-    lateinit var powerManager: PowerManager
+  @Inject lateinit var powerManager: PowerManager
 
-    private val binder = TimerBinder()
-    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+  private val binder = TimerBinder()
+  private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    private val _timerState = MutableStateFlow<TimerState>(TimerState.stopped())
-    val timerState: StateFlow<TimerState> = _timerState.asStateFlow()
+  private val _timerState = MutableStateFlow<TimerState>(TimerState.stopped())
+  val timerState: StateFlow<TimerState> = _timerState.asStateFlow()
 
-    private var countdownJob: Job? = null
-    private var wakeLock: PowerManager.WakeLock? = null
+  private var countdownJob: Job? = null
+  private var wakeLock: PowerManager.WakeLock? = null
 
-    // For testing only - allows direct state manipulation in tests
-    internal fun setTimerStateForTesting(state: TimerState) {
-        _timerState.value = state
+  // For testing only - allows direct state manipulation in tests
+  internal fun setTimerStateForTesting(state: TimerState) {
+    _timerState.value = state
+  }
+
+  override fun onCreate() {
+    super.onCreate()
+    // Notification channels are handled by TimerNotificationManager
+    initializeWakeLock()
+    initializeTimerState()
+    observeConfigurationChanges()
+  }
+
+  override fun onBind(intent: Intent): IBinder = binder
+
+  override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    val notification = timerNotificationManager.createTimerNotification(_timerState.value)
+    startForeground(TimerNotificationManager.TIMER_NOTIFICATION_ID, notification)
+    return START_STICKY
+  }
+
+  override fun onDestroy() {
+    stopCountdown()
+    releaseWakeLock()
+    serviceScope.cancel()
+    super.onDestroy()
+  }
+
+  fun syncConfiguration(config: TimerConfiguration) {
+    _timerState.value = _timerState.value.copy(configuration = config)
+    if (_timerState.value.isStopped) {
+      _timerState.value = TimerState.stopped(config)
+    }
+    timerNotificationManager.updateTimerNotification(_timerState.value)
+  }
+
+  fun startTimer(config: TimerConfiguration) {
+    if (_timerState.value.phase != TimerPhase.Stopped) {
+      throw IllegalStateException("Timer is already running")
     }
 
-    override fun onCreate() {
-        super.onCreate()
-        // Notification channels are handled by TimerNotificationManager
-        initializeWakeLock()
-        initializeTimerState()
-        observeConfigurationChanges()
-    }
+    _timerState.value =
+      TimerState(
+        phase = TimerPhase.Running,
+        timeRemaining = config.workDuration,
+        currentLap = 1,
+        totalLaps = config.laps,
+        isPaused = false,
+        configuration = config,
+      )
 
-    override fun onBind(intent: Intent): IBinder = binder
+    // Update notification when timer state changes
+    timerNotificationManager.updateTimerNotification(_timerState.value)
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val notification = timerNotificationManager.createTimerNotification(_timerState.value)
-        startForeground(TimerNotificationManager.TIMER_NOTIFICATION_ID, notification)
-        return START_STICKY
-    }
+    // Acquire wake lock and start countdown
+    acquireWakeLock()
+    startCountdown()
+  }
 
-    override fun onDestroy() {
-        stopCountdown()
-        releaseWakeLock()
-        serviceScope.cancel()
-        super.onDestroy()
-    }
+  // Store the previous phase when pausing to restore correctly
+  private var pausedFromPhase: TimerPhase = TimerPhase.Stopped
 
-    fun startTimer(config: TimerConfiguration) {
-        if (_timerState.value.phase != TimerPhase.Stopped) {
-            throw IllegalStateException("Timer is already running")
-        }
-
-        _timerState.value = TimerState(
-            phase = TimerPhase.Running,
-            timeRemaining = config.workDuration,
-            currentLap = 1,
-            totalLaps = config.laps,
-            isPaused = false,
-            configuration = config,
+  fun pauseTimer() {
+    val currentState = _timerState.value
+    if (currentState.phase == TimerPhase.Running || currentState.phase == TimerPhase.Resting) {
+      pausedFromPhase = currentState.phase
+      stopCountdown()
+      _timerState.value =
+        currentState.copy(
+          phase = TimerPhase.Paused,
+          isPaused = true,
         )
-
-        // Update notification when timer state changes
-        timerNotificationManager.updateTimerNotification(_timerState.value)
-
-        // Acquire wake lock and start countdown
-        acquireWakeLock()
-        startCountdown()
+      timerNotificationManager.updateTimerNotification(_timerState.value)
     }
+  }
 
-    // Store the previous phase when pausing to restore correctly
-    private var pausedFromPhase: TimerPhase = TimerPhase.Stopped
-
-    fun pauseTimer() {
-        val currentState = _timerState.value
-        if (currentState.phase == TimerPhase.Running || currentState.phase == TimerPhase.Resting) {
-            pausedFromPhase = currentState.phase
-            stopCountdown()
-            _timerState.value = currentState.copy(
-                phase = TimerPhase.Paused,
-                isPaused = true,
-            )
-            timerNotificationManager.updateTimerNotification(_timerState.value)
-        }
-    }
-
-    fun resumeTimer() {
-        val currentState = _timerState.value
-        if (currentState.phase == TimerPhase.Paused) {
-            _timerState.value = currentState.copy(
-                phase = pausedFromPhase,
-                isPaused = false,
-            )
-            timerNotificationManager.updateTimerNotification(_timerState.value)
-            startCountdown()
-        }
-    }
-
-    fun stopTimer() {
-        stopCountdown()
-        releaseWakeLock()
-        _timerState.value = TimerState.stopped()
-        timerNotificationManager.updateTimerNotification(_timerState.value)
-        timerNotificationManager.stopVibration()
-        timerNotificationManager.dismissAlert()
-    }
-
-    fun dismissAlarm() {
-        val currentState = _timerState.value
-        if (currentState.phase == TimerPhase.AlarmActive) {
-            timerNotificationManager.stopVibration()
-            timerNotificationManager.dismissAlert()
-
-            serviceScope.launch {
-                val settings = settingsRepository.notificationSettings.first()
-                handleAlarmDismissal(currentState, settings)
-            }
-        }
-    }
-
-    // ================================
-    // Private Timer Logic Methods
-    // ================================
-
-    private fun initializeWakeLock() {
-        wakeLock = powerManager.newWakeLock(
-            PowerManager.PARTIAL_WAKE_LOCK,
-            "WearInterval:TimerService",
+  fun resumeTimer() {
+    val currentState = _timerState.value
+    if (currentState.phase == TimerPhase.Paused) {
+      _timerState.value =
+        currentState.copy(
+          phase = pausedFromPhase,
+          isPaused = false,
         )
+      timerNotificationManager.updateTimerNotification(_timerState.value)
+      startCountdown()
     }
+  }
 
-    private fun initializeTimerState() {
-        // Initialize with current configuration to ensure consistency - do this synchronously
-        val currentConfig = configurationRepository.currentConfiguration.value
-        _timerState.value = TimerState.stopped(currentConfig)
-        android.util.Log.d("TimerService", "Initialized state with config: ${currentConfig.laps} laps, ${currentConfig.workDuration}")
-    }
+  fun stopTimer() {
+    stopCountdown()
+    releaseWakeLock()
+    _timerState.value = TimerState.stopped()
+    timerNotificationManager.updateTimerNotification(_timerState.value)
+    timerNotificationManager.stopVibration()
+    timerNotificationManager.dismissAlert()
+  }
 
-    private fun observeConfigurationChanges() {
-        serviceScope.launch {
-            configurationRepository.currentConfiguration.collect { config ->
-                android.util.Log.d("TimerService", "Config changed: ${config.laps} laps, ${config.workDuration}")
-                // Only update if timer is stopped to maintain single source of truth
-                if (_timerState.value.isStopped) {
-                    android.util.Log.d("TimerService", "Timer is stopped, updating state")
-                    _timerState.value = TimerState.stopped(config)
-                    timerNotificationManager.updateTimerNotification(_timerState.value)
-                } else {
-                    android.util.Log.d("TimerService", "Timer is not stopped, phase: ${_timerState.value.phase}")
-                }
-            }
-        }
-    }
+  fun dismissAlarm() {
+    val currentState = _timerState.value
+    if (currentState.phase == TimerPhase.AlarmActive) {
+      timerNotificationManager.stopVibration()
+      timerNotificationManager.dismissAlert()
 
-    private fun acquireWakeLock() {
-        wakeLock?.takeIf { !it.isHeld }?.acquire(10 * 60 * 1000L) // 10 minutes max
-    }
-
-    private fun releaseWakeLock() {
-        wakeLock?.takeIf { it.isHeld }?.release()
-    }
-
-    private fun startCountdown() {
-        countdownJob?.cancel()
-        countdownJob = serviceScope.launch {
-            while (_timerState.value.isRunning) {
-                delay(Constants.TimerService.UPDATE_INTERVAL) // Update every 100ms for smooth progress
-                updateTimerState()
-            }
-        }
-    }
-
-    private fun stopCountdown() {
-        countdownJob?.cancel()
-        countdownJob = null
-    }
-
-    private suspend fun updateTimerState() {
-        val currentState = _timerState.value
-        if (!currentState.isRunning || currentState.isPaused) return
-
-        val newTimeRemaining = currentState.timeRemaining - Constants.TimerService.COUNTDOWN_DECREMENT
-
-        if (newTimeRemaining <= Constants.TimerLimits.MIN_REST_DURATION) {
-            // Current interval completed
-            handleIntervalComplete(currentState)
-        } else {
-            // Continue countdown
-            _timerState.value = currentState.copy(timeRemaining = newTimeRemaining)
-            timerNotificationManager.updateTimerNotification(_timerState.value)
-        }
-    }
-
-    private suspend fun handleIntervalComplete(currentState: TimerState) {
+      serviceScope.launch {
         val settings = settingsRepository.notificationSettings.first()
+        handleAlarmDismissal(currentState, settings)
+      }
+    }
+  }
 
-        // Trigger notifications for interval completion
-        timerNotificationManager.triggerIntervalAlert(settings)
+  // ================================
+  // Private Timer Logic Methods
+  // ================================
 
-        if (currentState.isResting) {
-            // Rest period completed, start next work interval
-            handleRestComplete(currentState, settings)
+  private fun initializeWakeLock() {
+    wakeLock =
+      powerManager.newWakeLock(
+        PowerManager.PARTIAL_WAKE_LOCK,
+        "WearInterval:TimerService",
+      )
+  }
+
+  private fun initializeTimerState() {
+    // Initialize with current configuration to ensure consistency - do this synchronously
+    val currentConfig = configurationRepository.currentConfiguration.value
+    _timerState.value = TimerState.stopped(currentConfig)
+    android.util.Log.d(
+      "TimerService",
+      "Initialized state with config: ${currentConfig.laps} laps, ${currentConfig.workDuration}"
+    )
+  }
+
+  private fun observeConfigurationChanges() {
+    serviceScope.launch {
+      configurationRepository.currentConfiguration.collect { config ->
+        android.util.Log.d(
+          "TimerService",
+          "Config changed: ${config.laps} laps, ${config.workDuration}"
+        )
+        // Only update if timer is stopped to maintain single source of truth
+        if (_timerState.value.isStopped) {
+          android.util.Log.d("TimerService", "Timer is stopped, updating state")
+          _timerState.value = TimerState.stopped(config)
+          timerNotificationManager.updateTimerNotification(_timerState.value)
         } else {
-            // Work interval completed, start rest or next lap
-            handleWorkComplete(currentState, settings)
+          android.util.Log.d(
+            "TimerService",
+            "Timer is not stopped, phase: ${_timerState.value.phase}"
+          )
         }
+      }
     }
+  }
 
-    private suspend fun handleWorkComplete(currentState: TimerState, settings: NotificationSettings) {
-        val config = currentState.configuration
+  private fun acquireWakeLock() {
+    wakeLock?.takeIf { !it.isHeld }?.acquire(10 * 60 * 1000L) // 10 minutes max
+  }
 
-        if (config.restDuration > Constants.TimerLimits.MIN_REST_DURATION) {
-            // Start rest period
-            _timerState.value = currentState.copy(
-                phase = TimerPhase.Resting,
-                timeRemaining = config.restDuration,
-            )
-            timerNotificationManager.updateTimerNotification(_timerState.value)
+  private fun releaseWakeLock() {
+    wakeLock?.takeIf { it.isHeld }?.release()
+  }
 
-            if (settings.autoMode) {
-                // Continue automatically after brief delay
-                delay(Constants.TimerService.INTERVAL_TRANSITION_DELAY)
-            } else {
-                // Manual mode: pause and wait for user dismissal
-                pausedFromPhase = TimerPhase.Resting
-                _timerState.value = _timerState.value.copy(
-                    phase = TimerPhase.AlarmActive,
-                    isPaused = true,
-                )
-                timerNotificationManager.updateTimerNotification(_timerState.value)
-                timerNotificationManager.triggerContinuousAlarm(settings)
-            }
-        } else {
-            // No rest period, go directly to next lap or complete
-            advanceToNextLap(currentState, settings)
+  private fun startCountdown() {
+    countdownJob?.cancel()
+    countdownJob =
+      serviceScope.launch {
+        while (_timerState.value.isRunning) {
+          delay(Constants.TimerService.UPDATE_INTERVAL) // Update every 100ms for smooth progress
+          updateTimerState()
         }
+      }
+  }
+
+  private fun stopCountdown() {
+    countdownJob?.cancel()
+    countdownJob = null
+  }
+
+  private suspend fun updateTimerState() {
+    val currentState = _timerState.value
+    if (!currentState.isRunning || currentState.isPaused) return
+
+    val newTimeRemaining = currentState.timeRemaining - Constants.TimerService.COUNTDOWN_DECREMENT
+
+    if (newTimeRemaining <= Constants.TimerLimits.MIN_REST_DURATION) {
+      // Current interval completed
+      handleIntervalComplete(currentState)
+    } else {
+      // Continue countdown
+      _timerState.value = currentState.copy(timeRemaining = newTimeRemaining)
+      timerNotificationManager.updateTimerNotification(_timerState.value)
     }
+  }
 
-    private suspend fun handleRestComplete(currentState: TimerState, settings: NotificationSettings) {
-        advanceToNextLap(currentState, settings)
+  private suspend fun handleIntervalComplete(currentState: TimerState) {
+    val settings = settingsRepository.notificationSettings.first()
+
+    // Trigger notifications for interval completion
+    timerNotificationManager.triggerIntervalAlert(settings)
+
+    if (currentState.isResting) {
+      // Rest period completed, start next work interval
+      handleRestComplete(currentState, settings)
+    } else {
+      // Work interval completed, start rest or next lap
+      handleWorkComplete(currentState, settings)
     }
+  }
 
-    private suspend fun advanceToNextLap(currentState: TimerState, settings: NotificationSettings) {
-        val config = currentState.configuration
-        val nextLap = currentState.currentLap + 1
+  private suspend fun handleWorkComplete(currentState: TimerState, settings: NotificationSettings) {
+    val config = currentState.configuration
 
-        if (currentState.isInfinite || nextLap <= currentState.totalLaps) {
-            // Start next lap
-            _timerState.value = currentState.copy(
-                phase = TimerPhase.Running,
-                timeRemaining = config.workDuration,
-                currentLap = nextLap,
-            )
-            timerNotificationManager.updateTimerNotification(_timerState.value)
+    if (config.restDuration > Constants.TimerLimits.MIN_REST_DURATION) {
+      // Start rest period
+      _timerState.value =
+        currentState.copy(
+          phase = TimerPhase.Resting,
+          timeRemaining = config.restDuration,
+        )
+      timerNotificationManager.updateTimerNotification(_timerState.value)
 
-            if (settings.autoMode) {
-                // Continue automatically after brief delay
-                delay(Constants.TimerService.INTERVAL_TRANSITION_DELAY)
-            } else {
-                // Manual mode: pause and wait for user dismissal
-                pausedFromPhase = TimerPhase.Running
-                _timerState.value = _timerState.value.copy(
-                    phase = TimerPhase.AlarmActive,
-                    isPaused = true,
-                )
-                timerNotificationManager.updateTimerNotification(_timerState.value)
-                timerNotificationManager.triggerContinuousAlarm(settings)
-            }
-        } else {
-            // Workout completed
-            handleWorkoutComplete(settings)
-        }
+      if (settings.autoMode) {
+        // Continue automatically after brief delay
+        delay(Constants.TimerService.INTERVAL_TRANSITION_DELAY)
+      } else {
+        // Manual mode: pause and wait for user dismissal
+        pausedFromPhase = TimerPhase.Resting
+        _timerState.value =
+          _timerState.value.copy(
+            phase = TimerPhase.AlarmActive,
+            isPaused = true,
+          )
+        timerNotificationManager.updateTimerNotification(_timerState.value)
+        timerNotificationManager.triggerContinuousAlarm(settings)
+      }
+    } else {
+      // No rest period, go directly to next lap or complete
+      advanceToNextLap(currentState, settings)
     }
+  }
 
-    private suspend fun handleWorkoutComplete(settings: NotificationSettings) {
-        // Trigger completion notifications
-        timerNotificationManager.triggerWorkoutComplete(settings)
+  private suspend fun handleRestComplete(currentState: TimerState, settings: NotificationSettings) {
+    advanceToNextLap(currentState, settings)
+  }
 
-        if (settings.autoMode) {
-            // Auto mode: stop timer automatically after triple notification
-            delay(Constants.TimerService.WORKOUT_COMPLETION_DELAY) // Give time for completion sound/vibration
-            stopTimer()
-        } else {
-            // Manual mode: wait for user dismissal
-            _timerState.value = _timerState.value.copy(
-                phase = TimerPhase.AlarmActive,
-                isPaused = true,
-            )
-            timerNotificationManager.updateTimerNotification(_timerState.value)
-            timerNotificationManager.triggerContinuousAlarm(settings)
-        }
+  private suspend fun advanceToNextLap(currentState: TimerState, settings: NotificationSettings) {
+    val config = currentState.configuration
+    val nextLap = currentState.currentLap + 1
+
+    if (currentState.isInfinite || nextLap <= currentState.totalLaps) {
+      // Start next lap
+      _timerState.value =
+        currentState.copy(
+          phase = TimerPhase.Running,
+          timeRemaining = config.workDuration,
+          currentLap = nextLap,
+        )
+      timerNotificationManager.updateTimerNotification(_timerState.value)
+
+      if (settings.autoMode) {
+        // Continue automatically after brief delay
+        delay(Constants.TimerService.INTERVAL_TRANSITION_DELAY)
+      } else {
+        // Manual mode: pause and wait for user dismissal
+        pausedFromPhase = TimerPhase.Running
+        _timerState.value =
+          _timerState.value.copy(
+            phase = TimerPhase.AlarmActive,
+            isPaused = true,
+          )
+        timerNotificationManager.updateTimerNotification(_timerState.value)
+        timerNotificationManager.triggerContinuousAlarm(settings)
+      }
+    } else {
+      // Workout completed
+      handleWorkoutComplete(settings)
     }
+  }
 
-    private suspend fun handleAlarmDismissal(currentState: TimerState, settings: NotificationSettings) {
-        if (currentState.currentLap > currentState.totalLaps && !currentState.isInfinite) {
-            // Workout is complete, stop timer
-            stopTimer()
-        } else {
-            // Resume to the phase we were in before alarm
-            _timerState.value = currentState.copy(
-                phase = pausedFromPhase,
-                isPaused = false,
-            )
-            timerNotificationManager.updateTimerNotification(_timerState.value)
-            startCountdown()
-        }
-    }
+  private suspend fun handleWorkoutComplete(settings: NotificationSettings) {
+    // Trigger completion notifications
+    timerNotificationManager.triggerWorkoutComplete(settings)
 
-    inner class TimerBinder : Binder() {
-        fun getService(): TimerService = this@TimerService
+    if (settings.autoMode) {
+      // Auto mode: stop timer automatically after triple notification
+      delay(
+        Constants.TimerService.WORKOUT_COMPLETION_DELAY
+      ) // Give time for completion sound/vibration
+      stopTimer()
+    } else {
+      // Manual mode: wait for user dismissal
+      _timerState.value =
+        _timerState.value.copy(
+          phase = TimerPhase.AlarmActive,
+          isPaused = true,
+        )
+      timerNotificationManager.updateTimerNotification(_timerState.value)
+      timerNotificationManager.triggerContinuousAlarm(settings)
     }
+  }
+
+  private suspend fun handleAlarmDismissal(
+    currentState: TimerState,
+    settings: NotificationSettings
+  ) {
+    if (currentState.currentLap > currentState.totalLaps && !currentState.isInfinite) {
+      // Workout is complete, stop timer
+      stopTimer()
+    } else {
+      // Resume to the phase we were in before alarm
+      _timerState.value =
+        currentState.copy(
+          phase = pausedFromPhase,
+          isPaused = false,
+        )
+      timerNotificationManager.updateTimerNotification(_timerState.value)
+      startCountdown()
+    }
+  }
+
+  inner class TimerBinder : Binder() {
+    fun getService(): TimerService = this@TimerService
+  }
 }

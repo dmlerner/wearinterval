@@ -256,18 +256,7 @@ spotless {
     kotlin {
         target("src/**/*.kt", "*.kt")
         targetExclude("**/build/**/*.kt")
-        ktlint("1.0.1").editorConfigOverride(
-            mapOf(
-                "android" to "true",
-                "insert_final_newline" to "true",
-                "indent_size" to "4",
-                "continuation_indent_size" to "8",
-                "max_line_length" to "140",
-                "ktlint_standard_discouraged-comment-location" to "disabled",
-                "ktlint_standard_function-naming" to "disabled",
-                "ktlint_standard_filename" to "disabled",
-            ),
-        )
+        ktfmt("0.44").googleStyle()
     }
     kotlinGradle {
         target("*.gradle.kts")

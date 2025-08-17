@@ -21,15 +21,15 @@ import com.wearinterval.util.Constants
 
 // Constants for component sizing and spacing
 private object ProgressRingDefaults {
-    val DEFAULT_SIZE = Constants.Dimensions.PROGRESS_RING_DEFAULT_SIZE.dp
-    val DEFAULT_STROKE_WIDTH = Constants.Dimensions.PROGRESS_RING_DEFAULT_STROKE.dp
-    val DUAL_RING_SIZE = Constants.Dimensions.PROGRESS_RING_DUAL_SIZE.dp
-    val DUAL_RING_OUTER_STROKE = Constants.Dimensions.PROGRESS_RING_OUTER_STROKE.dp
-    val DUAL_RING_INNER_STROKE = Constants.Dimensions.PROGRESS_RING_INNER_STROKE.dp
-    val DUAL_RING_GAP = Constants.Dimensions.PROGRESS_RING_GAP.dp
-    const val BACKGROUND_ALPHA = 0.3f
-    const val DUAL_RING_BACKGROUND_ALPHA = 0.2f
-    const val START_ANGLE_TOP = -90f
+  val DEFAULT_SIZE = Constants.Dimensions.PROGRESS_RING_DEFAULT_SIZE.dp
+  val DEFAULT_STROKE_WIDTH = Constants.Dimensions.PROGRESS_RING_DEFAULT_STROKE.dp
+  val DUAL_RING_SIZE = Constants.Dimensions.PROGRESS_RING_DUAL_SIZE.dp
+  val DUAL_RING_OUTER_STROKE = Constants.Dimensions.PROGRESS_RING_OUTER_STROKE.dp
+  val DUAL_RING_INNER_STROKE = Constants.Dimensions.PROGRESS_RING_INNER_STROKE.dp
+  val DUAL_RING_GAP = Constants.Dimensions.PROGRESS_RING_GAP.dp
+  const val BACKGROUND_ALPHA = 0.3f
+  const val DUAL_RING_BACKGROUND_ALPHA = 0.2f
+  const val START_ANGLE_TOP = -90f
 }
 
 /**
@@ -46,76 +46,82 @@ private object ProgressRingDefaults {
  */
 @Composable
 fun ProgressRing(
-    progress: Float,
-    modifier: Modifier = Modifier,
-    size: Dp = ProgressRingDefaults.DEFAULT_SIZE,
-    strokeWidth: Dp = ProgressRingDefaults.DEFAULT_STROKE_WIDTH,
-    backgroundColor: Color = Constants.Colors.PROGRESS_RING_DEFAULT_BACKGROUND.copy(alpha = ProgressRingDefaults.BACKGROUND_ALPHA),
-    progressColor: Color = Constants.Colors.PROGRESS_RING_DEFAULT_PROGRESS,
-    startAngle: Float = ProgressRingDefaults.START_ANGLE_TOP, // Start from top
-    content: @Composable () -> Unit = {},
+  progress: Float,
+  modifier: Modifier = Modifier,
+  size: Dp = ProgressRingDefaults.DEFAULT_SIZE,
+  strokeWidth: Dp = ProgressRingDefaults.DEFAULT_STROKE_WIDTH,
+  backgroundColor: Color =
+    Constants.Colors.PROGRESS_RING_DEFAULT_BACKGROUND.copy(
+      alpha = ProgressRingDefaults.BACKGROUND_ALPHA
+    ),
+  progressColor: Color = Constants.Colors.PROGRESS_RING_DEFAULT_PROGRESS,
+  startAngle: Float = ProgressRingDefaults.START_ANGLE_TOP, // Start from top
+  content: @Composable () -> Unit = {},
 ) {
-    val density = LocalDensity.current
-    val strokeWidthPx = with(density) { strokeWidth.toPx() }
+  val density = LocalDensity.current
+  val strokeWidthPx = with(density) { strokeWidth.toPx() }
 
-    // Determine the final modifier - use size if provided, otherwise use the passed modifier for dynamic sizing
-    val finalModifier = if (modifier == Modifier) {
-        Modifier.size(size)
+  // Determine the final modifier - use size if provided, otherwise use the passed modifier for
+  // dynamic sizing
+  val finalModifier =
+    if (modifier == Modifier) {
+      Modifier.size(size)
     } else {
-        modifier
+      modifier
     }
 
-    Box(
-        modifier = finalModifier,
-        contentAlignment = Alignment.Center,
+  Box(
+    modifier = finalModifier,
+    contentAlignment = Alignment.Center,
+  ) {
+    // Progress ring canvas - use fillMaxSize for dynamic sizing
+    Canvas(
+      modifier = Modifier.fillMaxSize(),
     ) {
-        // Progress ring canvas - use fillMaxSize for dynamic sizing
-        Canvas(
-            modifier = Modifier.fillMaxSize(),
-        ) {
-            val canvasSize = this.size.minDimension
-            val radius = (canvasSize - strokeWidthPx) / 2f
-            val center = this.center
-            val topLeft = androidx.compose.ui.geometry.Offset(
-                center.x - radius,
-                center.y - radius,
-            )
-            val size = androidx.compose.ui.geometry.Size(radius * 2, radius * 2)
+      val canvasSize = this.size.minDimension
+      val radius = (canvasSize - strokeWidthPx) / 2f
+      val center = this.center
+      val topLeft =
+        androidx.compose.ui.geometry.Offset(
+          center.x - radius,
+          center.y - radius,
+        )
+      val size = androidx.compose.ui.geometry.Size(radius * 2, radius * 2)
 
-            // Draw background track
-            drawArc(
-                color = backgroundColor,
-                startAngle = 0f,
-                sweepAngle = 360f,
-                useCenter = false,
-                topLeft = topLeft,
-                size = size,
-                style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round),
-            )
+      // Draw background track
+      drawArc(
+        color = backgroundColor,
+        startAngle = 0f,
+        sweepAngle = 360f,
+        useCenter = false,
+        topLeft = topLeft,
+        size = size,
+        style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round),
+      )
 
-            // Draw progress arc
-            if (progress > 0f) {
-                val sweepAngle = (progress.coerceIn(0f, 1f) * 360f)
-                drawArc(
-                    color = progressColor,
-                    startAngle = startAngle,
-                    sweepAngle = sweepAngle,
-                    useCenter = false,
-                    topLeft = topLeft,
-                    size = size,
-                    style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round),
-                )
-            }
-        }
-
-        // Center content
-        content()
+      // Draw progress arc
+      if (progress > 0f) {
+        val sweepAngle = (progress.coerceIn(0f, 1f) * 360f)
+        drawArc(
+          color = progressColor,
+          startAngle = startAngle,
+          sweepAngle = sweepAngle,
+          useCenter = false,
+          topLeft = topLeft,
+          size = size,
+          style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round),
+        )
+      }
     }
+
+    // Center content
+    content()
+  }
 }
 
 /**
- * Dual concentric progress rings for the main timer display.
- * Outer ring shows overall workout progress, inner ring shows current interval progress.
+ * Dual concentric progress rings for the main timer display. Outer ring shows overall workout
+ * progress, inner ring shows current interval progress.
  *
  * @param outerProgress Overall workout progress (0.0 to 1.0)
  * @param innerProgress Current interval progress (0.0 to 1.0)
@@ -126,79 +132,79 @@ fun ProgressRing(
  */
 @Composable
 fun DualProgressRings(
-    outerProgress: Float,
-    innerProgress: Float,
-    modifier: Modifier = Modifier,
-    outerColor: Color = Constants.Colors.PROGRESS_RING_OUTER_COLOR,
-    innerColor: Color = Constants.Colors.PROGRESS_RING_INNER_COLOR,
-    content: @Composable () -> Unit = {},
+  outerProgress: Float,
+  innerProgress: Float,
+  modifier: Modifier = Modifier,
+  outerColor: Color = Constants.Colors.PROGRESS_RING_OUTER_COLOR,
+  innerColor: Color = Constants.Colors.PROGRESS_RING_INNER_COLOR,
+  content: @Composable () -> Unit = {},
 ) {
-    val outerStrokeWidth = ProgressRingDefaults.DUAL_RING_OUTER_STROKE
-    val innerStrokeWidth = ProgressRingDefaults.DUAL_RING_INNER_STROKE
-    val ringGap = ProgressRingDefaults.DUAL_RING_GAP // Gap between the rings
+  val outerStrokeWidth = ProgressRingDefaults.DUAL_RING_OUTER_STROKE
+  val innerStrokeWidth = ProgressRingDefaults.DUAL_RING_INNER_STROKE
+  val ringGap = ProgressRingDefaults.DUAL_RING_GAP // Gap between the rings
 
-    Box(
-        modifier = modifier,
-        contentAlignment = Alignment.Center,
-    ) {
-        // Outer progress ring (overall workout progress) - uses full available size
-        ProgressRing(
-            progress = outerProgress,
-            modifier = Modifier.fillMaxSize(),
-            strokeWidth = outerStrokeWidth,
-            progressColor = outerColor,
-            backgroundColor = outerColor.copy(alpha = ProgressRingDefaults.DUAL_RING_BACKGROUND_ALPHA),
-        )
+  Box(
+    modifier = modifier,
+    contentAlignment = Alignment.Center,
+  ) {
+    // Outer progress ring (overall workout progress) - uses full available size
+    ProgressRing(
+      progress = outerProgress,
+      modifier = Modifier.fillMaxSize(),
+      strokeWidth = outerStrokeWidth,
+      progressColor = outerColor,
+      backgroundColor = outerColor.copy(alpha = ProgressRingDefaults.DUAL_RING_BACKGROUND_ALPHA),
+    )
 
-        // Inner progress ring (current interval progress) - smaller to create the dual ring effect
-        ProgressRing(
-            progress = innerProgress,
-            modifier = Modifier.fillMaxSize(0.9f), // 90% of parent size for inner ring (closer to outer)
-            strokeWidth = innerStrokeWidth,
-            progressColor = innerColor,
-            backgroundColor = innerColor.copy(alpha = ProgressRingDefaults.DUAL_RING_BACKGROUND_ALPHA),
-        )
+    // Inner progress ring (current interval progress) - smaller to create the dual ring effect
+    ProgressRing(
+      progress = innerProgress,
+      modifier = Modifier.fillMaxSize(0.9f), // 90% of parent size for inner ring (closer to outer)
+      strokeWidth = innerStrokeWidth,
+      progressColor = innerColor,
+      backgroundColor = innerColor.copy(alpha = ProgressRingDefaults.DUAL_RING_BACKGROUND_ALPHA),
+    )
 
-        // Center content
-        content()
-    }
+    // Center content
+    content()
+  }
 }
 
 @Preview
 @Composable
 private fun ProgressRingPreview() {
-    MaterialTheme {
-        ProgressRing(
-            progress = 0.75f,
-            progressColor = Constants.Colors.PROGRESS_RING_DEFAULT_PROGRESS,
-        ) {
-            Text("75%")
-        }
+  MaterialTheme {
+    ProgressRing(
+      progress = 0.75f,
+      progressColor = Constants.Colors.PROGRESS_RING_DEFAULT_PROGRESS,
+    ) {
+      Text("75%")
     }
+  }
 }
 
 @Preview
 @Composable
 private fun DualProgressRingsPreview() {
-    MaterialTheme {
-        DualProgressRings(
-            outerProgress = 0.6f, // 60% overall progress
-            innerProgress = 0.8f, // 80% current interval progress
-            outerColor = Constants.Colors.PROGRESS_RING_OUTER_COLOR,
-            innerColor = Constants.Colors.PROGRESS_RING_INNER_COLOR,
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    text = "45s",
-                    style = MaterialTheme.typography.display3,
-                )
-                Text(
-                    text = "3/20",
-                    style = MaterialTheme.typography.body2,
-                )
-            }
-        }
+  MaterialTheme {
+    DualProgressRings(
+      outerProgress = 0.6f, // 60% overall progress
+      innerProgress = 0.8f, // 80% current interval progress
+      outerColor = Constants.Colors.PROGRESS_RING_OUTER_COLOR,
+      innerColor = Constants.Colors.PROGRESS_RING_INNER_COLOR,
+    ) {
+      Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+      ) {
+        Text(
+          text = "45s",
+          style = MaterialTheme.typography.display3,
+        )
+        Text(
+          text = "3/20",
+          style = MaterialTheme.typography.body2,
+        )
+      }
     }
+  }
 }
