@@ -56,6 +56,11 @@ android {
 apply(plugin = "jacoco")
 
 tasks.withType<Test> {
+    // Test parallelism configuration
+    maxParallelForks = (Runtime.getRuntime().availableProcessors() * 6 / 12).coerceAtLeast(1)
+    forkEvery = 20
+
+    // JaCoCo configuration
     configure<JacocoTaskExtension> {
         isIncludeNoLocationClasses = true
         excludes = listOf("jdk.internal.*")
