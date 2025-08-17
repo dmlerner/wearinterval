@@ -227,7 +227,6 @@ private fun TimerDisplay(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
                     color = MaterialTheme.colors.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
-
                 // Phase indicator (only show during rest)
                 if (uiState.isResting) {
                     Text(
@@ -237,7 +236,6 @@ private fun TimerDisplay(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
                         textAlign = TextAlign.Center,
                     )
                 }
-
                 // Control buttons inside the circle
                 TimerControlsInside(
                     uiState = uiState,
@@ -316,7 +314,6 @@ private fun AlarmScreen(uiState: MainUiState, onDismiss: () -> Unit) {
                 style = MaterialTheme.typography.display2,
                 color = MaterialTheme.colors.error,
             )
-
             Text(
                 text = "Tap to dismiss",
                 style = MaterialTheme.typography.body1,

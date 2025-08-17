@@ -2,9 +2,13 @@ package com.wearinterval.ui.screen.config
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.wear.compose.material.MaterialTheme
 import com.google.common.truth.Truth.assertThat
@@ -123,14 +127,15 @@ class ConfigScreenTest {
             }
         }
 
-        // Then
+        // Then - No reset button in new design
+        // Test that scroll pickers are displayed instead
         composeTestRule
-            .onNodeWithContentDescription("Reset to default")
+            .onNodeWithContentDescription("Tap to reset , long press for alternate value")
             .assertIsDisplayed()
     }
 
     @Test
-    fun increaseLapsButtonTriggersEvent() {
+    fun lapsResetTapTriggersEvent() {
         // Given
         var eventReceived: ConfigEvent? = null
         val uiState = ConfigUiState(laps = 3)
@@ -147,15 +152,15 @@ class ConfigScreenTest {
 
         // When
         composeTestRule
-            .onNodeWithContentDescription("Increase laps")
+            .onNodeWithContentDescription("Tap to reset , long press for alternate value")
             .performClick()
 
         // Then
-        assertThat(eventReceived).isEqualTo(ConfigEvent.IncreaseLaps)
+        assertThat(eventReceived).isEqualTo(ConfigEvent.ResetLaps)
     }
 
     @Test
-    fun decreaseLapsButtonTriggersEvent() {
+    fun lapsLongPressTriggersInfiniteEvent() {
         // Given
         var eventReceived: ConfigEvent? = null
         val uiState = ConfigUiState(laps = 3)
@@ -172,15 +177,15 @@ class ConfigScreenTest {
 
         // When
         composeTestRule
-            .onNodeWithContentDescription("Decrease laps")
-            .performClick()
+            .onNodeWithContentDescription("Tap to reset , long press for alternate value")
+            .performTouchInput { longClick() }
 
         // Then
-        assertThat(eventReceived).isEqualTo(ConfigEvent.DecreaseLaps)
+        assertThat(eventReceived).isEqualTo(ConfigEvent.SetLapsToInfinite)
     }
 
     @Test
-    fun increaseWorkDurationButtonTriggersEvent() {
+    fun workResetTapTriggersEvent() {
         // Given
         var eventReceived: ConfigEvent? = null
         val uiState = ConfigUiState()
@@ -195,17 +200,18 @@ class ConfigScreenTest {
             }
         }
 
-        // When
+        // When - Find the work duration picker tap area
         composeTestRule
-            .onNodeWithContentDescription("Increase work duration")
+            .onAllNodesWithContentDescription("Tap to reset , long press for alternate value")
+            .onFirst()
             .performClick()
 
         // Then
-        assertThat(eventReceived).isEqualTo(ConfigEvent.IncreaseWorkDuration)
+        assertThat(eventReceived).isEqualTo(ConfigEvent.ResetWork)
     }
 
     @Test
-    fun decreaseWorkDurationButtonTriggersEvent() {
+    fun workLongPressTriggersLongEvent() {
         // Given
         var eventReceived: ConfigEvent? = null
         val uiState = ConfigUiState()
@@ -220,17 +226,18 @@ class ConfigScreenTest {
             }
         }
 
-        // When
+        // When - Find the work duration picker tap area
         composeTestRule
-            .onNodeWithContentDescription("Decrease work duration")
-            .performClick()
+            .onAllNodesWithContentDescription("Tap to reset , long press for alternate value")
+            .onFirst()
+            .performTouchInput { longClick() }
 
         // Then
-        assertThat(eventReceived).isEqualTo(ConfigEvent.DecreaseWorkDuration)
+        assertThat(eventReceived).isEqualTo(ConfigEvent.SetWorkToLong)
     }
 
     @Test
-    fun increaseRestDurationButtonTriggersEvent() {
+    fun restResetTapTriggersEvent() {
         // Given
         var eventReceived: ConfigEvent? = null
         val uiState = ConfigUiState()
@@ -245,17 +252,18 @@ class ConfigScreenTest {
             }
         }
 
-        // When
+        // When - Find the rest duration picker tap area (third one)
         composeTestRule
-            .onNodeWithContentDescription("Increase rest duration")
+            .onAllNodesWithContentDescription("Tap to reset Rest, long press for alternate value")
+            .onFirst()
             .performClick()
 
         // Then
-        assertThat(eventReceived).isEqualTo(ConfigEvent.IncreaseRestDuration)
+        assertThat(eventReceived).isEqualTo(ConfigEvent.ResetRest)
     }
 
     @Test
-    fun decreaseRestDurationButtonTriggersEvent() {
+    fun restLongPressTriggersLongEvent() {
         // Given
         var eventReceived: ConfigEvent? = null
         val uiState = ConfigUiState()
@@ -270,38 +278,14 @@ class ConfigScreenTest {
             }
         }
 
-        // When
+        // When - Find the rest duration picker tap area (third one)
         composeTestRule
-            .onNodeWithContentDescription("Decrease rest duration")
-            .performClick()
+            .onAllNodesWithContentDescription("Tap to reset Rest, long press for alternate value")
+            .onFirst()
+            .performTouchInput { longClick() }
 
         // Then
-        assertThat(eventReceived).isEqualTo(ConfigEvent.DecreaseRestDuration)
-    }
-
-    @Test
-    fun resetButtonTriggersEvent() {
-        // Given
-        var eventReceived: ConfigEvent? = null
-        val uiState = ConfigUiState()
-
-        composeTestRule.setContent {
-            MaterialTheme {
-                ConfigContent(
-                    uiState = uiState,
-                    onEvent = { eventReceived = it },
-                    onNavigateBack = {},
-                )
-            }
-        }
-
-        // When
-        composeTestRule
-            .onNodeWithContentDescription("Reset to default")
-            .performClick()
-
-        // Then
-        assertThat(eventReceived).isEqualTo(ConfigEvent.Reset)
+        assertThat(eventReceived).isEqualTo(ConfigEvent.SetRestToLong)
     }
 
     @Test

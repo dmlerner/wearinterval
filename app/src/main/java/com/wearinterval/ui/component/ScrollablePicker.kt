@@ -76,14 +76,16 @@ fun ScrollablePicker(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Title
-        Text(
-            text = title,
-            style = MaterialTheme.typography.caption2,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colors.onSurfaceVariant,
-            modifier = Modifier.padding(bottom = 4.dp),
-        )
+        // Title (only show if not empty)
+        if (title.isNotEmpty()) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.caption2,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colors.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 4.dp),
+            )
+        }
 
         // Scrollable picker
         Box(

@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -18,15 +17,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.wear.compose.material.Button
-import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.MaterialTheme
-import androidx.wear.compose.material.Text
 import com.wearinterval.ui.component.ScrollablePicker
 import kotlin.time.Duration.Companion.seconds
 
@@ -73,7 +68,7 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
             ) {
                 // Laps Picker
                 ConfigScrollPicker(
-                    title = "Laps",
+                    title = "",
                     items = lapsDisplayItems,
                     selectedIndex = lapsIndex,
                     onSelectionChanged = { index ->
@@ -87,7 +82,7 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
 
                 // Work Duration Picker
                 ConfigScrollPicker(
-                    title = "Work",
+                    title = "",
                     items = durationDisplayItems,
                     selectedIndex = workDurationIndex,
                     onSelectionChanged = { index ->
@@ -101,7 +96,7 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
 
                 // Rest Duration Picker
                 ConfigScrollPicker(
-                    title = "Rest",
+                    title = "",
                     items = restDurationDisplayItems,
                     selectedIndex = restDurationIndex,
                     onSelectionChanged = { index ->
@@ -111,24 +106,6 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
                     onSingleTap = { onEvent(ConfigEvent.ResetRest) },
                     onLongPress = { onEvent(ConfigEvent.SetRestToLong) },
                     modifier = Modifier.weight(1f),
-                )
-            }
-
-            // Reset button
-            Button(
-                onClick = {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onEvent(ConfigEvent.Reset)
-                },
-                modifier = Modifier
-                    .size(40.dp)
-                    .semantics { contentDescription = "Reset to default" },
-                colors = ButtonDefaults.secondaryButtonColors(),
-            ) {
-                Text(
-                    text = "↻",
-                    style = MaterialTheme.typography.title3,
-                    textAlign = TextAlign.Center,
                 )
             }
         }
