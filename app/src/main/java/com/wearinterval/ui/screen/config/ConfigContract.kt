@@ -1,11 +1,11 @@
 package com.wearinterval.ui.screen.config
 
 data class ConfigUiState(
-    val laps: Int = 1,
-    val workMinutes: Int = 1,
-    val workSeconds: Int = 0,
+    val laps: Int = 2,
+    val workMinutes: Int = 0,
+    val workSeconds: Int = 3,
     val restMinutes: Int = 0,
-    val restSeconds: Int = 0,
+    val restSeconds: Int = 3,
 ) {
     val totalWorkTimeText: String
         get() = if (workMinutes > 0) {
