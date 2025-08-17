@@ -32,7 +32,7 @@ fun GridConfigurationItem(configuration: TimerConfiguration?, onClick: (TimerCon
     Box(
         modifier = modifier
             .width(62.dp)
-            .height(35.dp)
+            .height(48.dp)
             .clip(RoundedCornerShape(8.dp))
             .then(
                 if (configuration != null) {

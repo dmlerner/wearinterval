@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -71,31 +73,43 @@ internal fun HistoryContent(uiState: HistoryUiState, onEvent: (HistoryEvent) -> 
 
 @Composable
 private fun ConfigurationGrid(configurations: List<TimerConfiguration>, onConfigurationSelect: (TimerConfiguration) -> Unit) {
-    val maxItems = Constants.Dimensions.RECENT_CONFIGURATIONS_COUNT
     val actualItems = configurations.size
-
-    // Create grid based on actual items, but show empty slots up to maxItems for consistency
-    val totalSlots = maxItems
 
     // Dynamic grid layout - always use 2 columns for better balance on watch
     val columns = 2
 
-    val rows = (totalSlots + columns - 1) / columns // Ceiling division
+    // Only create as many rows as needed for actual items
+    val rows = if (actualItems == 0) 0 else (actualItems + columns - 1) / columns // Ceiling division
 
-    Column(
-        modifier = Modifier.padding(4.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
     ) {
-        repeat(rows) { rowIndex ->
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                repeat(columns) { colIndex ->
-                    val itemIndex = rowIndex * columns + colIndex
-                    GridConfigurationItem(
-                        configuration = if (itemIndex < actualItems) configurations[itemIndex] else null,
-                        onClick = onConfigurationSelect,
-                    )
+        Column(
+            modifier = Modifier.padding(4.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            repeat(rows) { rowIndex ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    repeat(columns) { colIndex ->
+                        val itemIndex = rowIndex * columns + colIndex
+                        if (itemIndex < actualItems) {
+                            GridConfigurationItem(
+                                configuration = configurations[itemIndex],
+                                onClick = onConfigurationSelect,
+                            )
+                        } else {
+                            // Add spacer to maintain grid alignment for incomplete rows
+                            Box(
+                                modifier = Modifier
+                                    .width(62.dp)
+                                    .height(48.dp),
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -172,6 +186,60 @@ private fun HistoryContentPartialGridPreview() {
         HistoryContent(
             uiState = HistoryUiState(
                 configurations = sampleConfigurations,
+                isLoading = false,
+            ),
+            onEvent = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun HistoryContentSingleItemPreview() {
+    val singleConfiguration = listOf(
+        TimerConfiguration(
+            laps = 8,
+            workDuration = 30.seconds,
+            restDuration = 10.seconds,
+        ),
+    )
+
+    MaterialTheme {
+        HistoryContent(
+            uiState = HistoryUiState(
+                configurations = singleConfiguration,
+                isLoading = false,
+            ),
+            onEvent = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun HistoryContentThreeItemsPreview() {
+    val threeConfigurations = listOf(
+        TimerConfiguration(
+            laps = 20,
+            workDuration = 45.seconds,
+            restDuration = 15.seconds,
+        ),
+        TimerConfiguration(
+            laps = 1,
+            workDuration = 90.seconds,
+            restDuration = 0.seconds,
+        ),
+        TimerConfiguration(
+            laps = 8,
+            workDuration = 30.seconds,
+            restDuration = 10.seconds,
+        ),
+    )
+
+    MaterialTheme {
+        HistoryContent(
+            uiState = HistoryUiState(
+                configurations = threeConfigurations,
                 isLoading = false,
             ),
             onEvent = {},
