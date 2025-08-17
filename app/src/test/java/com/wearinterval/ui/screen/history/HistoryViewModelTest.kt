@@ -68,8 +68,7 @@ class HistoryViewModelTest {
         testViewModel.uiState.test {
             val initialState = awaitItem()
             assertThat(initialState.isLoading).isFalse()
-            assertThat(initialState.recentConfigurations).isEmpty()
-            assertThat(initialState.error).isNull()
+            assertThat(initialState.configurations).isEmpty()
             assertThat(initialState.hasConfigurations).isFalse()
         }
     }
@@ -87,8 +86,7 @@ class HistoryViewModelTest {
         testViewModel.uiState.test {
             val state = awaitItem()
             assertThat(state.isLoading).isFalse()
-            assertThat(state.recentConfigurations).containsExactlyElementsIn(sampleConfigurations)
-            assertThat(state.error).isNull()
+            assertThat(state.configurations).containsExactlyElementsIn(sampleConfigurations)
             assertThat(state.hasConfigurations).isTrue()
         }
     }

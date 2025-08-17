@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -73,6 +74,15 @@ class TimerRepositoryImpl @Inject constructor(
         return try {
             ensureServiceBound()
             val config = configurationRepository.currentConfiguration.value
+
+            // Save configuration to history when timer starts
+            configurationRepository.updateConfiguration(
+                config.copy(
+                    id = UUID.randomUUID().toString(), // Generate new ID to create unique history entry
+                    lastUsed = System.currentTimeMillis(),
+                ),
+            )
+
             timerService?.startTimer(config)
             Result.success(Unit)
         } catch (e: Exception) {

@@ -21,37 +21,26 @@ class HistoryViewModel @Inject constructor(
     val uiState: StateFlow<HistoryUiState> = configurationRepository.recentConfigurations
         .map { configurations ->
             HistoryUiState(
-                recentConfigurations = configurations,
+                configurations = configurations.take(4), // Limit to 4 most recent for 2x2 grid
                 isLoading = false,
-                error = null,
             )
         }
-        .catch { error ->
-            emit(
-                HistoryUiState(
-                    recentConfigurations = emptyList(),
-                    isLoading = false,
-                    error = error.message ?: "Unknown error occurred",
-                ),
-            )
+        .catch {
+            emit(HistoryUiState(configurations = emptyList(), isLoading = false))
         }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(Constants.UI.SUBSCRIPTION_TIMEOUT),
-            initialValue = HistoryUiState(),
+            initialValue = HistoryUiState(isLoading = true),
         )
 
     fun onEvent(event: HistoryEvent) {
         viewModelScope.launch {
             when (event) {
-                is HistoryEvent.SelectConfiguration -> {
+                is HistoryEvent.ConfigurationSelected -> {
                     configurationRepository.selectRecentConfiguration(event.configuration)
                 }
-                HistoryEvent.ClearHistory -> {
-                    // Note: We don't implement clear functionality yet as it's not in the basic spec
-                    // This could be added later if needed
-                }
-                HistoryEvent.Refresh -> {
+                HistoryEvent.RefreshHistory -> {
                     // The StateFlow automatically refreshes from the repository
                     // This event is here for future manual refresh functionality
                 }
