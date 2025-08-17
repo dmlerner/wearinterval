@@ -71,36 +71,34 @@ internal fun HistoryContent(uiState: HistoryUiState, onEvent: (HistoryEvent) -> 
 
 @Composable
 private fun ConfigurationGrid(configurations: List<TimerConfiguration>, onConfigurationSelect: (TimerConfiguration) -> Unit) {
-    // 2x2 grid with 4dp padding and 6dp spacing
+    val totalItems = Constants.Dimensions.RECENT_CONFIGURATIONS_COUNT
+
+    // Dynamic grid layout based on total items
+    val columns = when {
+        totalItems <= 2 -> totalItems
+        totalItems <= 4 -> 2
+        totalItems <= 6 -> 3
+        else -> 3 // Max 3 columns for watch screens
+    }
+
+    val rows = (totalItems + columns - 1) / columns // Ceiling division
+
     Column(
         modifier = Modifier.padding(4.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        // Top row
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            GridConfigurationItem(
-                configuration = configurations.getOrNull(0),
-                onClick = onConfigurationSelect,
-            )
-            GridConfigurationItem(
-                configuration = configurations.getOrNull(1),
-                onClick = onConfigurationSelect,
-            )
-        }
-        // Bottom row
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            GridConfigurationItem(
-                configuration = configurations.getOrNull(2),
-                onClick = onConfigurationSelect,
-            )
-            GridConfigurationItem(
-                configuration = configurations.getOrNull(3),
-                onClick = onConfigurationSelect,
-            )
+        repeat(rows) { rowIndex ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                repeat(columns) { colIndex ->
+                    val itemIndex = rowIndex * columns + colIndex
+                    GridConfigurationItem(
+                        configuration = configurations.getOrNull(itemIndex),
+                        onClick = onConfigurationSelect,
+                    )
+                }
+            }
         }
     }
 }

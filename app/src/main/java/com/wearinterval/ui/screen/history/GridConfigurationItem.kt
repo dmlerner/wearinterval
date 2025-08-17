@@ -54,7 +54,7 @@ fun GridConfigurationItem(configuration: TimerConfiguration?, onClick: (TimerCon
         if (configuration != null) {
             Text(
                 text = configuration.displayString(),
-                fontSize = 12.sp,
+                fontSize = 14.sp, // Increased from 12sp to 14sp
                 color = Constants.Colors.HISTORY_ITEM_TEXT,
                 textAlign = TextAlign.Center,
                 maxLines = 2,

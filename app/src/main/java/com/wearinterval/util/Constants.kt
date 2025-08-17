@@ -71,6 +71,7 @@ object Constants {
         // History Screen
         const val HISTORY_ITEM_HEIGHT = 56
         const val HISTORY_BUTTON_CORNER_RADIUS = 20
+        const val RECENT_CONFIGURATIONS_COUNT = 6 // Configurable number of recent configurations to show
     }
 
     // UI Colors

@@ -5,6 +5,7 @@ import com.wearinterval.data.database.TimerConfigurationEntity
 import com.wearinterval.data.datastore.DataStoreManager
 import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.repository.ConfigurationRepository
+import com.wearinterval.util.Constants
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -33,7 +34,7 @@ class ConfigurationRepositoryImpl @Inject constructor(
             )
 
     override val recentConfigurations: StateFlow<List<TimerConfiguration>> =
-        configurationDao.getRecentConfigurationsFlow(4)
+        configurationDao.getRecentConfigurationsFlow(Constants.Dimensions.RECENT_CONFIGURATIONS_COUNT)
             .map { entities -> entities.map { it.toDomain() } }
             .stateIn(
                 scope = repositoryScope,
@@ -124,15 +125,11 @@ class ConfigurationRepositoryImpl @Inject constructor(
     private suspend fun cleanupRecentConfigurations() {
         try {
             val count = configurationDao.getConfigurationCount()
-            if (count > LRU_CAPACITY) {
-                configurationDao.cleanupOldConfigurations(LRU_CAPACITY)
+            if (count > Constants.Dimensions.RECENT_CONFIGURATIONS_COUNT) {
+                configurationDao.cleanupOldConfigurations(Constants.Dimensions.RECENT_CONFIGURATIONS_COUNT)
             }
         } catch (e: Exception) {
             // Log error but don't fail the operation
         }
-    }
-
-    companion object {
-        private const val LRU_CAPACITY = 4
     }
 }
