@@ -56,7 +56,7 @@ fun ScrollablePicker(
           kotlin.math.abs((it.offset + it.size / 2) - center)
         }
       // Adjust for padding items (first item is padding, so subtract 1)
-      val rawIndex = centerItem?.index ?: 1
+      val rawIndex = centerItem?.index ?: 0
       val adjustedIndex = rawIndex - 1
       val finalIndex = kotlin.math.max(0, kotlin.math.min(adjustedIndex, items.size - 1))
       android.util.Log.d(
