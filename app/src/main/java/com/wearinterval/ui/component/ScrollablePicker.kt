@@ -88,7 +88,7 @@ fun ScrollablePicker(
     LaunchedEffect(selectedIndex) {
         if (!isUserScrolling.value && selectedIndex != centerIndex && selectedIndex >= 0 && selectedIndex < items.size) {
             isProgrammaticScroll.value = true
-            listState.scrollToItem(selectedIndex)
+            listState.scrollToItem(selectedIndex + 1) // +1 to account for padding item
             kotlinx.coroutines.delay(Constants.UI.SCROLL_PICKER_DEBOUNCE.inWholeMilliseconds)
             isProgrammaticScroll.value = false
         }
