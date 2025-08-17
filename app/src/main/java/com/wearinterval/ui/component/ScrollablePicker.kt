@@ -75,7 +75,7 @@ fun ScrollablePicker(
             isUserScrolling.value = true
             onSelectionChanged(centerIndex)
             // Provide haptic feedback for option change
-            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+            view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
             // Reset after a delay to allow the external state change to propagate
             kotlinx.coroutines.delay(Constants.UI.SCROLL_PICKER_DEBOUNCE.inWholeMilliseconds)
             isUserScrolling.value = false
