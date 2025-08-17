@@ -140,6 +140,9 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.6.8")
     androidTestImplementation("androidx.room:room-testing:2.6.1")
     androidTestImplementation("com.google.dagger:hilt-android-testing:2.51.1")
+    androidTestImplementation("com.google.truth:truth:1.4.4")
+    androidTestImplementation("app.cash.turbine:turbine:1.1.0")
+    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
     kspAndroidTest("com.google.dagger:hilt-compiler:2.51.1")
 
     // Debug Tools

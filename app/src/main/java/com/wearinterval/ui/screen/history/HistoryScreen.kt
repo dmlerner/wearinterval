@@ -52,7 +52,7 @@ fun HistoryScreen(onNavigateBack: () -> Unit, viewModel: HistoryViewModel = hilt
 }
 
 @Composable
-private fun HistoryContent(uiState: HistoryUiState, onEvent: (HistoryEvent) -> Unit, onNavigateBack: () -> Unit) {
+internal fun HistoryContent(uiState: HistoryUiState, onEvent: (HistoryEvent) -> Unit, onNavigateBack: () -> Unit) {
     val listState = rememberScalingLazyListState()
 
     Box(

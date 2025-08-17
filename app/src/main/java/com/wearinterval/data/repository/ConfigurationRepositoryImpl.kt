@@ -24,11 +24,13 @@ class ConfigurationRepositoryImpl @Inject constructor(
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override val currentConfiguration: StateFlow<TimerConfiguration> =
-        dataStoreManager.currentConfiguration.stateIn(
-            scope = repositoryScope,
-            started = SharingStarted.Eagerly,
-            initialValue = TimerConfiguration.DEFAULT,
-        )
+        dataStoreManager.currentConfiguration
+            .map { it ?: TimerConfiguration.DEFAULT }
+            .stateIn(
+                scope = repositoryScope,
+                started = SharingStarted.Eagerly,
+                initialValue = TimerConfiguration.DEFAULT,
+            )
 
     override val recentConfigurations: StateFlow<List<TimerConfiguration>> =
         configurationDao.getRecentConfigurationsFlow(4)

@@ -11,7 +11,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import kotlin.time.Duration.Companion.seconds
-
 class TimerServiceTest {
 
     private lateinit var timerService: TimerService
@@ -313,5 +312,74 @@ class TimerServiceTest {
 
         // When/Then - Should not be able to cast to MutableStateFlow
         assertThat(stateFlow).isNotInstanceOf(kotlinx.coroutines.flow.MutableStateFlow::class.java)
+    }
+
+    @Test
+    fun timerBinder_providesCorrectService() {
+        // Given
+        val binder = timerService.TimerBinder()
+
+        // When
+        val service = binder.getService()
+
+        // Then
+        assertThat(service).isEqualTo(timerService)
+        assertThat(service).isInstanceOf(TimerService::class.java)
+    }
+
+    @Test
+    fun setTimerStateForTesting_updatesState() {
+        // Given
+        val testState = TimerState(
+            phase = TimerPhase.Running,
+            timeRemaining = 45.seconds,
+            currentLap = 3,
+            totalLaps = 5,
+            isPaused = false,
+            configuration = TimerConfiguration.DEFAULT,
+        )
+
+        // When
+        timerService.setTimerStateForTesting(testState)
+
+        // Then
+        runTest {
+            timerService.timerState.test {
+                val state = awaitItem()
+                assertThat(state).isEqualTo(testState)
+            }
+        }
+    }
+
+    @Test
+    fun serviceLifecycle_handlesPauses() = runTest {
+        // Test that service can handle pause/resume through lifecycle events
+        val config = TimerConfiguration.DEFAULT
+
+        timerService.timerState.test {
+            // Initial state
+            val initial = awaitItem()
+            assertThat(initial.phase).isEqualTo(TimerPhase.Stopped)
+
+            // Start timer
+            timerService.startTimer(config)
+            val running = awaitItem()
+            assertThat(running.phase).isEqualTo(TimerPhase.Running)
+
+            // Pause timer
+            timerService.pauseTimer()
+            val paused = awaitItem()
+            assertThat(paused.phase).isEqualTo(TimerPhase.Paused)
+
+            // Resume timer
+            timerService.resumeTimer()
+            val resumed = awaitItem()
+            assertThat(resumed.phase).isEqualTo(TimerPhase.Running)
+
+            // Stop timer
+            timerService.stopTimer()
+            val stopped = awaitItem()
+            assertThat(stopped.phase).isEqualTo(TimerPhase.Stopped)
+        }
     }
 }

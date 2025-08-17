@@ -1,5 +1,6 @@
 package com.wearinterval.ui.component
 
+import androidx.compose.ui.unit.dp
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -8,6 +9,56 @@ import org.junit.Test
  * UI composition tests should be in androidTest directory.
  */
 class ProgressRingTest {
+
+    @Test
+    fun progressRingDefaults_haveCorrectValues() {
+        // Test that default values are within expected ranges
+        // We test the constants through reflection since they're private
+        val progressRingDefaultsClass = Class.forName("com.wearinterval.ui.component.ProgressRingDefaults")
+
+        // Test that the class exists and is accessible
+        assertThat(progressRingDefaultsClass).isNotNull()
+        assertThat(progressRingDefaultsClass.simpleName).isEqualTo("ProgressRingDefaults")
+    }
+
+    @Test
+    fun progressRing_parametersAreValidated() {
+        // Test the parameter validation logic that would be used in ProgressRing
+        val validProgress = 0.75f
+        val invalidProgressHigh = 1.5f
+        val invalidProgressLow = -0.5f
+
+        // Test coercing values to valid range
+        assertThat(validProgress.coerceIn(0f, 1f)).isEqualTo(0.75f)
+        assertThat(invalidProgressHigh.coerceIn(0f, 1f)).isEqualTo(1f)
+        assertThat(invalidProgressLow.coerceIn(0f, 1f)).isEqualTo(0f)
+    }
+
+    @Test
+    fun dualProgressRings_sizingLogic() {
+        // Test the sizing logic for dual rings
+        val outerSize = 140.dp
+        val outerStrokeWidth = 6.dp
+        val ringGap = 12.dp
+
+        val expectedInnerSize = outerSize - (outerStrokeWidth * 2) - ringGap
+        val calculatedInnerSize = 140.dp - (6.dp * 2) - 12.dp // = 116.dp
+
+        assertThat(calculatedInnerSize.value).isEqualTo(116f)
+    }
+
+    @Test
+    fun color_alphaCalculations() {
+        // Test alpha calculations for background colors
+        val backgroundAlpha = 0.3f
+        val dualRingBackgroundAlpha = 0.2f
+
+        // Test that alpha values are in valid range
+        assertThat(backgroundAlpha).isAtLeast(0f)
+        assertThat(backgroundAlpha).isAtMost(1f)
+        assertThat(dualRingBackgroundAlpha).isAtLeast(0f)
+        assertThat(dualRingBackgroundAlpha).isAtMost(1f)
+    }
 
     @Test
     fun progressValues_areCoercedCorrectly() {

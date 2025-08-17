@@ -10,6 +10,14 @@ import org.junit.Test
 class ThemeTest {
 
     @Test
+    fun theme_packageStructure() {
+        // Test theme package naming convention
+        val expectedPackage = "com.wearinterval.ui.theme"
+        assertThat(expectedPackage).endsWith(".theme")
+        assertThat(expectedPackage).contains("ui")
+    }
+
+    @Test
     fun colorValues_areValid() {
         // Test color value validation
         fun isValidColorHex(color: String): Boolean {

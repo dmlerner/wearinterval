@@ -25,6 +25,9 @@ class DataStoreManager @Inject constructor(
 ) {
     private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("settings")
 
+    // Expose dataStore for testing
+    val dataStore: DataStore<Preferences> get() = context.dataStore
+
     companion object {
         // NotificationSettings keys
         private val VIBRATION_ENABLED = booleanPreferencesKey("vibration_enabled")
@@ -44,29 +47,34 @@ class DataStoreManager @Inject constructor(
         .catch { emit(androidx.datastore.preferences.core.emptyPreferences()) }
         .map { preferences ->
             NotificationSettings(
-                vibrationEnabled = preferences[VIBRATION_ENABLED] ?: true,
-                soundEnabled = preferences[SOUND_ENABLED] ?: true,
-                flashEnabled = preferences[FLASH_ENABLED] ?: true,
-                autoMode = preferences[AUTO_MODE] ?: true,
+                vibrationEnabled = preferences[VIBRATION_ENABLED] ?: NotificationSettings.DEFAULT.vibrationEnabled,
+                soundEnabled = preferences[SOUND_ENABLED] ?: NotificationSettings.DEFAULT.soundEnabled,
+                flashEnabled = preferences[FLASH_ENABLED] ?: NotificationSettings.DEFAULT.flashEnabled,
+                autoMode = preferences[AUTO_MODE] ?: NotificationSettings.DEFAULT.autoMode,
             )
         }
 
-    val currentConfiguration: Flow<TimerConfiguration> = context.dataStore.data
+    val currentConfiguration: Flow<TimerConfiguration?> = context.dataStore.data
         .catch { emit(androidx.datastore.preferences.core.emptyPreferences()) }
         .map { preferences ->
-            TimerConfiguration(
-                id = preferences[CURRENT_CONFIG_ID] ?: TimerConfiguration.DEFAULT.id,
-                laps = preferences[CURRENT_CONFIG_LAPS] ?: TimerConfiguration.DEFAULT.laps,
-                workDuration = (
-                    preferences[CURRENT_CONFIG_WORK_DURATION]
-                        ?: TimerConfiguration.DEFAULT.workDuration.inWholeSeconds
-                    ).seconds,
-                restDuration = (
-                    preferences[CURRENT_CONFIG_REST_DURATION]
-                        ?: TimerConfiguration.DEFAULT.restDuration.inWholeSeconds
-                    ).seconds,
-                lastUsed = preferences[CURRENT_CONFIG_LAST_USED] ?: TimerConfiguration.DEFAULT.lastUsed,
-            )
+            val configId = preferences[CURRENT_CONFIG_ID]
+            if (configId == null) {
+                null
+            } else {
+                TimerConfiguration(
+                    id = configId,
+                    laps = preferences[CURRENT_CONFIG_LAPS] ?: TimerConfiguration.DEFAULT.laps,
+                    workDuration = (
+                        preferences[CURRENT_CONFIG_WORK_DURATION]
+                            ?: TimerConfiguration.DEFAULT.workDuration.inWholeSeconds
+                        ).seconds,
+                    restDuration = (
+                        preferences[CURRENT_CONFIG_REST_DURATION]
+                            ?: TimerConfiguration.DEFAULT.restDuration.inWholeSeconds
+                        ).seconds,
+                    lastUsed = preferences[CURRENT_CONFIG_LAST_USED] ?: TimerConfiguration.DEFAULT.lastUsed,
+                )
+            }
         }
 
     suspend fun updateNotificationSettings(settings: NotificationSettings) {

@@ -35,7 +35,7 @@ fun SettingsScreen(onNavigateBack: () -> Unit, viewModel: SettingsViewModel = hi
 }
 
 @Composable
-private fun SettingsContent(uiState: SettingsUiState, onEvent: (SettingsEvent) -> Unit, onNavigateBack: () -> Unit) {
+internal fun SettingsContent(uiState: SettingsUiState, onEvent: (SettingsEvent) -> Unit, onNavigateBack: () -> Unit) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,

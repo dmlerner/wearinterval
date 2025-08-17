@@ -38,7 +38,7 @@ fun ConfigScreen(onNavigateBack: () -> Unit, viewModel: ConfigViewModel = hiltVi
 }
 
 @Composable
-private fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Unit, onNavigateBack: () -> Unit) {
+internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Unit, onNavigateBack: () -> Unit) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,

@@ -1,11 +1,11 @@
 package com.wearinterval.ui.component
 
-import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import org.junit.Rule
 import org.junit.Test

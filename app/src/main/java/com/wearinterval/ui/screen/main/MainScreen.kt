@@ -64,7 +64,7 @@ fun MainScreen(
 }
 
 @Composable
-private fun MainContent(
+internal fun MainContent(
     uiState: MainUiState,
     onEvent: (MainEvent) -> Unit,
     onNavigateToConfig: () -> Unit,
