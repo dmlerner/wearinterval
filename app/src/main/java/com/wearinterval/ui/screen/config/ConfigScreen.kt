@@ -1,5 +1,6 @@
 package com.wearinterval.ui.screen.config
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,7 +53,9 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
     val restDurationDisplayItems = ConfigPickerValues.REST_DURATION_VALUES.map { ConfigPickerValues.durationDisplayText(it) }
 
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colors.background),
         contentAlignment = Alignment.Center,
     ) {
         Column(

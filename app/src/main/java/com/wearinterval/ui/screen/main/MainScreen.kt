@@ -74,6 +74,7 @@ internal fun MainContent(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colors.background)
             .then(flashModifier),
         contentAlignment = Alignment.Center,
     ) {

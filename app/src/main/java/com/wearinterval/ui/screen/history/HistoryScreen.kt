@@ -1,5 +1,6 @@
 package com.wearinterval.ui.screen.history
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,7 +56,9 @@ internal fun HistoryContent(uiState: HistoryUiState, onEvent: (HistoryEvent) -> 
     val listState = rememberScalingLazyListState()
 
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colors.background),
         contentAlignment = Alignment.Center,
     ) {
         when {
