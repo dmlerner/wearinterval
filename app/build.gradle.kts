@@ -203,6 +203,7 @@ dependencies {
 
     // Coroutines & Flow
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.8.1")
 
     // Wear OS Platform APIs
     implementation("androidx.wear.tiles:tiles:1.4.0")
