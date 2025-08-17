@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import com.wearinterval.data.service.TimerService
-import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.model.TimerState
 import com.wearinterval.domain.repository.ConfigurationRepository
 import com.wearinterval.domain.repository.TimerRepository
@@ -124,16 +123,6 @@ class TimerRepositoryImpl @Inject constructor(
         return try {
             ensureServiceBound()
             timerService?.dismissAlarm()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun updateConfiguration(config: TimerConfiguration): Result<Unit> {
-        return try {
-            ensureServiceBound()
-            timerService?.updateConfiguration(config)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

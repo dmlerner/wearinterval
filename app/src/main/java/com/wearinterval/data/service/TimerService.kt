@@ -9,6 +9,7 @@ import com.wearinterval.domain.model.NotificationSettings
 import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.model.TimerPhase
 import com.wearinterval.domain.model.TimerState
+import com.wearinterval.domain.repository.ConfigurationRepository
 import com.wearinterval.domain.repository.SettingsRepository
 import com.wearinterval.util.Constants
 import com.wearinterval.wearos.notification.TimerNotificationManager
@@ -36,6 +37,9 @@ class TimerService : Service() {
     lateinit var settingsRepository: SettingsRepository
 
     @Inject
+    lateinit var configurationRepository: ConfigurationRepository
+
+    @Inject
     lateinit var powerManager: PowerManager
 
     private val binder = TimerBinder()
@@ -56,6 +60,7 @@ class TimerService : Service() {
         super.onCreate()
         // Notification channels are handled by TimerNotificationManager
         initializeWakeLock()
+        observeConfigurationChanges()
     }
 
     override fun onBind(intent: Intent): IBinder = binder
@@ -132,14 +137,6 @@ class TimerService : Service() {
         timerNotificationManager.dismissAlert()
     }
 
-    fun updateConfiguration(config: TimerConfiguration) {
-        // Only update if timer is stopped
-        if (_timerState.value.isStopped) {
-            _timerState.value = TimerState.stopped(config)
-            timerNotificationManager.updateTimerNotification(_timerState.value)
-        }
-    }
-
     fun dismissAlarm() {
         val currentState = _timerState.value
         if (currentState.phase == TimerPhase.AlarmActive) {
@@ -162,6 +159,22 @@ class TimerService : Service() {
             PowerManager.PARTIAL_WAKE_LOCK,
             "WearInterval:TimerService",
         )
+    }
+
+    private fun observeConfigurationChanges() {
+        serviceScope.launch {
+            configurationRepository.currentConfiguration.collect { config ->
+                android.util.Log.d("TimerService", "Config changed: ${config.laps} laps, ${config.workDuration}")
+                // Only update if timer is stopped to maintain single source of truth
+                if (_timerState.value.isStopped) {
+                    android.util.Log.d("TimerService", "Timer is stopped, updating state")
+                    _timerState.value = TimerState.stopped(config)
+                    timerNotificationManager.updateTimerNotification(_timerState.value)
+                } else {
+                    android.util.Log.d("TimerService", "Timer is not stopped, phase: ${_timerState.value.phase}")
+                }
+            }
+        }
     }
 
     private fun acquireWakeLock() {

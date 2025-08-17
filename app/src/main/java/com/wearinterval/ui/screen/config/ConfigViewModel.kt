@@ -74,8 +74,6 @@ class ConfigViewModel @Inject constructor(
             }
 
             configurationRepository.updateConfiguration(updatedConfig)
-            // Also update timer service if stopped so main screen reflects changes immediately
-            timerRepository.updateConfiguration(updatedConfig)
         }
     }
 }

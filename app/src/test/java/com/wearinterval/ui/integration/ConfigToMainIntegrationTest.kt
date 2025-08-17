@@ -66,18 +66,13 @@ class ConfigToMainIntegrationTest {
         timerRepository = mockk {
             every { timerState } returns timerStateFlow
             every { isServiceBound } returns isServiceBoundFlow
-            coEvery { updateConfiguration(any()) } answers {
-                // Simulate what TimerService does - only update if stopped
-                if (timerStateFlow.value.isStopped) {
-                    timerStateFlow.value = TimerState.stopped(firstArg())
-                }
-                Result.success(Unit)
-            }
             coEvery { startTimer() } returns Result.success(Unit)
             coEvery { pauseTimer() } returns Result.success(Unit)
             coEvery { resumeTimer() } returns Result.success(Unit)
             coEvery { stopTimer() } returns Result.success(Unit)
         }
+
+        // Note: Timer service synchronization now happens through reactive flows automatically
 
         // Setup settings repository mock
         settingsRepository = mockk()

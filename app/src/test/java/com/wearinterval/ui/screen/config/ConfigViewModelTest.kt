@@ -35,7 +35,6 @@ class ConfigViewModelTest {
     fun setup() {
         every { mockConfigRepository.currentConfiguration } returns currentConfigFlow
         coEvery { mockConfigRepository.updateConfiguration(any()) } returns Result.success(Unit)
-        coEvery { mockTimerRepository.updateConfiguration(any()) } returns Result.success(Unit)
 
         viewModel = ConfigViewModel(mockConfigRepository, mockTimerRepository)
     }

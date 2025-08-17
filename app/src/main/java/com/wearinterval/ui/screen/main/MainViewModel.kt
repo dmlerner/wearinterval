@@ -29,11 +29,21 @@ class MainViewModel @Inject constructor(
         timerRepository.isServiceBound,
         flashScreen,
     ) { timerState, configuration, isServiceBound, flash ->
+        android.util.Log.d(
+            "MainViewModel",
+            "TimerState: ${timerState.currentLap}/${timerState.totalLaps}, Config: ${configuration.laps}, Phase: ${timerState.phase}",
+        )
+
+        // When stopped, always use configuration values to avoid race conditions
+        val displayLaps = if (timerState.isStopped) configuration.laps else timerState.totalLaps
+        val displayCurrentLap = if (timerState.isStopped) 1 else timerState.currentLap
+        val displayTimeRemaining = if (timerState.isStopped) configuration.workDuration else timerState.timeRemaining
+
         MainUiState(
             timerPhase = timerState.phase,
-            timeRemaining = timerState.timeRemaining,
-            currentLap = timerState.currentLap,
-            totalLaps = timerState.totalLaps,
+            timeRemaining = displayTimeRemaining,
+            currentLap = displayCurrentLap,
+            totalLaps = displayLaps,
             isPaused = timerState.isPaused,
             configuration = configuration,
             isPlayButtonEnabled = isServiceBound,
