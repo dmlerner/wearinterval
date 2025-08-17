@@ -50,15 +50,18 @@
                 android:value="interval_timer" />
         </service>
 
-        <!-- 
-        Wear OS integration services are temporarily commented out for Phase 4.
-        They will be implemented in Phase 5 - Wear OS Integration.
-        -->
+        <!-- Timer Notification Receiver -->
+        <receiver
+            android:name=".wearos.notification.TimerNotificationReceiver"
+            android:enabled="true"
+            android:exported="false" />
+
+        <!-- Wear OS Integration Services - Phase 7 -->
         
-        <!-- Tile Service (TODO: Phase 5) -->
+        <!-- Tile Service (temporarily disabled - will implement step by step) -->
         <!--
         <service
-            android:name=".wearos.tile.TimerTileService"
+            android:name=".wearos.tile.WearIntervalTileService"
             android:exported="true"
             android:label="@string/tile_label"
             android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER">
@@ -71,10 +74,10 @@
         </service>
         -->
 
-        <!-- Complication Service (TODO: Phase 5) -->
+        <!-- Complication Service (temporarily disabled - will fix in next iteration) -->
         <!--
         <service
-            android:name=".wearos.complication.TimerComplicationService"
+            android:name=".wearos.complication.WearIntervalComplicationService"
             android:exported="true"
             android:label="@string/complication_label"
             android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">

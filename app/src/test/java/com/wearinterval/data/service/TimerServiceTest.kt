@@ -1,26 +1,27 @@
 package com.wearinterval.data.service
 
-import android.app.NotificationManager
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.model.TimerPhase
 import com.wearinterval.domain.model.TimerState
+import com.wearinterval.wearos.notification.TimerNotificationManager
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import kotlin.time.Duration.Companion.seconds
+
 class TimerServiceTest {
 
     private lateinit var timerService: TimerService
-    private lateinit var mockNotificationManager: NotificationManager
+    private lateinit var mockTimerNotificationManager: TimerNotificationManager
 
     @Before
     fun setup() {
-        mockNotificationManager = mockk(relaxed = true)
+        mockTimerNotificationManager = mockk(relaxed = true)
         timerService = TimerService().apply {
-            notificationManager = mockNotificationManager
+            timerNotificationManager = mockTimerNotificationManager
         }
     }
 

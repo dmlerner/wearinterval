@@ -1,17 +1,13 @@
 package com.wearinterval.data.service
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
-import androidx.core.app.NotificationCompat
-import com.wearinterval.R
 import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.model.TimerPhase
 import com.wearinterval.domain.model.TimerState
+import com.wearinterval.wearos.notification.TimerNotificationManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,7 +22,7 @@ import javax.inject.Inject
 class TimerService : Service() {
 
     @Inject
-    lateinit var notificationManager: NotificationManager
+    lateinit var timerNotificationManager: TimerNotificationManager
 
     private val binder = TimerBinder()
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -39,21 +35,16 @@ class TimerService : Service() {
         _timerState.value = state
     }
 
-    companion object {
-        private const val NOTIFICATION_ID = 1
-        private const val CHANNEL_ID = "timer_service_channel"
-        private const val CHANNEL_NAME = "Timer Service"
-    }
-
     override fun onCreate() {
         super.onCreate()
-        createNotificationChannel()
+        // Notification channels are handled by TimerNotificationManager
     }
 
     override fun onBind(intent: Intent): IBinder = binder
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForeground(NOTIFICATION_ID, createNotification())
+        val notification = timerNotificationManager.createTimerNotification(_timerState.value)
+        startForeground(TimerNotificationManager.TIMER_NOTIFICATION_ID, notification)
         return START_STICKY
     }
 
@@ -76,7 +67,10 @@ class TimerService : Service() {
             configuration = config,
         )
 
-        // TODO: Implement countdown logic in Phase 6
+        // Update notification when timer state changes
+        timerNotificationManager.updateTimerNotification(_timerState.value)
+
+        // TODO: Implement countdown logic in Phase 7
     }
 
     // Store the previous phase when pausing to restore correctly
@@ -90,6 +84,7 @@ class TimerService : Service() {
                 phase = TimerPhase.Paused,
                 isPaused = true,
             )
+            timerNotificationManager.updateTimerNotification(_timerState.value)
         }
     }
 
@@ -100,41 +95,26 @@ class TimerService : Service() {
                 phase = pausedFromPhase,
                 isPaused = false,
             )
+            timerNotificationManager.updateTimerNotification(_timerState.value)
         }
     }
 
     fun stopTimer() {
         _timerState.value = TimerState.stopped()
+        timerNotificationManager.updateTimerNotification(_timerState.value)
+        timerNotificationManager.stopVibration()
+        timerNotificationManager.dismissAlert()
     }
 
     fun dismissAlarm() {
         val currentState = _timerState.value
         if (currentState.phase == TimerPhase.AlarmActive) {
-            // TODO: Implement alarm dismissal logic in Phase 6
+            // TODO: Implement alarm dismissal logic in Phase 7
             _timerState.value = currentState.copy(phase = TimerPhase.Stopped)
+            timerNotificationManager.updateTimerNotification(_timerState.value)
+            timerNotificationManager.stopVibration()
+            timerNotificationManager.dismissAlert()
         }
-    }
-
-    private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            CHANNEL_NAME,
-            NotificationManager.IMPORTANCE_LOW,
-        ).apply {
-            description = "Timer service notification channel"
-            setShowBadge(false)
-        }
-        notificationManager.createNotificationChannel(channel)
-    }
-
-    private fun createNotification(): Notification {
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("WearInterval Timer")
-            .setContentText("Timer is running")
-            .setSmallIcon(android.R.drawable.ic_media_play)
-            .setOngoing(true)
-            .setSilent(true)
-            .build()
     }
 
     inner class TimerBinder : Binder() {

@@ -35,4 +35,10 @@ object TimeUtils {
             "${seconds}s"
         }
     }
+
+    /**
+     * Formats a duration for short display contexts (alias for formatTimeCompact).
+     * Returns format like "2:30" or "45s" (optimized for space).
+     */
+    fun formatDurationShort(duration: Duration): String = formatTimeCompact(duration)
 }
