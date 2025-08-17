@@ -9,15 +9,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -27,8 +26,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
+import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
+import com.wearinterval.R
 import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.model.TimerPhase
 import com.wearinterval.ui.component.DualProgressRings
@@ -41,9 +42,9 @@ private object MainScreenDefaults {
     const val FLASH_DURATION_MS = 500L
     val COMPONENT_SPACING = 12.dp
     val CONTROL_BUTTON_SPACING = 16.dp
-    val CONTROL_BUTTONS_SPACING = 8.dp
-    val PLAY_BUTTON_SIZE = 40.dp // Increased from 24dp for better usability
-    val STOP_BUTTON_SIZE = 36.dp // Increased from 20dp for better usability
+    val CONTROL_BUTTONS_SPACING = 16.dp // Match wearinterval button spacing
+    val PLAY_BUTTON_SIZE = 56.dp // Match wearinterval button size
+    val STOP_BUTTON_SIZE = 56.dp // Match wearinterval button size
     val ALARM_SPACING = 16.dp
 }
 
@@ -192,7 +193,28 @@ private fun TimerControlsInside(uiState: MainUiState, onEvent: (MainEvent) -> Un
         horizontalArrangement = Arrangement.spacedBy(MainScreenDefaults.CONTROL_BUTTONS_SPACING),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Play/Pause button (bigger for better usability)
+        // Stop button with Material icon (matching wearinterval style - stop button first)
+        Button(
+            onClick = {
+                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                onEvent(MainEvent.StopClicked)
+            },
+            modifier = Modifier
+                .size(MainScreenDefaults.STOP_BUTTON_SIZE)
+                .semantics { contentDescription = "Stop" },
+            enabled = uiState.isStopButtonEnabled,
+            colors = ButtonDefaults.buttonColors(
+                backgroundColor = Color.Red,
+            ),
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_stop),
+                contentDescription = "Stop",
+                tint = Color.White,
+            )
+        }
+
+        // Play/Pause button with Material icons (matching wearinterval style)
         Button(
             onClick = {
                 view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
@@ -200,7 +222,6 @@ private fun TimerControlsInside(uiState: MainUiState, onEvent: (MainEvent) -> Un
             },
             modifier = Modifier
                 .size(MainScreenDefaults.PLAY_BUTTON_SIZE)
-                .clip(CircleShape)
                 .semantics {
                     contentDescription = when {
                         uiState.isStopped -> "Play"
@@ -209,34 +230,28 @@ private fun TimerControlsInside(uiState: MainUiState, onEvent: (MainEvent) -> Un
                     }
                 },
             enabled = uiState.isPlayButtonEnabled,
-            colors = ButtonDefaults.primaryButtonColors(),
-        ) {
-            Text(
-                text = if (uiState.isRunning || uiState.isResting) {
-                    "⏸"
-                } else {
-                    "▶"
+            colors = ButtonDefaults.buttonColors(
+                backgroundColor = when {
+                    !uiState.isRunning -> Color.Green
+                    uiState.isPaused -> Color.Green
+                    else -> Color.Yellow
                 },
-                style = MaterialTheme.typography.caption1, // Slightly larger text for bigger buttons
-            )
-        }
-
-        // Stop button (bigger for better usability)
-        Button(
-            onClick = {
-                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                onEvent(MainEvent.StopClicked)
-            },
-            modifier = Modifier
-                .size(MainScreenDefaults.STOP_BUTTON_SIZE)
-                .clip(CircleShape)
-                .semantics { contentDescription = "Stop" },
-            enabled = uiState.isStopButtonEnabled,
-            colors = ButtonDefaults.secondaryButtonColors(),
+            ),
         ) {
-            Text(
-                text = "⏹",
-                style = MaterialTheme.typography.caption1, // Slightly larger text for bigger buttons
+            Icon(
+                painter = painterResource(
+                    id = if (uiState.isRunning && !uiState.isPaused) {
+                        R.drawable.ic_pause
+                    } else {
+                        R.drawable.ic_play_arrow
+                    },
+                ),
+                contentDescription = when {
+                    uiState.isStopped -> "Play"
+                    uiState.isPaused -> "Resume"
+                    else -> "Pause"
+                },
+                tint = Color.Black,
             )
         }
     }
