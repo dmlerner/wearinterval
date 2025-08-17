@@ -3,6 +3,7 @@ package com.wearinterval.ui.screen.history
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wearinterval.domain.repository.ConfigurationRepository
+import com.wearinterval.util.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -36,7 +37,7 @@ class HistoryViewModel @Inject constructor(
         }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
+            started = SharingStarted.WhileSubscribed(Constants.UI.SUBSCRIPTION_TIMEOUT),
             initialValue = HistoryUiState(),
         )
 

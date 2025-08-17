@@ -1,5 +1,6 @@
 package com.wearinterval.ui.screen.config
 
+import com.wearinterval.util.Constants
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -8,7 +9,7 @@ object ConfigPickerValues {
 
     // Laps values as defined in design spec
     val LAPS_VALUES = listOf(
-        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 25, 30, 40, 50, 60, 75, 100, 150, 200, 300, 500, 999,
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 25, 30, 40, 50, 60, 75, 100, 150, 200, 300, 500, Constants.TimerLimits.INFINITE_LAPS,
     )
 
     // Duration values as defined in design spec
@@ -41,20 +42,20 @@ object ConfigPickerValues {
 
     // Display text for laps
     fun lapsDisplayText(laps: Int): String = when (laps) {
-        999 -> "∞"
+        Constants.TimerLimits.INFINITE_LAPS -> "∞"
         else -> laps.toString()
     }
 
     // Display text for durations
     fun durationDisplayText(duration: Duration): String = when {
-        duration == 0.seconds -> "None"
+        duration == Constants.TimerLimits.MIN_REST_DURATION -> "None"
         duration.inWholeMinutes > 0 -> {
             val minutes = duration.inWholeMinutes
             val seconds = (duration.inWholeSeconds % 60).toInt()
             if (seconds == 0) {
                 "$minutes:00"
             } else {
-                "$minutes:${seconds.toString().padStart(2, '0')}"
+                "$minutes:${seconds.toString().padStart(Constants.UI.STRING_PADDING_WIDTH, '0')}"
             }
         }
         else -> "${duration.inWholeSeconds}s"

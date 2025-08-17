@@ -1,5 +1,7 @@
 package com.wearinterval.ui.screen.config
 
+import com.wearinterval.util.Constants
+
 data class ConfigUiState(
     val laps: Int = 2,
     val workMinutes: Int = 0,
@@ -9,14 +11,14 @@ data class ConfigUiState(
 ) {
     val totalWorkTimeText: String
         get() = if (workMinutes > 0) {
-            "$workMinutes:${workSeconds.toString().padStart(2, '0')}"
+            "$workMinutes:${workSeconds.toString().padStart(Constants.UI.STRING_PADDING_WIDTH, '0')}"
         } else {
             "${workSeconds}s"
         }
 
     val totalRestTimeText: String
         get() = if (restMinutes > 0) {
-            "$restMinutes:${restSeconds.toString().padStart(2, '0')}"
+            "$restMinutes:${restSeconds.toString().padStart(Constants.UI.STRING_PADDING_WIDTH, '0')}"
         } else if (restSeconds > 0) {
             "${restSeconds}s"
         } else {

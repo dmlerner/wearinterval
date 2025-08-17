@@ -10,6 +10,7 @@ import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.model.TimerPhase
 import com.wearinterval.domain.model.TimerState
 import com.wearinterval.domain.repository.SettingsRepository
+import com.wearinterval.util.Constants
 import com.wearinterval.wearos.notification.TimerNotificationManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -24,8 +25,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 @AndroidEntryPoint
 class TimerService : Service() {
@@ -177,7 +176,7 @@ class TimerService : Service() {
         countdownJob?.cancel()
         countdownJob = serviceScope.launch {
             while (_timerState.value.isRunning) {
-                delay(100.milliseconds) // Update every 100ms for smooth progress
+                delay(Constants.TimerService.UPDATE_INTERVAL) // Update every 100ms for smooth progress
                 updateTimerState()
             }
         }
@@ -192,9 +191,9 @@ class TimerService : Service() {
         val currentState = _timerState.value
         if (!currentState.isRunning || currentState.isPaused) return
 
-        val newTimeRemaining = currentState.timeRemaining - 100.milliseconds
+        val newTimeRemaining = currentState.timeRemaining - Constants.TimerService.COUNTDOWN_DECREMENT
 
-        if (newTimeRemaining <= 0.seconds) {
+        if (newTimeRemaining <= Constants.TimerLimits.MIN_REST_DURATION) {
             // Current interval completed
             handleIntervalComplete(currentState)
         } else {
@@ -222,7 +221,7 @@ class TimerService : Service() {
     private suspend fun handleWorkComplete(currentState: TimerState, settings: NotificationSettings) {
         val config = currentState.configuration
 
-        if (config.restDuration > 0.seconds) {
+        if (config.restDuration > Constants.TimerLimits.MIN_REST_DURATION) {
             // Start rest period
             _timerState.value = currentState.copy(
                 phase = TimerPhase.Resting,
@@ -232,7 +231,7 @@ class TimerService : Service() {
 
             if (settings.autoMode) {
                 // Continue automatically after brief delay
-                delay(500.milliseconds)
+                delay(Constants.TimerService.INTERVAL_TRANSITION_DELAY)
             } else {
                 // Manual mode: pause and wait for user dismissal
                 pausedFromPhase = TimerPhase.Resting
@@ -268,7 +267,7 @@ class TimerService : Service() {
 
             if (settings.autoMode) {
                 // Continue automatically after brief delay
-                delay(500.milliseconds)
+                delay(Constants.TimerService.INTERVAL_TRANSITION_DELAY)
             } else {
                 // Manual mode: pause and wait for user dismissal
                 pausedFromPhase = TimerPhase.Running
@@ -291,7 +290,7 @@ class TimerService : Service() {
 
         if (settings.autoMode) {
             // Auto mode: stop timer automatically after triple notification
-            delay(2.seconds) // Give time for completion sound/vibration
+            delay(Constants.TimerService.WORKOUT_COMPLETION_DELAY) // Give time for completion sound/vibration
             stopTimer()
         } else {
             // Manual mode: wait for user dismissal

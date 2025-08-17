@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.repository.ConfigurationRepository
 import com.wearinterval.domain.repository.TimerRepository
+import com.wearinterval.util.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -32,7 +33,7 @@ class ConfigViewModel @Inject constructor(
         }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
+            started = SharingStarted.WhileSubscribed(Constants.UI.SUBSCRIPTION_TIMEOUT),
             initialValue = ConfigUiState(),
         )
 
@@ -62,7 +63,7 @@ class ConfigViewModel @Inject constructor(
                     currentConfig.copy(restDuration = TimerConfiguration.DEFAULT.restDuration)
                 }
                 ConfigEvent.SetLapsToInfinite -> {
-                    currentConfig.copy(laps = 999)
+                    currentConfig.copy(laps = Constants.TimerLimits.INFINITE_LAPS)
                 }
                 ConfigEvent.SetWorkToLong -> {
                     currentConfig.copy(workDuration = 5.minutes)

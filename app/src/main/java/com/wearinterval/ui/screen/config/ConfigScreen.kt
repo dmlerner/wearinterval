@@ -28,6 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.material.MaterialTheme
 import com.wearinterval.ui.component.ScrollablePicker
+import com.wearinterval.util.Constants
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -64,8 +65,8 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
         Row(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 4.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                .padding(horizontal = Constants.Dimensions.SMALL_SPACING.dp, vertical = Constants.Dimensions.MEDIUM_SPACING.dp),
+            horizontalArrangement = Arrangement.spacedBy(Constants.Dimensions.MEDIUM_SPACING.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // Laps Picker
@@ -129,11 +130,11 @@ private fun ConfigScrollPicker(
     Box(
         modifier = modifier
             .fillMaxHeight()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(Constants.Dimensions.SCROLL_PICKER_CORNER_RADIUS.dp))
             .background(
                 Color.White.copy(alpha = 0.08f), // Subtle white background for distinction
             )
-            .padding(4.dp),
+            .padding(Constants.Dimensions.SCROLL_PICKER_CONTAINER_PADDING.dp),
     ) {
         ScrollablePicker(
             items = items,
@@ -190,7 +191,7 @@ private fun ConfigContentPreview() {
 private fun ConfigScrollPickerPreview() {
     MaterialTheme {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(Constants.Dimensions.MEDIUM_SPACING.dp),
             modifier = Modifier.fillMaxWidth(),
         ) {
             ConfigScrollPicker(

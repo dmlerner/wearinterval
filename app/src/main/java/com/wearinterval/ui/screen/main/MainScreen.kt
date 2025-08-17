@@ -33,19 +33,20 @@ import com.wearinterval.R
 import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.model.TimerPhase
 import com.wearinterval.ui.component.DualProgressRings
+import com.wearinterval.util.Constants
 import com.wearinterval.util.TimeUtils
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
 // Constants for MainScreen UI
 private object MainScreenDefaults {
-    const val FLASH_DURATION_MS = 500L
-    val COMPONENT_SPACING = 12.dp
-    val CONTROL_BUTTON_SPACING = 16.dp
-    val CONTROL_BUTTONS_SPACING = 16.dp // Match wearinterval button spacing
-    val PLAY_BUTTON_SIZE = 56.dp // Match wearinterval button size
-    val STOP_BUTTON_SIZE = 56.dp // Match wearinterval button size
-    val ALARM_SPACING = 16.dp
+    val FLASH_DURATION_MS = Constants.UI.FLASH_DURATION.inWholeMilliseconds
+    val COMPONENT_SPACING = Constants.Dimensions.COMPONENT_SPACING.dp
+    val CONTROL_BUTTON_SPACING = Constants.Dimensions.CONTROL_BUTTON_SPACING.dp
+    val CONTROL_BUTTONS_SPACING = Constants.Dimensions.CONTROL_BUTTON_SPACING.dp // Match wearinterval button spacing
+    val PLAY_BUTTON_SIZE = Constants.Dimensions.MAIN_PLAY_BUTTON_SIZE.dp // Match wearinterval button size
+    val STOP_BUTTON_SIZE = Constants.Dimensions.MAIN_STOP_BUTTON_SIZE.dp // Match wearinterval button size
+    val ALARM_SPACING = Constants.Dimensions.CONTROL_BUTTON_SPACING.dp
 }
 
 @Composable
@@ -143,13 +144,13 @@ private fun TimerDisplay(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
                 Text(
                     text = when {
                         uiState.isStopped -> {
-                            if (uiState.configuration.laps == 999) {
+                            if (uiState.configuration.laps == Constants.TimerLimits.INFINITE_LAPS) {
                                 "∞ laps"
                             } else {
                                 "${uiState.configuration.laps} laps"
                             }
                         }
-                        uiState.totalLaps == 999 -> "Lap ${uiState.currentLap}"
+                        uiState.totalLaps == Constants.TimerLimits.INFINITE_LAPS -> "Lap ${uiState.currentLap}"
                         else -> "${uiState.currentLap}/${uiState.totalLaps}"
                     },
                     style = MaterialTheme.typography.caption2,

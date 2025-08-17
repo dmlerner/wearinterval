@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
+import com.wearinterval.util.Constants
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -76,7 +77,7 @@ fun ScrollablePicker(
             // Provide haptic feedback for option change
             view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
             // Reset after a delay to allow the external state change to propagate
-            kotlinx.coroutines.delay(100)
+            kotlinx.coroutines.delay(Constants.UI.SCROLL_PICKER_DEBOUNCE.inWholeMilliseconds)
             isUserScrolling.value = false
         }
         // Always update previous index
@@ -88,7 +89,7 @@ fun ScrollablePicker(
         if (!isUserScrolling.value && selectedIndex != centerIndex && selectedIndex >= 0 && selectedIndex < items.size) {
             isProgrammaticScroll.value = true
             listState.scrollToItem(selectedIndex)
-            kotlinx.coroutines.delay(100)
+            kotlinx.coroutines.delay(Constants.UI.SCROLL_PICKER_DEBOUNCE.inWholeMilliseconds)
             isProgrammaticScroll.value = false
         }
     }
@@ -104,7 +105,7 @@ fun ScrollablePicker(
                 style = MaterialTheme.typography.caption2,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colors.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 4.dp),
+                modifier = Modifier.padding(bottom = Constants.Dimensions.SMALL_SPACING.dp),
             )
         }
 
@@ -116,12 +117,14 @@ fun ScrollablePicker(
             LazyColumn(
                 state = listState,
                 flingBehavior = snapBehavior,
-                verticalArrangement = Arrangement.spacedBy(12.dp), // More spacing for better selection visibility
+                verticalArrangement = Arrangement.spacedBy(
+                    Constants.Dimensions.SCROLL_PICKER_ITEM_SPACING.dp,
+                ), // More spacing for better selection visibility
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 // Add padding items at start and end for proper centering
                 item {
-                    Box(modifier = Modifier.height(40.dp))
+                    Box(modifier = Modifier.height(Constants.Dimensions.SCROLL_PICKER_PADDING_HEIGHT.dp))
                 }
 
                 itemsIndexed(items) { index, item ->
@@ -141,12 +144,12 @@ fun ScrollablePicker(
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 6.dp), // Slightly more padding
+                            .padding(vertical = Constants.Dimensions.SCROLL_PICKER_ITEM_VERTICAL_PADDING.dp), // Slightly more padding
                     )
                 }
 
                 item {
-                    Box(modifier = Modifier.height(40.dp))
+                    Box(modifier = Modifier.height(Constants.Dimensions.SCROLL_PICKER_PADDING_HEIGHT.dp))
                 }
             }
         }

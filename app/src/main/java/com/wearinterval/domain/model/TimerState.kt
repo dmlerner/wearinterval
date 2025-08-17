@@ -1,5 +1,6 @@
 package com.wearinterval.domain.model
 
+import com.wearinterval.util.Constants
 import kotlin.time.Duration
 
 data class TimerState(
@@ -33,7 +34,7 @@ data class TimerState(
         return lapProgress.toFloat() / totalLaps.toFloat()
     }
 
-    val isInfinite: Boolean get() = totalLaps == INFINITE_LAPS
+    val isInfinite: Boolean get() = totalLaps == Constants.TimerLimits.INFINITE_LAPS
 
     val displayCurrentLap: String get() = if (isInfinite) currentLap.toString() else "$currentLap/$totalLaps"
 

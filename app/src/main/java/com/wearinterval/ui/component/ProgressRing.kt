@@ -17,15 +17,16 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
+import com.wearinterval.util.Constants
 
 // Constants for component sizing and spacing
 private object ProgressRingDefaults {
-    val DEFAULT_SIZE = 120.dp
-    val DEFAULT_STROKE_WIDTH = 8.dp
-    val DUAL_RING_SIZE = 140.dp
-    val DUAL_RING_OUTER_STROKE = 6.dp
-    val DUAL_RING_INNER_STROKE = 4.dp
-    val DUAL_RING_GAP = 12.dp
+    val DEFAULT_SIZE = Constants.Dimensions.PROGRESS_RING_DEFAULT_SIZE.dp
+    val DEFAULT_STROKE_WIDTH = Constants.Dimensions.PROGRESS_RING_DEFAULT_STROKE.dp
+    val DUAL_RING_SIZE = Constants.Dimensions.PROGRESS_RING_DUAL_SIZE.dp
+    val DUAL_RING_OUTER_STROKE = Constants.Dimensions.PROGRESS_RING_OUTER_STROKE.dp
+    val DUAL_RING_INNER_STROKE = Constants.Dimensions.PROGRESS_RING_INNER_STROKE.dp
+    val DUAL_RING_GAP = Constants.Dimensions.PROGRESS_RING_GAP.dp
     const val BACKGROUND_ALPHA = 0.3f
     const val DUAL_RING_BACKGROUND_ALPHA = 0.2f
     const val START_ANGLE_TOP = -90f

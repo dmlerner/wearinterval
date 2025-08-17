@@ -13,6 +13,7 @@ import com.wearinterval.MainActivity
 import com.wearinterval.R
 import com.wearinterval.domain.model.NotificationSettings
 import com.wearinterval.domain.model.TimerState
+import com.wearinterval.util.Constants
 import com.wearinterval.util.TimeUtils
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -35,10 +36,10 @@ class TimerNotificationManager @Inject constructor(
 ) {
 
     companion object {
-        const val TIMER_CHANNEL_ID = "timer_service_channel"
-        const val ALERT_CHANNEL_ID = "timer_alert_channel"
-        const val TIMER_NOTIFICATION_ID = 1
-        const val ALERT_NOTIFICATION_ID = 2
+        const val TIMER_CHANNEL_ID = Constants.Notifications.TIMER_CHANNEL_ID
+        const val ALERT_CHANNEL_ID = Constants.Notifications.ALERT_CHANNEL_ID
+        const val TIMER_NOTIFICATION_ID = Constants.Notifications.TIMER_NOTIFICATION_ID
+        const val ALERT_NOTIFICATION_ID = Constants.Notifications.ALERT_NOTIFICATION_ID
 
         private const val TIMER_CHANNEL_NAME = "Timer Service"
         private const val ALERT_CHANNEL_NAME = "Timer Alerts"

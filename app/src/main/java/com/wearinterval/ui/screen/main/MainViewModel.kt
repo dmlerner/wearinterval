@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.wearinterval.domain.repository.ConfigurationRepository
 import com.wearinterval.domain.repository.SettingsRepository
 import com.wearinterval.domain.repository.TimerRepository
+import com.wearinterval.util.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,7 +43,7 @@ class MainViewModel @Inject constructor(
         )
     }.stateIn(
         scope = viewModelScope,
-        started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
+        started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(Constants.UI.SUBSCRIPTION_TIMEOUT),
         initialValue = MainUiState(),
     )
 

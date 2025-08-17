@@ -1,6 +1,7 @@
 package com.wearinterval.domain.model
 
 import com.google.common.truth.Truth.assertThat
+import com.wearinterval.util.Constants
 import org.junit.Test
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -12,7 +13,7 @@ class TimerConfigurationTest {
         val config = TimerConfiguration(
             laps = 5,
             workDuration = 45.seconds,
-            restDuration = 15.seconds,
+            restDuration = Constants.TestValues.COMMON_REST_DURATION,
         )
 
         assertThat(config.isValid()).isTrue()
@@ -23,7 +24,7 @@ class TimerConfigurationTest {
         val tooFewLaps = TimerConfiguration(
             laps = 0,
             workDuration = 60.seconds,
-            restDuration = 0.seconds,
+            restDuration = Constants.TimerLimits.MIN_REST_DURATION,
         )
 
         val tooManyLaps = TimerConfiguration(
