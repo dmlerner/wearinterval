@@ -20,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -39,6 +40,7 @@ fun ScrollablePicker(
   val listState = rememberLazyListState()
   val snapBehavior = rememberSnapFlingBehavior(lazyListState = listState)
   val view = LocalView.current
+  val density = LocalDensity.current
 
   // Calculate the visible center index based on scroll position
   val centerIndex by derivedStateOf {
@@ -46,7 +48,9 @@ fun ScrollablePicker(
     if (layoutInfo.visibleItemsInfo.isEmpty()) {
       0
     } else {
+      // Calculate center position for item selection
       val center = layoutInfo.viewportEndOffset / 2
+
       val centerItem =
         layoutInfo.visibleItemsInfo.minByOrNull {
           kotlin.math.abs((it.offset + it.size / 2) - center)
@@ -57,7 +61,7 @@ fun ScrollablePicker(
       val finalIndex = kotlin.math.max(0, kotlin.math.min(adjustedIndex, items.size - 1))
       android.util.Log.d(
         "ScrollablePicker",
-        "centerIndex calc: rawIndex=$rawIndex, adjustedIndex=$adjustedIndex, finalIndex=$finalIndex"
+        "centerIndex calc: center=$center, rawIndex=$rawIndex, adjustedIndex=$adjustedIndex, finalIndex=$finalIndex"
       )
       finalIndex
     }
@@ -122,60 +126,61 @@ fun ScrollablePicker(
     }
 
     // Scrollable picker - use remaining height
-    Box(
-      modifier = Modifier.weight(1f),
-      contentAlignment = Alignment.Center,
+    LazyColumn(
+      state = listState,
+      flingBehavior = snapBehavior,
+      verticalArrangement =
+        Arrangement.spacedBy(
+          Constants.Dimensions.SCROLL_PICKER_ITEM_SPACING.dp,
+        ), // More spacing for better selection visibility
+      modifier = Modifier.weight(1f).fillMaxWidth(),
     ) {
-      LazyColumn(
-        state = listState,
-        flingBehavior = snapBehavior,
-        verticalArrangement =
-          Arrangement.spacedBy(
-            Constants.Dimensions.SCROLL_PICKER_ITEM_SPACING.dp,
-          ), // More spacing for better selection visibility
-        modifier = Modifier.fillMaxWidth(),
-      ) {
-        // Add padding items at start and end for proper centering
-        item {
-          Box(modifier = Modifier.height(Constants.Dimensions.SCROLL_PICKER_PADDING_HEIGHT.dp))
-        }
+      // Add padding item at start for proper centering
+      // Use weight-based padding to ensure perfect centering
+      item {
+        Box(
+          modifier =
+            Modifier.height(Constants.Dimensions.SCROLL_PICKER_PADDING_HEIGHT.dp).fillMaxWidth()
+        )
+      }
 
-        itemsIndexed(items) { index, item ->
-          // Use selectedIndex for highlighting when not actively scrolling, centerIndex when
-          // scrolling
-          val isSelected =
-            if (isUserScrolling.value) index == centerIndex else index == selectedIndex
-          android.util.Log.d(
-            "ScrollablePicker",
-            "Item[$index]='$item', centerIndex=$centerIndex, selectedIndex=$selectedIndex, " +
-              "isUserScrolling=${isUserScrolling.value}, isSelected=$isSelected"
-          )
-          Text(
-            text = item,
-            style =
-              if (isSelected) {
-                MaterialTheme.typography.title3 // Larger, more prominent font
-              } else {
-                MaterialTheme.typography.body2
-              },
-            color =
-              if (isSelected) {
-                Constants.Colors.SCROLLABLE_PICKER_SELECTED // Bright blue for selected
-              } else {
-                MaterialTheme.colors.onSurface.copy(alpha = 0.4f) // More dimmed non-selected
-              },
-            textAlign = TextAlign.Center,
-            modifier =
-              Modifier.fillMaxWidth()
-                .padding(
-                  vertical = Constants.Dimensions.SCROLL_PICKER_ITEM_VERTICAL_PADDING.dp
-                ), // Slightly more padding
-          )
-        }
+      itemsIndexed(items) { index, item ->
+        // Use selectedIndex for highlighting when not actively scrolling, centerIndex when
+        // scrolling
+        val isSelected = if (isUserScrolling.value) index == centerIndex else index == selectedIndex
+        android.util.Log.d(
+          "ScrollablePicker",
+          "Item[$index]='$item', centerIndex=$centerIndex, selectedIndex=$selectedIndex, " +
+            "isUserScrolling=${isUserScrolling.value}, isSelected=$isSelected"
+        )
+        Text(
+          text = item,
+          style =
+            if (isSelected) {
+              MaterialTheme.typography.title3 // Larger, more prominent font
+            } else {
+              MaterialTheme.typography.body2
+            },
+          color =
+            if (isSelected) {
+              Constants.Colors.SCROLLABLE_PICKER_SELECTED // Bright blue for selected
+            } else {
+              MaterialTheme.colors.onSurface.copy(alpha = 0.4f) // More dimmed non-selected
+            },
+          textAlign = TextAlign.Center,
+          modifier =
+            Modifier.fillMaxWidth()
+              .padding(
+                vertical = Constants.Dimensions.SCROLL_PICKER_ITEM_VERTICAL_PADDING.dp
+              ), // Slightly more padding
+        )
+      }
 
-        item {
-          Box(modifier = Modifier.height(Constants.Dimensions.SCROLL_PICKER_PADDING_HEIGHT.dp))
-        }
+      item {
+        Box(
+          modifier =
+            Modifier.height(Constants.Dimensions.SCROLL_PICKER_PADDING_HEIGHT.dp).fillMaxWidth()
+        )
       }
     }
   }
