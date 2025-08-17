@@ -68,7 +68,7 @@ class MainViewModelTest {
             assertThat(initialState.timerPhase).isEqualTo(TimerPhase.Stopped)
             assertThat(initialState.timeRemaining).isEqualTo(TimerConfiguration.DEFAULT.workDuration)
             assertThat(initialState.currentLap).isEqualTo(1)
-            assertThat(initialState.totalLaps).isEqualTo(1)
+            assertThat(initialState.totalLaps).isEqualTo(2)
             assertThat(initialState.isPaused).isFalse()
             assertThat(initialState.configuration).isEqualTo(TimerConfiguration.DEFAULT)
             assertThat(initialState.isPlayButtonEnabled).isFalse()

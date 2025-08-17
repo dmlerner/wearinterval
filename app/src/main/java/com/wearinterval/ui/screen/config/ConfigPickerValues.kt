@@ -13,6 +13,10 @@ object ConfigPickerValues {
 
     // Duration values as defined in design spec
     val DURATION_VALUES = listOf(
+        1.seconds,
+        2.seconds,
+        3.seconds,
+        4.seconds,
         5.seconds,
         10.seconds,
         15.seconds,

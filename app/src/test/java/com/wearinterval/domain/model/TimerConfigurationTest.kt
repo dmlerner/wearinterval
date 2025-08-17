@@ -40,7 +40,7 @@ class TimerConfigurationTest {
     fun `isValid returns false for invalid work duration`() {
         val tooShort = TimerConfiguration(
             laps = 1,
-            workDuration = 3.seconds,
+            workDuration = 0.seconds,
             restDuration = 0.seconds,
         )
 
@@ -188,12 +188,12 @@ class TimerConfigurationTest {
     fun `validate coerces invalid values to valid ranges`() {
         val config = TimerConfiguration.validate(
             laps = 0,
-            workDuration = 2.seconds,
+            workDuration = 0.seconds,
             restDuration = 15.minutes,
         )
 
         assertThat(config.laps).isEqualTo(1)
-        assertThat(config.workDuration).isEqualTo(5.seconds)
+        assertThat(config.workDuration).isEqualTo(1.seconds)
         assertThat(config.restDuration).isEqualTo(10.minutes)
     }
 
@@ -220,7 +220,7 @@ class TimerConfigurationTest {
 
         val minValid = TimerConfiguration.validate(
             laps = 1,
-            workDuration = 5.seconds,
+            workDuration = 1.seconds,
             restDuration = 0.seconds,
         )
 
@@ -229,16 +229,16 @@ class TimerConfigurationTest {
         assertThat(maxValid.restDuration).isEqualTo(10.minutes)
 
         assertThat(minValid.laps).isEqualTo(1)
-        assertThat(minValid.workDuration).isEqualTo(5.seconds)
+        assertThat(minValid.workDuration).isEqualTo(1.seconds)
         assertThat(minValid.restDuration).isEqualTo(0.seconds)
     }
 
     @Test
     fun `DEFAULT configuration is valid`() {
         assertThat(TimerConfiguration.DEFAULT.isValid()).isTrue()
-        assertThat(TimerConfiguration.DEFAULT.laps).isEqualTo(1)
-        assertThat(TimerConfiguration.DEFAULT.workDuration).isEqualTo(60.seconds)
-        assertThat(TimerConfiguration.DEFAULT.restDuration).isEqualTo(0.seconds)
+        assertThat(TimerConfiguration.DEFAULT.laps).isEqualTo(2)
+        assertThat(TimerConfiguration.DEFAULT.workDuration).isEqualTo(3.seconds)
+        assertThat(TimerConfiguration.DEFAULT.restDuration).isEqualTo(3.seconds)
     }
 
     @Test

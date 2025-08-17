@@ -17,7 +17,7 @@ data class TimerConfiguration(
 ) {
     fun isValid(): Boolean {
         return laps in 1..INFINITE_LAPS &&
-            workDuration >= 5.seconds &&
+            workDuration >= 1.seconds &&
             workDuration <= 10.minutes &&
             restDuration >= 0.seconds &&
             restDuration <= 10.minutes
@@ -46,14 +46,14 @@ data class TimerConfiguration(
 
     companion object {
         val DEFAULT = TimerConfiguration(
-            laps = 1,
-            workDuration = 60.seconds,
-            restDuration = 0.seconds,
+            laps = 2,
+            workDuration = 3.seconds,
+            restDuration = 3.seconds,
         )
 
         fun validate(laps: Int, workDuration: Duration, restDuration: Duration): TimerConfiguration {
             val validLaps = laps.coerceIn(1, INFINITE_LAPS)
-            val validWorkDuration = workDuration.coerceIn(5.seconds, 10.minutes)
+            val validWorkDuration = workDuration.coerceIn(1.seconds, 10.minutes)
             val validRestDuration = restDuration.coerceIn(0.seconds, 10.minutes)
 
             return TimerConfiguration(

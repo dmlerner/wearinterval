@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
 class ConfigViewModel @Inject constructor(
@@ -54,19 +53,19 @@ class ConfigViewModel @Inject constructor(
                     TimerConfiguration.DEFAULT
                 }
                 ConfigEvent.ResetLaps -> {
-                    currentConfig.copy(laps = 1)
+                    currentConfig.copy(laps = TimerConfiguration.DEFAULT.laps)
                 }
                 ConfigEvent.ResetWork -> {
-                    currentConfig.copy(workDuration = 60.seconds)
+                    currentConfig.copy(workDuration = TimerConfiguration.DEFAULT.workDuration)
                 }
                 ConfigEvent.ResetRest -> {
-                    currentConfig.copy(restDuration = 0.seconds)
+                    currentConfig.copy(restDuration = TimerConfiguration.DEFAULT.restDuration)
                 }
                 ConfigEvent.SetLapsToInfinite -> {
                     currentConfig.copy(laps = 999)
                 }
                 ConfigEvent.SetWorkToLong -> {
-                    currentConfig.copy(workDuration = 1.minutes)
+                    currentConfig.copy(workDuration = 5.minutes)
                 }
                 ConfigEvent.SetRestToLong -> {
                     currentConfig.copy(restDuration = 5.minutes)
