@@ -38,7 +38,14 @@ data class MainUiState(
     }
 
     val overallProgressPercentage: Float get() = if (totalLaps > 0) {
-        (currentLap.toFloat() / totalLaps.toFloat()).coerceIn(0f, 1f)
+        // Calculate progress within current lap based on interval completion
+        val currentLapProgress = 1f - intervalProgressPercentage
+
+        // Combine completed laps with progress in current lap
+        val completedLapsProgress = (currentLap - 1).toFloat() / totalLaps.toFloat()
+        val currentLapContribution = currentLapProgress / totalLaps.toFloat()
+
+        (completedLapsProgress + currentLapContribution).coerceIn(0f, 1f)
     } else {
         0f
     }
