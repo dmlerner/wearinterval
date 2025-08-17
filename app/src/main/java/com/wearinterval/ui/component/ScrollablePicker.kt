@@ -17,7 +17,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -26,7 +25,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
-import kotlinx.coroutines.flow.distinctUntilChanged
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -63,21 +61,25 @@ fun ScrollablePicker(
     val isUserScrolling = remember { mutableStateOf(false) }
     // Track if we're programmatically scrolling due to external selectedIndex change
     val isProgrammaticScroll = remember { mutableStateOf(false) }
+    // Track previous center index to only vibrate on actual changes
+    val previousCenterIndex = remember { mutableStateOf(-1) }
 
     // Handle selection changes with haptic feedback
-    LaunchedEffect(listState) {
-        snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
-            .distinctUntilChanged()
-            .collect { (firstIndex, offset) ->
-                if (!isProgrammaticScroll.value && centerIndex >= 0 && centerIndex < items.size) {
-                    isUserScrolling.value = true
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onSelectionChanged(centerIndex)
-                    // Reset after a delay to allow the external state change to propagate
-                    kotlinx.coroutines.delay(100)
-                    isUserScrolling.value = false
-                }
-            }
+    LaunchedEffect(centerIndex) {
+        if (!isProgrammaticScroll.value &&
+            centerIndex != previousCenterIndex.value &&
+            centerIndex >= 0 && centerIndex < items.size &&
+            previousCenterIndex.value != -1
+        ) { // Don't vibrate on initial load
+            isUserScrolling.value = true
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+            onSelectionChanged(centerIndex)
+            // Reset after a delay to allow the external state change to propagate
+            kotlinx.coroutines.delay(100)
+            isUserScrolling.value = false
+        }
+        // Always update previous index
+        previousCenterIndex.value = centerIndex
     }
 
     // Scroll to selected item when selectedIndex changes externally (but not from user scrolling)

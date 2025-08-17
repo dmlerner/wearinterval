@@ -66,7 +66,7 @@ class ConfigViewModel @Inject constructor(
                     currentConfig.copy(laps = 999)
                 }
                 ConfigEvent.SetWorkToLong -> {
-                    currentConfig.copy(workDuration = 5.minutes)
+                    currentConfig.copy(workDuration = 1.minutes)
                 }
                 ConfigEvent.SetRestToLong -> {
                     currentConfig.copy(restDuration = 5.minutes)
