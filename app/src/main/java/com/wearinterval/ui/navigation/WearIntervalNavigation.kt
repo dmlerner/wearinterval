@@ -1,73 +1,42 @@
 package com.wearinterval.ui.navigation
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavHostController
-import androidx.wear.compose.navigation.SwipeDismissableNavHost
-import androidx.wear.compose.navigation.composable
-import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
+import androidx.compose.ui.Modifier
 import com.wearinterval.ui.screen.config.ConfigScreen
 import com.wearinterval.ui.screen.history.HistoryScreen
 import com.wearinterval.ui.screen.main.MainScreen
 import com.wearinterval.ui.screen.settings.SettingsScreen
 
 /**
- * Main navigation destinations for the WearInterval app.
+ * Main navigation for the WearInterval app using HorizontalPager.
  *
- * Navigation flow per design:
- * - Main screen is the central hub
- * - Swipe left: History screen (recent configurations)
- * - Swipe right: Config screen (picker interface)
- * - Swipe up: Settings screen (notification preferences)
+ * Navigation flow:
+ * Page 0: History (swipe left from main)
+ * Page 1: Main (center page - primary screen)
+ * Page 2: Config (swipe right from main)
+ * Page 3: Settings (swipe right from config)
  */
-object WearIntervalDestinations {
-    const val MAIN = "main"
-    const val CONFIG = "config"
-    const val HISTORY = "history"
-    const val SETTINGS = "settings"
-}
-
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun WearIntervalNavigation(navController: NavHostController = rememberSwipeDismissableNavController()) {
-    SwipeDismissableNavHost(
-        navController = navController,
-        startDestination = WearIntervalDestinations.MAIN,
-    ) {
-        composable(WearIntervalDestinations.MAIN) {
-            MainScreen(
-                onNavigateToConfig = {
-                    navController.navigate(WearIntervalDestinations.CONFIG)
-                },
-                onNavigateToHistory = {
-                    navController.navigate(WearIntervalDestinations.HISTORY)
-                },
-                onNavigateToSettings = {
-                    navController.navigate(WearIntervalDestinations.SETTINGS)
-                },
-            )
-        }
+fun WearIntervalNavigation() {
+    val pagerState = rememberPagerState(
+        initialPage = 1, // Start on Main screen
+        pageCount = { 4 }, // History, Main, Config, Settings
+    )
 
-        composable(WearIntervalDestinations.CONFIG) {
-            ConfigScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-            )
-        }
-
-        composable(WearIntervalDestinations.HISTORY) {
-            HistoryScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-            )
-        }
-
-        composable(WearIntervalDestinations.SETTINGS) {
-            SettingsScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-            )
+    HorizontalPager(
+        state = pagerState,
+        modifier = Modifier.fillMaxSize(),
+    ) { page ->
+        when (page) {
+            0 -> HistoryScreen()
+            1 -> MainScreen() // CENTER - primary screen
+            2 -> ConfigScreen() // Right swipe from main
+            3 -> SettingsScreen() // Far right
         }
     }
 }

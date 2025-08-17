@@ -26,18 +26,17 @@ import com.wearinterval.ui.component.ScrollablePicker
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
-fun ConfigScreen(onNavigateBack: () -> Unit, viewModel: ConfigViewModel = hiltViewModel()) {
+fun ConfigScreen(viewModel: ConfigViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     ConfigContent(
         uiState = uiState,
         onEvent = viewModel::onEvent,
-        onNavigateBack = onNavigateBack,
     )
 }
 
 @Composable
-internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Unit, onNavigateBack: () -> Unit) {
+internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Unit) {
     val hapticFeedback = LocalHapticFeedback.current
 
     // Calculate current indices for each picker
@@ -181,7 +180,6 @@ private fun ConfigContentPreview() {
                 restSeconds = 15,
             ),
             onEvent = {},
-            onNavigateBack = {},
         )
     }
 }

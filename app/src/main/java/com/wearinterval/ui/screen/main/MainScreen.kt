@@ -1,7 +1,6 @@
 package com.wearinterval.ui.screen.main
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,15 +11,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -37,7 +31,6 @@ import com.wearinterval.domain.model.TimerPhase
 import com.wearinterval.ui.component.DualProgressRings
 import com.wearinterval.util.TimeUtils
 import kotlinx.coroutines.delay
-import kotlin.math.abs
 import kotlin.time.Duration.Companion.seconds
 
 // Constants for MainScreen UI
@@ -52,31 +45,17 @@ private object MainScreenDefaults {
 }
 
 @Composable
-fun MainScreen(
-    onNavigateToConfig: () -> Unit,
-    onNavigateToHistory: () -> Unit,
-    onNavigateToSettings: () -> Unit,
-    viewModel: MainViewModel = hiltViewModel(),
-) {
+fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     MainContent(
         uiState = uiState,
         onEvent = viewModel::onEvent,
-        onNavigateToConfig = onNavigateToConfig,
-        onNavigateToHistory = onNavigateToHistory,
-        onNavigateToSettings = onNavigateToSettings,
     )
 }
 
 @Composable
-internal fun MainContent(
-    uiState: MainUiState,
-    onEvent: (MainEvent) -> Unit,
-    onNavigateToConfig: () -> Unit,
-    onNavigateToHistory: () -> Unit,
-    onNavigateToSettings: () -> Unit,
-) {
+internal fun MainContent(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
     // Handle screen flash effect
     if (uiState.flashScreen) {
         LaunchedEffect(uiState.flashScreen) {
@@ -106,75 +85,11 @@ internal fun MainContent(
             )
         } else {
             // Normal timer interface
-            TimerInterface(
+            TimerDisplay(
                 uiState = uiState,
                 onEvent = onEvent,
-                onNavigateToConfig = onNavigateToConfig,
-                onNavigateToHistory = onNavigateToHistory,
-                onNavigateToSettings = onNavigateToSettings,
             )
         }
-    }
-}
-
-@Composable
-private fun TimerInterface(
-    uiState: MainUiState,
-    onEvent: (MainEvent) -> Unit,
-    onNavigateToConfig: () -> Unit,
-    onNavigateToHistory: () -> Unit,
-    onNavigateToSettings: () -> Unit,
-) {
-    val density = LocalDensity.current
-    val swipeThreshold = with(density) { 100.dp.toPx() } // Minimum swipe distance
-
-    // State to track cumulative drag
-    var totalDragX by remember { mutableStateOf(0f) }
-    var totalDragY by remember { mutableStateOf(0f) }
-
-    // Box with swipe gesture detection for navigation
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragStart = {
-                        // Reset drag totals on new gesture
-                        totalDragX = 0f
-                        totalDragY = 0f
-                    },
-                    onDragEnd = {
-                        // Check if we've accumulated enough drag to trigger navigation
-                        when {
-                            // Swipe right: Navigate to config screen (picker interface)
-                            totalDragX > swipeThreshold && abs(totalDragX) > abs(totalDragY) -> {
-                                onNavigateToConfig()
-                            }
-                            // Swipe left: Navigate to history screen (recent configurations)
-                            totalDragX < -swipeThreshold && abs(totalDragX) > abs(totalDragY) -> {
-                                onNavigateToHistory()
-                            }
-                            // Swipe up: Navigate to settings screen (notification preferences)
-                            totalDragY < -swipeThreshold && abs(totalDragY) > abs(totalDragX) -> {
-                                onNavigateToSettings()
-                            }
-                        }
-                        // Reset after processing
-                        totalDragX = 0f
-                        totalDragY = 0f
-                    },
-                ) { change, dragAmount ->
-                    // Accumulate drag distance
-                    totalDragX += dragAmount.x
-                    totalDragY += dragAmount.y
-                }
-            },
-    ) {
-        // Timer display with dual progress rings and controls inside - clean power user UI
-        TimerDisplay(
-            uiState = uiState,
-            onEvent = onEvent,
-        )
     }
 }
 
@@ -338,9 +253,6 @@ private fun MainContentPreview() {
                 isStopButtonEnabled = true,
             ),
             onEvent = {},
-            onNavigateToConfig = {},
-            onNavigateToHistory = {},
-            onNavigateToSettings = {},
         )
     }
 }

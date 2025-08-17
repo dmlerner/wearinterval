@@ -41,18 +41,17 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
-fun HistoryScreen(onNavigateBack: () -> Unit, viewModel: HistoryViewModel = hiltViewModel()) {
+fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     HistoryContent(
         uiState = uiState,
         onEvent = viewModel::onEvent,
-        onNavigateBack = onNavigateBack,
     )
 }
 
 @Composable
-internal fun HistoryContent(uiState: HistoryUiState, onEvent: (HistoryEvent) -> Unit, onNavigateBack: () -> Unit) {
+internal fun HistoryContent(uiState: HistoryUiState, onEvent: (HistoryEvent) -> Unit) {
     val listState = rememberScalingLazyListState()
 
     Box(
@@ -80,7 +79,6 @@ internal fun HistoryContent(uiState: HistoryUiState, onEvent: (HistoryEvent) -> 
                     configurations = uiState.recentConfigurations,
                     onConfigurationSelect = { config ->
                         onEvent(HistoryEvent.SelectConfiguration(config))
-                        onNavigateBack()
                     },
                     listState = listState,
                 )
@@ -267,7 +265,6 @@ private fun HistoryContentPreview() {
                 isLoading = false,
             ),
             onEvent = {},
-            onNavigateBack = {},
         )
     }
 }
@@ -282,7 +279,6 @@ private fun EmptyHistoryContentPreview() {
                 isLoading = false,
             ),
             onEvent = {},
-            onNavigateBack = {},
         )
     }
 }
@@ -297,7 +293,6 @@ private fun LoadingHistoryContentPreview() {
                 isLoading = true,
             ),
             onEvent = {},
-            onNavigateBack = {},
         )
     }
 }

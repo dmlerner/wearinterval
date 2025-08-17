@@ -24,18 +24,17 @@ import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 
 @Composable
-fun SettingsScreen(onNavigateBack: () -> Unit, viewModel: SettingsViewModel = hiltViewModel()) {
+fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     SettingsContent(
         uiState = uiState,
         onEvent = viewModel::onEvent,
-        onNavigateBack = onNavigateBack,
     )
 }
 
 @Composable
-internal fun SettingsContent(uiState: SettingsUiState, onEvent: (SettingsEvent) -> Unit, onNavigateBack: () -> Unit) {
+internal fun SettingsContent(uiState: SettingsUiState, onEvent: (SettingsEvent) -> Unit) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
@@ -127,7 +126,6 @@ private fun SettingsContentPreview() {
                 flashEnabled = false,
             ),
             onEvent = {},
-            onNavigateBack = {},
         )
     }
 }
