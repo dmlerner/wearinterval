@@ -31,8 +31,8 @@ data class MainUiState(
     }
 
     val intervalProgressPercentage: Float get() = if (currentIntervalDuration > Duration.ZERO) {
-        val elapsed = currentIntervalDuration - timeRemaining
-        (elapsed.inWholeMilliseconds.toFloat() / currentIntervalDuration.inWholeMilliseconds.toFloat()).coerceIn(0f, 1f)
+        // Progress starts full (1.0) and ticks down to empty (0.0) as time remaining decreases
+        (timeRemaining.inWholeMilliseconds.toFloat() / currentIntervalDuration.inWholeMilliseconds.toFloat()).coerceIn(0f, 1f)
     } else {
         0f
     }

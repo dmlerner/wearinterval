@@ -1,6 +1,7 @@
 package com.wearinterval.ui.screen.main
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,10 +12,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -31,17 +37,17 @@ import com.wearinterval.domain.model.TimerPhase
 import com.wearinterval.ui.component.DualProgressRings
 import com.wearinterval.util.TimeUtils
 import kotlinx.coroutines.delay
+import kotlin.math.abs
 import kotlin.time.Duration.Companion.seconds
 
 // Constants for MainScreen UI
 private object MainScreenDefaults {
     const val FLASH_DURATION_MS = 500L
-    val TIMER_DISPLAY_SIZE = 140.dp
     val COMPONENT_SPACING = 12.dp
     val CONTROL_BUTTON_SPACING = 16.dp
-    val CONTROL_BUTTONS_SPACING = 4.dp
-    val PLAY_BUTTON_SIZE = 56.dp
-    val STOP_BUTTON_SIZE = 48.dp
+    val CONTROL_BUTTONS_SPACING = 8.dp
+    val PLAY_BUTTON_SIZE = 40.dp // Increased from 24dp for better usability
+    val STOP_BUTTON_SIZE = 36.dp // Increased from 20dp for better usability
     val ALARM_SPACING = 16.dp
 }
 
@@ -119,11 +125,57 @@ private fun TimerInterface(
     onNavigateToHistory: () -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
-    // Timer display with dual progress rings and controls inside - clean power user UI
-    TimerDisplay(
-        uiState = uiState,
-        onEvent = onEvent,
-    )
+    val density = LocalDensity.current
+    val swipeThreshold = with(density) { 100.dp.toPx() } // Minimum swipe distance
+
+    // State to track cumulative drag
+    var totalDragX by remember { mutableStateOf(0f) }
+    var totalDragY by remember { mutableStateOf(0f) }
+
+    // Box with swipe gesture detection for navigation
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDragStart = {
+                        // Reset drag totals on new gesture
+                        totalDragX = 0f
+                        totalDragY = 0f
+                    },
+                    onDragEnd = {
+                        // Check if we've accumulated enough drag to trigger navigation
+                        when {
+                            // Swipe right: Navigate to config screen (picker interface)
+                            totalDragX > swipeThreshold && abs(totalDragX) > abs(totalDragY) -> {
+                                onNavigateToConfig()
+                            }
+                            // Swipe left: Navigate to history screen (recent configurations)
+                            totalDragX < -swipeThreshold && abs(totalDragX) > abs(totalDragY) -> {
+                                onNavigateToHistory()
+                            }
+                            // Swipe up: Navigate to settings screen (notification preferences)
+                            totalDragY < -swipeThreshold && abs(totalDragY) > abs(totalDragX) -> {
+                                onNavigateToSettings()
+                            }
+                        }
+                        // Reset after processing
+                        totalDragX = 0f
+                        totalDragY = 0f
+                    },
+                ) { change, dragAmount ->
+                    // Accumulate drag distance
+                    totalDragX += dragAmount.x
+                    totalDragY += dragAmount.y
+                }
+            },
+    ) {
+        // Timer display with dual progress rings and controls inside - clean power user UI
+        TimerDisplay(
+            uiState = uiState,
+            onEvent = onEvent,
+        )
+    }
 }
 
 @Composable
@@ -136,56 +188,62 @@ private fun TimerDisplay(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
         MaterialTheme.colors.primaryVariant // Green for work periods
     }
 
-    DualProgressRings(
-        outerProgress = uiState.overallProgressPercentage,
-        innerProgress = uiState.intervalProgressPercentage,
-        size = MainScreenDefaults.TIMER_DISPLAY_SIZE,
-        outerColor = outerRingColor,
-        innerColor = innerRingColor,
+    // Use fillMaxSize to extend rings to the edge of the watch face
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
+        DualProgressRings(
+            outerProgress = uiState.overallProgressPercentage,
+            innerProgress = uiState.intervalProgressPercentage,
+            modifier = Modifier.fillMaxSize(),
+            outerColor = outerRingColor,
+            innerColor = innerRingColor,
         ) {
-            // Main time display
-            Text(
-                text = TimeUtils.formatDuration(uiState.timeRemaining),
-                style = MaterialTheme.typography.title1, // Smaller to fit with controls
-                color = if (uiState.isResting) {
-                    MaterialTheme.colors.secondary
-                } else {
-                    MaterialTheme.colors.onSurface
-                },
-                textAlign = TextAlign.Center,
-            )
-
-            // Lap indicator
-            Text(
-                text = if (uiState.totalLaps == 999) {
-                    "Lap ${uiState.currentLap}"
-                } else {
-                    "${uiState.currentLap}/${uiState.totalLaps}"
-                },
-                style = MaterialTheme.typography.caption2,
-                color = MaterialTheme.colors.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-
-            // Phase indicator (only show during rest)
-            if (uiState.isResting) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                // Main time display
                 Text(
-                    text = "REST",
-                    style = MaterialTheme.typography.caption2,
-                    color = MaterialTheme.colors.secondary,
+                    text = TimeUtils.formatDuration(uiState.timeRemaining),
+                    style = MaterialTheme.typography.title1, // Smaller to fit with controls
+                    color = if (uiState.isResting) {
+                        MaterialTheme.colors.secondary
+                    } else {
+                        MaterialTheme.colors.onSurface
+                    },
                     textAlign = TextAlign.Center,
                 )
-            }
 
-            // Control buttons inside the circle
-            TimerControlsInside(
-                uiState = uiState,
-                onEvent = onEvent,
-            )
+                // Lap indicator
+                Text(
+                    text = if (uiState.totalLaps == 999) {
+                        "Lap ${uiState.currentLap}"
+                    } else {
+                        "${uiState.currentLap}/${uiState.totalLaps}"
+                    },
+                    style = MaterialTheme.typography.caption2,
+                    color = MaterialTheme.colors.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+
+                // Phase indicator (only show during rest)
+                if (uiState.isResting) {
+                    Text(
+                        text = "REST",
+                        style = MaterialTheme.typography.caption2,
+                        color = MaterialTheme.colors.secondary,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+
+                // Control buttons inside the circle
+                TimerControlsInside(
+                    uiState = uiState,
+                    onEvent = onEvent,
+                )
+            }
         }
     }
 }
@@ -193,14 +251,14 @@ private fun TimerDisplay(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
 @Composable
 private fun TimerControlsInside(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(6.dp), // Very compact spacing
+        horizontalArrangement = Arrangement.spacedBy(MainScreenDefaults.CONTROL_BUTTONS_SPACING),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Play/Pause button (very small for inside circle)
+        // Play/Pause button (bigger for better usability)
         Button(
             onClick = { onEvent(MainEvent.PlayPauseClicked) },
             modifier = Modifier
-                .size(24.dp) // Very small size for inside circle
+                .size(MainScreenDefaults.PLAY_BUTTON_SIZE)
                 .clip(CircleShape)
                 .semantics {
                     contentDescription = when {
@@ -218,15 +276,15 @@ private fun TimerControlsInside(uiState: MainUiState, onEvent: (MainEvent) -> Un
                 } else {
                     "▶"
                 },
-                style = MaterialTheme.typography.caption2, // Very small text
+                style = MaterialTheme.typography.caption1, // Slightly larger text for bigger buttons
             )
         }
 
-        // Stop button (very small for inside circle)
+        // Stop button (bigger for better usability)
         Button(
             onClick = { onEvent(MainEvent.StopClicked) },
             modifier = Modifier
-                .size(20.dp) // Very small size for inside circle
+                .size(MainScreenDefaults.STOP_BUTTON_SIZE)
                 .clip(CircleShape)
                 .semantics { contentDescription = "Stop" },
             enabled = uiState.isStopButtonEnabled,
@@ -234,7 +292,7 @@ private fun TimerControlsInside(uiState: MainUiState, onEvent: (MainEvent) -> Un
         ) {
             Text(
                 text = "⏹",
-                style = MaterialTheme.typography.caption2, // Very small text
+                style = MaterialTheme.typography.caption1, // Slightly larger text for bigger buttons
             )
         }
     }

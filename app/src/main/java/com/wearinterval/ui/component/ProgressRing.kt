@@ -3,6 +3,7 @@ package com.wearinterval.ui.component
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -56,13 +57,20 @@ fun ProgressRing(
     val density = LocalDensity.current
     val strokeWidthPx = with(density) { strokeWidth.toPx() }
 
+    // Determine the final modifier - use size if provided, otherwise use the passed modifier for dynamic sizing
+    val finalModifier = if (modifier == Modifier) {
+        Modifier.size(size)
+    } else {
+        modifier
+    }
+
     Box(
-        modifier = modifier.size(size),
+        modifier = finalModifier,
         contentAlignment = Alignment.Center,
     ) {
-        // Progress ring canvas
+        // Progress ring canvas - use fillMaxSize for dynamic sizing
         Canvas(
-            modifier = Modifier.size(size),
+            modifier = Modifier.fillMaxSize(),
         ) {
             val canvasSize = this.size.minDimension
             val radius = (canvasSize - strokeWidthPx) / 2f
@@ -110,8 +118,7 @@ fun ProgressRing(
  *
  * @param outerProgress Overall workout progress (0.0 to 1.0)
  * @param innerProgress Current interval progress (0.0 to 1.0)
- * @param modifier Modifier for the component
- * @param size Overall size of the dual rings
+ * @param modifier Modifier for the component (can include fillMaxSize for edge-to-edge display)
  * @param outerColor Color of the outer progress ring
  * @param innerColor Color of the inner progress ring
  * @param content Content to display in the center
@@ -121,7 +128,6 @@ fun DualProgressRings(
     outerProgress: Float,
     innerProgress: Float,
     modifier: Modifier = Modifier,
-    size: Dp = ProgressRingDefaults.DUAL_RING_SIZE,
     outerColor: Color = Color.Blue,
     innerColor: Color = Color.Green,
     content: @Composable () -> Unit = {},
@@ -131,22 +137,22 @@ fun DualProgressRings(
     val ringGap = ProgressRingDefaults.DUAL_RING_GAP // Gap between the rings
 
     Box(
-        modifier = modifier.size(size),
+        modifier = modifier,
         contentAlignment = Alignment.Center,
     ) {
-        // Outer progress ring (overall workout progress)
+        // Outer progress ring (overall workout progress) - uses full available size
         ProgressRing(
             progress = outerProgress,
-            size = size,
+            modifier = Modifier.fillMaxSize(),
             strokeWidth = outerStrokeWidth,
             progressColor = outerColor,
             backgroundColor = outerColor.copy(alpha = ProgressRingDefaults.DUAL_RING_BACKGROUND_ALPHA),
         )
 
-        // Inner progress ring (current interval progress)
+        // Inner progress ring (current interval progress) - smaller to create the dual ring effect
         ProgressRing(
             progress = innerProgress,
-            size = size - (outerStrokeWidth * 2) - ringGap,
+            modifier = Modifier.fillMaxSize(0.8f), // 80% of parent size for inner ring
             strokeWidth = innerStrokeWidth,
             progressColor = innerColor,
             backgroundColor = innerColor.copy(alpha = ProgressRingDefaults.DUAL_RING_BACKGROUND_ALPHA),

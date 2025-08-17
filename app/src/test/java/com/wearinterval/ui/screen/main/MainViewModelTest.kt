@@ -365,7 +365,7 @@ class MainViewModelTest {
             )
 
             var uiState = awaitItem()
-            assertThat(uiState.intervalProgressPercentage).isWithin(0.01f).of(0.25f) // 15/60 = 0.25
+            assertThat(uiState.intervalProgressPercentage).isWithin(0.01f).of(0.75f) // 45/60 = 0.75 (remaining time)
             assertThat(uiState.overallProgressPercentage).isWithin(0.01f).of(0.3f) // 3/10 = 0.3
 
             // Test rest interval progress
@@ -379,7 +379,7 @@ class MainViewModelTest {
             )
 
             uiState = awaitItem()
-            assertThat(uiState.intervalProgressPercentage).isWithin(0.01f).of(0.33f) // 10/30 ≈ 0.33
+            assertThat(uiState.intervalProgressPercentage).isWithin(0.01f).of(0.67f) // 20/30 ≈ 0.67 (remaining time)
             assertThat(uiState.overallProgressPercentage).isWithin(0.01f).of(0.3f) // 3/10 = 0.3
         }
     }
