@@ -1,19 +1,21 @@
 package com.wearinterval.ui.screen.config
 
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -25,6 +27,8 @@ import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
+import com.wearinterval.ui.component.ScrollablePicker
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun ConfigScreen(onNavigateBack: () -> Unit, viewModel: ConfigViewModel = hiltViewModel()) {
@@ -39,135 +43,149 @@ fun ConfigScreen(onNavigateBack: () -> Unit, viewModel: ConfigViewModel = hiltVi
 
 @Composable
 internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Unit, onNavigateBack: () -> Unit) {
+    val hapticFeedback = LocalHapticFeedback.current
+
+    // Calculate current indices for each picker
+    val lapsIndex = ConfigPickerValues.findLapsIndex(uiState.laps)
+    val workDuration = (uiState.workMinutes * 60 + uiState.workSeconds).seconds
+    val restDuration = (uiState.restMinutes * 60 + uiState.restSeconds).seconds
+    val workDurationIndex = ConfigPickerValues.findDurationIndex(workDuration, isRest = false)
+    val restDurationIndex = ConfigPickerValues.findDurationIndex(restDuration, isRest = true)
+
+    // Create display lists
+    val lapsDisplayItems = ConfigPickerValues.LAPS_VALUES.map { ConfigPickerValues.lapsDisplayText(it) }
+    val durationDisplayItems = ConfigPickerValues.DURATION_VALUES.map { ConfigPickerValues.durationDisplayText(it) }
+    val restDurationDisplayItems = ConfigPickerValues.REST_DURATION_VALUES.map { ConfigPickerValues.durationDisplayText(it) }
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             // Three-column picker layout
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
             ) {
-                // Laps Column
-                ConfigPickerColumn(
+                // Laps Picker
+                ConfigScrollPicker(
                     title = "Laps",
-                    value = uiState.laps.toString(),
-                    onIncrement = { onEvent(ConfigEvent.IncreaseLaps) },
-                    onDecrement = { onEvent(ConfigEvent.DecreaseLaps) },
-                    incrementDescription = "Increase laps",
-                    decrementDescription = "Decrease laps",
+                    items = lapsDisplayItems,
+                    selectedIndex = lapsIndex,
+                    onSelectionChanged = { index ->
+                        val selectedLaps = ConfigPickerValues.LAPS_VALUES[index]
+                        onEvent(ConfigEvent.SetLaps(selectedLaps))
+                    },
+                    onSingleTap = { onEvent(ConfigEvent.ResetLaps) },
+                    onLongPress = { onEvent(ConfigEvent.SetLapsToInfinite) },
+                    modifier = Modifier.weight(1f),
                 )
 
-                // Work Duration Column
-                ConfigPickerColumn(
+                // Work Duration Picker
+                ConfigScrollPicker(
                     title = "Work",
-                    value = uiState.totalWorkTimeText,
-                    onIncrement = { onEvent(ConfigEvent.IncreaseWorkDuration) },
-                    onDecrement = { onEvent(ConfigEvent.DecreaseWorkDuration) },
-                    incrementDescription = "Increase work duration",
-                    decrementDescription = "Decrease work duration",
+                    items = durationDisplayItems,
+                    selectedIndex = workDurationIndex,
+                    onSelectionChanged = { index ->
+                        val selectedDuration = ConfigPickerValues.DURATION_VALUES[index]
+                        onEvent(ConfigEvent.SetWorkDuration(selectedDuration))
+                    },
+                    onSingleTap = { onEvent(ConfigEvent.ResetWork) },
+                    onLongPress = { onEvent(ConfigEvent.SetWorkToLong) },
+                    modifier = Modifier.weight(1f),
                 )
 
-                // Rest Duration Column
-                ConfigPickerColumn(
+                // Rest Duration Picker
+                ConfigScrollPicker(
                     title = "Rest",
-                    value = uiState.totalRestTimeText,
-                    onIncrement = { onEvent(ConfigEvent.IncreaseRestDuration) },
-                    onDecrement = { onEvent(ConfigEvent.DecreaseRestDuration) },
-                    incrementDescription = "Increase rest duration",
-                    decrementDescription = "Decrease rest duration",
+                    items = restDurationDisplayItems,
+                    selectedIndex = restDurationIndex,
+                    onSelectionChanged = { index ->
+                        val selectedDuration = ConfigPickerValues.REST_DURATION_VALUES[index]
+                        onEvent(ConfigEvent.SetRestDuration(selectedDuration))
+                    },
+                    onSingleTap = { onEvent(ConfigEvent.ResetRest) },
+                    onLongPress = { onEvent(ConfigEvent.SetRestToLong) },
+                    modifier = Modifier.weight(1f),
                 )
             }
 
-            // Reset button row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
+            // Reset button
+            Button(
+                onClick = {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onEvent(ConfigEvent.Reset)
+                },
+                modifier = Modifier
+                    .size(40.dp)
+                    .semantics { contentDescription = "Reset to default" },
+                colors = ButtonDefaults.secondaryButtonColors(),
             ) {
-                Button(
-                    onClick = { onEvent(ConfigEvent.Reset) },
-                    modifier = Modifier
-                        .size(40.dp)
-                        .semantics { contentDescription = "Reset to default" },
-                    colors = ButtonDefaults.secondaryButtonColors(),
-                ) {
-                    Text(
-                        text = "↻",
-                        style = MaterialTheme.typography.title3,
-                        textAlign = TextAlign.Center,
-                    )
-                }
+                Text(
+                    text = "↻",
+                    style = MaterialTheme.typography.title3,
+                    textAlign = TextAlign.Center,
+                )
             }
         }
     }
 }
 
 @Composable
-private fun ConfigPickerColumn(
+private fun ConfigScrollPicker(
     title: String,
-    value: String,
-    onIncrement: () -> Unit,
-    onDecrement: () -> Unit,
-    incrementDescription: String,
-    decrementDescription: String,
+    items: List<String>,
+    selectedIndex: Int,
+    onSelectionChanged: (Int) -> Unit,
+    onSingleTap: () -> Unit,
+    onLongPress: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val hapticFeedback = LocalHapticFeedback.current
+
     Column(
-        modifier = modifier.width(60.dp),
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        // Increment button (+ button)
-        Button(
-            onClick = onIncrement,
+        // Use ScrollablePicker with gesture tap area
+        Box(
             modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape)
-                .semantics { contentDescription = incrementDescription },
-            colors = ButtonDefaults.primaryButtonColors(),
+                .height(140.dp)
+                .fillMaxWidth(),
         ) {
-            Text(
-                text = "+",
-                style = MaterialTheme.typography.caption1,
-                textAlign = TextAlign.Center,
+            ScrollablePicker(
+                items = items,
+                selectedIndex = selectedIndex,
+                onSelectionChanged = onSelectionChanged,
+                title = title,
+                modifier = Modifier.fillMaxSize(),
             )
-        }
 
-        // Title
-        Text(
-            text = title,
-            style = MaterialTheme.typography.caption2,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colors.onSurfaceVariant,
-        )
-
-        // Value display
-        Text(
-            text = value,
-            style = MaterialTheme.typography.body2,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colors.onSurface,
-            maxLines = 1,
-        )
-
-        // Decrement button (- button)
-        Button(
-            onClick = onDecrement,
-            modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape)
-                .semantics { contentDescription = decrementDescription },
-            colors = ButtonDefaults.secondaryButtonColors(),
-        ) {
-            Text(
-                text = "−",
-                style = MaterialTheme.typography.caption1,
-                textAlign = TextAlign.Center,
+            // Invisible tap area at bottom for gestures
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(32.dp)
+                    .align(Alignment.BottomCenter)
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onTap = {
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onSingleTap()
+                            },
+                            onLongPress = {
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onLongPress()
+                            },
+                        )
+                    }
+                    .semantics {
+                        contentDescription = "Tap to reset $title, long press for alternate value"
+                    },
             )
         }
     }
@@ -193,34 +211,38 @@ private fun ConfigContentPreview() {
 
 @Preview
 @Composable
-private fun ConfigPickerColumnPreview() {
+private fun ConfigScrollPickerPreview() {
     MaterialTheme {
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth(),
         ) {
-            ConfigPickerColumn(
+            ConfigScrollPicker(
                 title = "Laps",
-                value = "5",
-                onIncrement = {},
-                onDecrement = {},
-                incrementDescription = "Increase laps",
-                decrementDescription = "Decrease laps",
+                items = listOf("1", "2", "3", "4", "5"),
+                selectedIndex = 2,
+                onSelectionChanged = {},
+                onSingleTap = {},
+                onLongPress = {},
+                modifier = Modifier.weight(1f),
             )
-            ConfigPickerColumn(
+            ConfigScrollPicker(
                 title = "Work",
-                value = "1:30",
-                onIncrement = {},
-                onDecrement = {},
-                incrementDescription = "Increase work",
-                decrementDescription = "Decrease work",
+                items = listOf("30s", "45s", "1:00", "1:30", "2:00"),
+                selectedIndex = 2,
+                onSelectionChanged = {},
+                onSingleTap = {},
+                onLongPress = {},
+                modifier = Modifier.weight(1f),
             )
-            ConfigPickerColumn(
+            ConfigScrollPicker(
                 title = "Rest",
-                value = "30s",
-                onIncrement = {},
-                onDecrement = {},
-                incrementDescription = "Increase rest",
-                decrementDescription = "Decrease rest",
+                items = listOf("None", "15s", "30s", "45s", "1:00"),
+                selectedIndex = 2,
+                onSelectionChanged = {},
+                onSingleTap = {},
+                onLongPress = {},
+                modifier = Modifier.weight(1f),
             )
         }
     }

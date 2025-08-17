@@ -61,149 +61,155 @@ class ConfigViewModelTest {
     }
 
     @Test
-    fun `increase laps updates configuration`() = runTest {
+    fun `set laps updates configuration`() = runTest {
         // Given
         val initialConfig = TimerConfiguration(laps = 5, workDuration = 60.seconds, restDuration = 0.seconds)
         currentConfigFlow.value = initialConfig
 
         // When
-        viewModel.onEvent(ConfigEvent.IncreaseLaps)
+        viewModel.onEvent(ConfigEvent.SetLaps(10))
 
         // Then
         coVerify {
             mockConfigRepository.updateConfiguration(
-                initialConfig.copy(laps = 6),
+                initialConfig.copy(laps = 10),
             )
         }
     }
 
     @Test
-    fun `decrease laps updates configuration`() = runTest {
+    fun `reset laps sets to default value`() = runTest {
+        // Given
+        val initialConfig = TimerConfiguration(laps = 20, workDuration = 60.seconds, restDuration = 0.seconds)
+        currentConfigFlow.value = initialConfig
+
+        // When
+        viewModel.onEvent(ConfigEvent.ResetLaps)
+
+        // Then
+        coVerify {
+            mockConfigRepository.updateConfiguration(
+                initialConfig.copy(laps = 1),
+            )
+        }
+    }
+
+    @Test
+    fun `set laps to infinite sets to 999`() = runTest {
         // Given
         val initialConfig = TimerConfiguration(laps = 5, workDuration = 60.seconds, restDuration = 0.seconds)
         currentConfigFlow.value = initialConfig
 
         // When
-        viewModel.onEvent(ConfigEvent.DecreaseLaps)
+        viewModel.onEvent(ConfigEvent.SetLapsToInfinite)
 
         // Then
         coVerify {
             mockConfigRepository.updateConfiguration(
-                initialConfig.copy(laps = 4),
+                initialConfig.copy(laps = 999),
             )
         }
     }
 
     @Test
-    fun `laps cannot go below 1`() = runTest {
-        // Given
-        val initialConfig = TimerConfiguration(laps = 1, workDuration = 60.seconds, restDuration = 0.seconds)
-        currentConfigFlow.value = initialConfig
-
-        // When
-        viewModel.onEvent(ConfigEvent.DecreaseLaps)
-
-        // Then - no update should be called
-        coVerify(exactly = 0) {
-            mockConfigRepository.updateConfiguration(any())
-        }
-    }
-
-    @Test
-    fun `increase work duration updates configuration`() = runTest {
+    fun `set work duration updates configuration`() = runTest {
         // Given
         val initialConfig = TimerConfiguration(laps = 1, workDuration = 30.seconds, restDuration = 0.seconds)
         currentConfigFlow.value = initialConfig
 
         // When
-        viewModel.onEvent(ConfigEvent.IncreaseWorkDuration)
+        viewModel.onEvent(ConfigEvent.SetWorkDuration(45.seconds))
 
         // Then
         coVerify {
             mockConfigRepository.updateConfiguration(
-                initialConfig.copy(workDuration = 35.seconds),
+                initialConfig.copy(workDuration = 45.seconds),
             )
         }
     }
 
     @Test
-    fun `decrease work duration updates configuration`() = runTest {
+    fun `reset work duration sets to default value`() = runTest {
         // Given
         val initialConfig = TimerConfiguration(laps = 1, workDuration = 30.seconds, restDuration = 0.seconds)
         currentConfigFlow.value = initialConfig
 
         // When
-        viewModel.onEvent(ConfigEvent.DecreaseWorkDuration)
+        viewModel.onEvent(ConfigEvent.ResetWork)
 
         // Then
         coVerify {
             mockConfigRepository.updateConfiguration(
-                initialConfig.copy(workDuration = 25.seconds),
+                initialConfig.copy(workDuration = 60.seconds),
             )
         }
     }
 
     @Test
-    fun `work duration cannot go below 5 seconds`() = runTest {
+    fun `set work to long duration sets to 5 minutes`() = runTest {
         // Given
-        val initialConfig = TimerConfiguration(laps = 1, workDuration = 5.seconds, restDuration = 0.seconds)
+        val initialConfig = TimerConfiguration(laps = 1, workDuration = 30.seconds, restDuration = 0.seconds)
         currentConfigFlow.value = initialConfig
 
         // When
-        viewModel.onEvent(ConfigEvent.DecreaseWorkDuration)
-
-        // Then - no update should be called
-        coVerify(exactly = 0) {
-            mockConfigRepository.updateConfiguration(any())
-        }
-    }
-
-    @Test
-    fun `increase rest duration updates configuration`() = runTest {
-        // Given
-        val initialConfig = TimerConfiguration(laps = 1, workDuration = 60.seconds, restDuration = 10.seconds)
-        currentConfigFlow.value = initialConfig
-
-        // When
-        viewModel.onEvent(ConfigEvent.IncreaseRestDuration)
+        viewModel.onEvent(ConfigEvent.SetWorkToLong)
 
         // Then
         coVerify {
             mockConfigRepository.updateConfiguration(
-                initialConfig.copy(restDuration = 15.seconds),
+                initialConfig.copy(workDuration = 5.minutes),
             )
         }
     }
 
     @Test
-    fun `decrease rest duration updates configuration`() = runTest {
+    fun `set rest duration updates configuration`() = runTest {
         // Given
         val initialConfig = TimerConfiguration(laps = 1, workDuration = 60.seconds, restDuration = 10.seconds)
         currentConfigFlow.value = initialConfig
 
         // When
-        viewModel.onEvent(ConfigEvent.DecreaseRestDuration)
+        viewModel.onEvent(ConfigEvent.SetRestDuration(30.seconds))
 
         // Then
         coVerify {
             mockConfigRepository.updateConfiguration(
-                initialConfig.copy(restDuration = 5.seconds),
+                initialConfig.copy(restDuration = 30.seconds),
             )
         }
     }
 
     @Test
-    fun `rest duration cannot go below 0 seconds`() = runTest {
+    fun `reset rest duration sets to default value`() = runTest {
+        // Given
+        val initialConfig = TimerConfiguration(laps = 1, workDuration = 60.seconds, restDuration = 10.seconds)
+        currentConfigFlow.value = initialConfig
+
+        // When
+        viewModel.onEvent(ConfigEvent.ResetRest)
+
+        // Then
+        coVerify {
+            mockConfigRepository.updateConfiguration(
+                initialConfig.copy(restDuration = 0.seconds),
+            )
+        }
+    }
+
+    @Test
+    fun `set rest to long duration sets to 5 minutes`() = runTest {
         // Given
         val initialConfig = TimerConfiguration(laps = 1, workDuration = 60.seconds, restDuration = 0.seconds)
         currentConfigFlow.value = initialConfig
 
         // When
-        viewModel.onEvent(ConfigEvent.DecreaseRestDuration)
+        viewModel.onEvent(ConfigEvent.SetRestToLong)
 
-        // Then - no update should be called
-        coVerify(exactly = 0) {
-            mockConfigRepository.updateConfiguration(any())
+        // Then
+        coVerify {
+            mockConfigRepository.updateConfiguration(
+                initialConfig.copy(restDuration = 5.minutes),
+            )
         }
     }
 

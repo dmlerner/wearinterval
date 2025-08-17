@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
@@ -38,44 +39,35 @@ class ConfigViewModel @Inject constructor(
         viewModelScope.launch {
             val currentConfig = configurationRepository.currentConfiguration.value
             val updatedConfig = when (event) {
-                ConfigEvent.IncreaseLaps -> {
-                    currentConfig.copy(laps = currentConfig.laps + 1)
+                is ConfigEvent.SetLaps -> {
+                    currentConfig.copy(laps = event.laps)
                 }
-                ConfigEvent.DecreaseLaps -> {
-                    if (currentConfig.laps > 1) {
-                        currentConfig.copy(laps = currentConfig.laps - 1)
-                    } else {
-                        return@launch // Don't update if already at minimum
-                    }
+                is ConfigEvent.SetWorkDuration -> {
+                    currentConfig.copy(workDuration = event.duration)
                 }
-                ConfigEvent.IncreaseWorkDuration -> {
-                    currentConfig.copy(
-                        workDuration = currentConfig.workDuration + 5.seconds,
-                    )
-                }
-                ConfigEvent.DecreaseWorkDuration -> {
-                    val newDuration = currentConfig.workDuration - 5.seconds
-                    if (newDuration >= 5.seconds) {
-                        currentConfig.copy(workDuration = newDuration)
-                    } else {
-                        return@launch // Don't update if below minimum
-                    }
-                }
-                ConfigEvent.IncreaseRestDuration -> {
-                    currentConfig.copy(
-                        restDuration = currentConfig.restDuration + 5.seconds,
-                    )
-                }
-                ConfigEvent.DecreaseRestDuration -> {
-                    val newDuration = currentConfig.restDuration - 5.seconds
-                    if (newDuration >= 0.seconds) {
-                        currentConfig.copy(restDuration = newDuration)
-                    } else {
-                        return@launch // Don't update if below minimum
-                    }
+                is ConfigEvent.SetRestDuration -> {
+                    currentConfig.copy(restDuration = event.duration)
                 }
                 ConfigEvent.Reset -> {
                     TimerConfiguration.DEFAULT
+                }
+                ConfigEvent.ResetLaps -> {
+                    currentConfig.copy(laps = 1)
+                }
+                ConfigEvent.ResetWork -> {
+                    currentConfig.copy(workDuration = 60.seconds)
+                }
+                ConfigEvent.ResetRest -> {
+                    currentConfig.copy(restDuration = 0.seconds)
+                }
+                ConfigEvent.SetLapsToInfinite -> {
+                    currentConfig.copy(laps = 999)
+                }
+                ConfigEvent.SetWorkToLong -> {
+                    currentConfig.copy(workDuration = 5.minutes)
+                }
+                ConfigEvent.SetRestToLong -> {
+                    currentConfig.copy(restDuration = 5.minutes)
                 }
             }
 

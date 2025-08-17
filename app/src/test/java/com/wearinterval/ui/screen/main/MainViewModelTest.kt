@@ -366,7 +366,8 @@ class MainViewModelTest {
 
             var uiState = awaitItem()
             assertThat(uiState.intervalProgressPercentage).isWithin(0.01f).of(0.75f) // 45/60 = 0.75 (remaining time)
-            assertThat(uiState.overallProgressPercentage).isWithin(0.01f).of(0.3f) // 3/10 = 0.3
+            // Overall progress: (2 completed + 0.25 current progress) / 10 = 0.225 progress → 0.775 remaining
+            assertThat(uiState.overallProgressPercentage).isWithin(0.01f).of(0.775f)
 
             // Test rest interval progress
             timerStateFlow.value = TimerState(
@@ -380,7 +381,8 @@ class MainViewModelTest {
 
             uiState = awaitItem()
             assertThat(uiState.intervalProgressPercentage).isWithin(0.01f).of(0.67f) // 20/30 ≈ 0.67 (remaining time)
-            assertThat(uiState.overallProgressPercentage).isWithin(0.01f).of(0.3f) // 3/10 = 0.3
+            // During rest: (2 completed + 0.33 current progress) / 10 = 0.233 progress → 0.767 remaining
+            assertThat(uiState.overallProgressPercentage).isWithin(0.01f).of(0.767f)
         }
     }
 

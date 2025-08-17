@@ -25,11 +25,14 @@ data class ConfigUiState(
 }
 
 sealed class ConfigEvent {
-    object IncreaseLaps : ConfigEvent()
-    object DecreaseLaps : ConfigEvent()
-    object IncreaseWorkDuration : ConfigEvent()
-    object DecreaseWorkDuration : ConfigEvent()
-    object IncreaseRestDuration : ConfigEvent()
-    object DecreaseRestDuration : ConfigEvent()
+    data class SetLaps(val laps: Int) : ConfigEvent()
+    data class SetWorkDuration(val duration: kotlin.time.Duration) : ConfigEvent()
+    data class SetRestDuration(val duration: kotlin.time.Duration) : ConfigEvent()
     object Reset : ConfigEvent()
+    object ResetLaps : ConfigEvent()
+    object ResetWork : ConfigEvent()
+    object ResetRest : ConfigEvent()
+    object SetLapsToInfinite : ConfigEvent()
+    object SetWorkToLong : ConfigEvent()
+    object SetRestToLong : ConfigEvent()
 }
