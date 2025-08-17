@@ -1,5 +1,6 @@
 package com.wearinterval.ui.screen.settings
 
+import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -97,8 +99,13 @@ private fun SettingsToggleButton(
     contentDescription: String,
     modifier: Modifier = Modifier,
 ) {
+    val view = LocalView.current
+
     Button(
-        onClick = onClick,
+        onClick = {
+            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            onClick()
+        },
         modifier = modifier
             .size(72.dp)
             .semantics { this.contentDescription = contentDescription },
