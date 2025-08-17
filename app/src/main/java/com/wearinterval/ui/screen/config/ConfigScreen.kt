@@ -4,15 +4,19 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -58,58 +62,55 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
             .background(MaterialTheme.colors.background),
         contentAlignment = Alignment.Center,
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+        // Three-column picker layout using full screen height
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 4.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            // Three-column picker layout
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.Top,
-            ) {
-                // Laps Picker
-                ConfigScrollPicker(
-                    title = "",
-                    items = lapsDisplayItems,
-                    selectedIndex = lapsIndex,
-                    onSelectionChanged = { index ->
-                        val selectedLaps = ConfigPickerValues.LAPS_VALUES[index]
-                        onEvent(ConfigEvent.SetLaps(selectedLaps))
-                    },
-                    onSingleTap = { onEvent(ConfigEvent.ResetLaps) },
-                    onLongPress = { onEvent(ConfigEvent.SetLapsToInfinite) },
-                    modifier = Modifier.weight(1f),
-                )
+            // Laps Picker
+            ConfigScrollPicker(
+                title = "",
+                items = lapsDisplayItems,
+                selectedIndex = lapsIndex,
+                onSelectionChanged = { index ->
+                    val selectedLaps = ConfigPickerValues.LAPS_VALUES[index]
+                    onEvent(ConfigEvent.SetLaps(selectedLaps))
+                },
+                onSingleTap = { onEvent(ConfigEvent.ResetLaps) },
+                onLongPress = { onEvent(ConfigEvent.SetLapsToInfinite) },
+                modifier = Modifier.weight(1f),
+            )
 
-                // Work Duration Picker
-                ConfigScrollPicker(
-                    title = "",
-                    items = durationDisplayItems,
-                    selectedIndex = workDurationIndex,
-                    onSelectionChanged = { index ->
-                        val selectedDuration = ConfigPickerValues.DURATION_VALUES[index]
-                        onEvent(ConfigEvent.SetWorkDuration(selectedDuration))
-                    },
-                    onSingleTap = { onEvent(ConfigEvent.ResetWork) },
-                    onLongPress = { onEvent(ConfigEvent.SetWorkToLong) },
-                    modifier = Modifier.weight(1f),
-                )
+            // Work Duration Picker
+            ConfigScrollPicker(
+                title = "",
+                items = durationDisplayItems,
+                selectedIndex = workDurationIndex,
+                onSelectionChanged = { index ->
+                    val selectedDuration = ConfigPickerValues.DURATION_VALUES[index]
+                    onEvent(ConfigEvent.SetWorkDuration(selectedDuration))
+                },
+                onSingleTap = { onEvent(ConfigEvent.ResetWork) },
+                onLongPress = { onEvent(ConfigEvent.SetWorkToLong) },
+                modifier = Modifier.weight(1f),
+            )
 
-                // Rest Duration Picker
-                ConfigScrollPicker(
-                    title = "",
-                    items = restDurationDisplayItems,
-                    selectedIndex = restDurationIndex,
-                    onSelectionChanged = { index ->
-                        val selectedDuration = ConfigPickerValues.REST_DURATION_VALUES[index]
-                        onEvent(ConfigEvent.SetRestDuration(selectedDuration))
-                    },
-                    onSingleTap = { onEvent(ConfigEvent.ResetRest) },
-                    onLongPress = { onEvent(ConfigEvent.SetRestToLong) },
-                    modifier = Modifier.weight(1f),
-                )
-            }
+            // Rest Duration Picker
+            ConfigScrollPicker(
+                title = "",
+                items = restDurationDisplayItems,
+                selectedIndex = restDurationIndex,
+                onSelectionChanged = { index ->
+                    val selectedDuration = ConfigPickerValues.REST_DURATION_VALUES[index]
+                    onEvent(ConfigEvent.SetRestDuration(selectedDuration))
+                },
+                onSingleTap = { onEvent(ConfigEvent.ResetRest) },
+                onLongPress = { onEvent(ConfigEvent.SetRestToLong) },
+                modifier = Modifier.weight(1f),
+            )
         }
     }
 }
@@ -126,47 +127,46 @@ private fun ConfigScrollPicker(
 ) {
     val hapticFeedback = LocalHapticFeedback.current
 
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
+    // Use full height with subtle background for visual distinction
+    Box(
+        modifier = modifier
+            .fillMaxHeight()
+            .clip(RoundedCornerShape(12.dp))
+            .background(
+                Color.White.copy(alpha = 0.08f), // Subtle white background for distinction
+            )
+            .padding(4.dp),
     ) {
-        // Use ScrollablePicker with gesture tap area
+        ScrollablePicker(
+            items = items,
+            selectedIndex = selectedIndex,
+            onSelectionChanged = onSelectionChanged,
+            title = title,
+            modifier = Modifier.fillMaxSize(),
+        )
+
+        // Invisible tap area at bottom for gestures
         Box(
             modifier = Modifier
-                .height(140.dp)
-                .fillMaxWidth(),
-        ) {
-            ScrollablePicker(
-                items = items,
-                selectedIndex = selectedIndex,
-                onSelectionChanged = onSelectionChanged,
-                title = title,
-                modifier = Modifier.fillMaxSize(),
-            )
-
-            // Invisible tap area at bottom for gestures
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(32.dp)
-                    .align(Alignment.BottomCenter)
-                    .pointerInput(Unit) {
-                        detectTapGestures(
-                            onTap = {
-                                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onSingleTap()
-                            },
-                            onLongPress = {
-                                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                                onLongPress()
-                            },
-                        )
-                    }
-                    .semantics {
-                        contentDescription = "Tap to reset $title, long press for alternate value"
-                    },
-            )
-        }
+                .fillMaxWidth()
+                .height(32.dp)
+                .align(Alignment.BottomCenter)
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onTap = {
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onSingleTap()
+                        },
+                        onLongPress = {
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onLongPress()
+                        },
+                    )
+                }
+                .semantics {
+                    contentDescription = "Tap to reset $title, long press for alternate value"
+                },
+        )
     }
 }
 
