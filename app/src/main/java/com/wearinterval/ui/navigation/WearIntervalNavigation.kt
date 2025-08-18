@@ -5,11 +5,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import com.wearinterval.ui.screen.config.ConfigScreen
 import com.wearinterval.ui.screen.history.HistoryScreen
 import com.wearinterval.ui.screen.main.MainScreen
 import com.wearinterval.ui.screen.settings.SettingsScreen
+import kotlinx.coroutines.launch
 
 /**
  * Main navigation for the WearInterval app using optimized HorizontalPager.
@@ -29,6 +31,8 @@ fun WearIntervalNavigation() {
       pageCount = { 4 }, // History, Main, Config, Settings
     )
 
+  val scope = rememberCoroutineScope()
+
   HorizontalPager(
     state = pagerState,
     modifier = Modifier.fillMaxSize(),
@@ -36,7 +40,7 @@ fun WearIntervalNavigation() {
     beyondViewportPageCount = 0 // Try newer parameter name
   ) { page ->
     when (page) {
-      0 -> HistoryScreen()
+      0 -> HistoryScreen(onNavigateToMain = { scope.launch { pagerState.animateScrollToPage(1) } })
       1 -> MainScreen() // CENTER - primary screen
       2 -> ConfigScreen() // Right swipe from main
       3 -> SettingsScreen() // Far right

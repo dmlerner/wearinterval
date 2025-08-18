@@ -31,17 +31,25 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
-fun HistoryScreen(viewModel: HistoryViewModel = hiltViewModel()) {
+fun HistoryScreen(
+  onNavigateToMain: () -> Unit = {},
+  viewModel: HistoryViewModel = hiltViewModel()
+) {
   val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
   HistoryContent(
     uiState = uiState,
     onEvent = viewModel::onEvent,
+    onNavigateToMain = onNavigateToMain,
   )
 }
 
 @Composable
-internal fun HistoryContent(uiState: HistoryUiState, onEvent: (HistoryEvent) -> Unit) {
+internal fun HistoryContent(
+  uiState: HistoryUiState,
+  onEvent: (HistoryEvent) -> Unit,
+  onNavigateToMain: () -> Unit = {}
+) {
   Box(
     modifier =
       Modifier.fillMaxSize().background(MaterialTheme.colors.background).semantics {
@@ -62,7 +70,10 @@ internal fun HistoryContent(uiState: HistoryUiState, onEvent: (HistoryEvent) -> 
       else -> {
         ConfigurationGrid(
           configurations = uiState.configurations,
-          onConfigurationSelect = { config -> onEvent(HistoryEvent.ConfigurationSelected(config)) },
+          onConfigurationSelect = { config ->
+            onEvent(HistoryEvent.ConfigurationSelected(config))
+            onNavigateToMain()
+          },
         )
       }
     }
@@ -161,6 +172,7 @@ private fun HistoryContentGridPreview() {
           isLoading = false,
         ),
       onEvent = {},
+      onNavigateToMain = {},
     )
   }
 }
@@ -190,6 +202,7 @@ private fun HistoryContentPartialGridPreview() {
           isLoading = false,
         ),
       onEvent = {},
+      onNavigateToMain = {},
     )
   }
 }
@@ -214,6 +227,7 @@ private fun HistoryContentSingleItemPreview() {
           isLoading = false,
         ),
       onEvent = {},
+      onNavigateToMain = {},
     )
   }
 }
@@ -248,6 +262,7 @@ private fun HistoryContentThreeItemsPreview() {
           isLoading = false,
         ),
       onEvent = {},
+      onNavigateToMain = {},
     )
   }
 }
@@ -263,6 +278,7 @@ private fun EmptyHistoryContentPreview() {
           isLoading = false,
         ),
       onEvent = {},
+      onNavigateToMain = {},
     )
   }
 }
@@ -278,6 +294,7 @@ private fun LoadingHistoryContentPreview() {
           isLoading = true,
         ),
       onEvent = {},
+      onNavigateToMain = {},
     )
   }
 }

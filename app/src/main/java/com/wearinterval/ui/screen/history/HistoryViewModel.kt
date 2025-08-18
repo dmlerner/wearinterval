@@ -3,6 +3,7 @@ package com.wearinterval.ui.screen.history
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wearinterval.domain.repository.ConfigurationRepository
+import com.wearinterval.domain.repository.TimerRepository
 import com.wearinterval.util.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -18,6 +19,7 @@ class HistoryViewModel
 @Inject
 constructor(
   private val configurationRepository: ConfigurationRepository,
+  private val timerRepository: TimerRepository,
 ) : ViewModel() {
 
   val uiState: StateFlow<HistoryUiState> =
@@ -39,6 +41,8 @@ constructor(
     viewModelScope.launch {
       when (event) {
         is HistoryEvent.ConfigurationSelected -> {
+          // Stop the timer first, then select the new configuration
+          timerRepository.stopTimer()
           configurationRepository.selectRecentConfiguration(event.configuration)
         }
         HistoryEvent.RefreshHistory -> {
