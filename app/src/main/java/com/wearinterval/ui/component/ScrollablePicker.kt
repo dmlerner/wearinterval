@@ -51,6 +51,15 @@ fun ScrollablePicker(
     }
   }
 
+  // Handle external selectedIndex changes (e.g., from button presses)
+  LaunchedEffect(selectedIndex) {
+    if (!isFirstComposition.value && selectedIndex != pickerState.selectedOption) {
+      if (selectedIndex in 0 until stableItems.size) {
+        pickerState.animateScrollToOption(selectedIndex)
+      }
+    }
+  }
+
   Column(
     modifier = modifier,
     horizontalAlignment = Alignment.CenterHorizontally,

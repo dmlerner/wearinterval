@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
@@ -49,22 +48,13 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
     if (uiState.isLoading) {
       androidx.wear.compose.material.CircularProgressIndicator()
     } else {
-      // Calculate current indices for each picker - use remember to prevent recalculation
-      val lapsIndex = remember(uiState.laps) { ConfigPickerValues.findLapsIndex(uiState.laps) }
-      val workDuration =
-        remember(uiState.workMinutes, uiState.workSeconds) {
-          (uiState.workMinutes * 60 + uiState.workSeconds).seconds
-        }
-      val restDuration =
-        remember(uiState.restMinutes, uiState.restSeconds) {
-          (uiState.restMinutes * 60 + uiState.restSeconds).seconds
-        }
-      val workDurationIndex =
-        remember(workDuration) {
-          ConfigPickerValues.findDurationIndex(workDuration, isRest = false)
-        }
-      val restDurationIndex =
-        remember(restDuration) { ConfigPickerValues.findDurationIndex(restDuration, isRest = true) }
+      // Calculate current indices for each picker - recalculate on every composition to ensure
+      // immediate updates
+      val lapsIndex = ConfigPickerValues.findLapsIndex(uiState.laps)
+      val workDuration = (uiState.workMinutes * 60 + uiState.workSeconds).seconds
+      val restDuration = (uiState.restMinutes * 60 + uiState.restSeconds).seconds
+      val workDurationIndex = ConfigPickerValues.findDurationIndex(workDuration, isRest = false)
+      val restDurationIndex = ConfigPickerValues.findDurationIndex(restDuration, isRest = true)
 
       // Use pre-computed display lists (no runtime computation needed)
       val lapsDisplayItems = ConfigPickerValues.LAPS_DISPLAY_ITEMS
