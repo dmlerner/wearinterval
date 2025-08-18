@@ -103,25 +103,10 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
           index
         }
 
-      // Create display lists - use remember to prevent recreation on recomposition
-      val lapsDisplayItems = remember {
-        DebugLogger.logConfigScreen("ConfigScreen", "ConfigContent - LAPS DISPLAY ITEMS RECREATED")
-        ConfigPickerValues.LAPS_VALUES.map { ConfigPickerValues.lapsDisplayText(it) }
-      }
-      val durationDisplayItems = remember {
-        DebugLogger.logConfigScreen(
-          "ConfigScreen",
-          "ConfigContent - DURATION DISPLAY ITEMS RECREATED"
-        )
-        ConfigPickerValues.DURATION_VALUES.map { ConfigPickerValues.durationDisplayText(it) }
-      }
-      val restDurationDisplayItems = remember {
-        DebugLogger.logConfigScreen(
-          "ConfigScreen",
-          "ConfigContent - REST DURATION DISPLAY ITEMS RECREATED"
-        )
-        ConfigPickerValues.REST_DURATION_VALUES.map { ConfigPickerValues.durationDisplayText(it) }
-      }
+      // Use pre-computed display lists (no runtime computation needed)
+      val lapsDisplayItems = ConfigPickerValues.LAPS_DISPLAY_ITEMS
+      val durationDisplayItems = ConfigPickerValues.DURATION_DISPLAY_ITEMS
+      val restDurationDisplayItems = ConfigPickerValues.REST_DURATION_DISPLAY_ITEMS
 
       // Track overall state in side effect
       SideEffect {

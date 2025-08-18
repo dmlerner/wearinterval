@@ -90,6 +90,11 @@ object ConfigPickerValues {
       else -> "${duration.inWholeSeconds}s"
     }
 
+  // Pre-computed display lists (created once at compile time, not during composition)
+  val LAPS_DISPLAY_ITEMS = LAPS_VALUES.map { lapsDisplayText(it) }
+  val DURATION_DISPLAY_ITEMS = DURATION_VALUES.map { durationDisplayText(it) }
+  val REST_DURATION_DISPLAY_ITEMS = REST_DURATION_VALUES.map { durationDisplayText(it) }
+
   // Find the index of the value in the list that is closest to the given lap count
   fun findLapsIndex(laps: Int): Int {
     val closest = LAPS_VALUES.minByOrNull { abs(it - laps) } ?: return LAPS_VALUES.size - 1
