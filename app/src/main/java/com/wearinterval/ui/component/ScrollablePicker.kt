@@ -33,22 +33,22 @@ fun ScrollablePicker(
   // Stabilize items to prevent unnecessary recreations
   val stableItems = remember(items) { items }
 
-  // Create picker state - sync with selectedIndex efficiently
+  // Create self-managed picker state
   val pickerState =
     rememberPickerState(
       initialNumberOfOptions = stableItems.size,
-      initiallySelectedOption = selectedIndex.coerceIn(0, stableItems.size - 1)
+      initiallySelectedOption = 0 // Always start at 0
     )
 
-  // Track if this is the first composition to avoid callback on init
+  // One-time initialization only
   val isFirstComposition = remember { mutableStateOf(true) }
-
-  // Sync picker state with external selectedIndex only when needed
-  LaunchedEffect(selectedIndex) {
-    if (selectedIndex != pickerState.selectedOption && selectedIndex in 0 until stableItems.size) {
-      pickerState.scrollToOption(selectedIndex)
+  if (isFirstComposition.value) {
+    LaunchedEffect(Unit) {
+      if (selectedIndex in 0 until stableItems.size) {
+        pickerState.scrollToOption(selectedIndex)
+      }
+      isFirstComposition.value = false
     }
-    isFirstComposition.value = false
   }
 
   Column(
@@ -73,19 +73,21 @@ fun ScrollablePicker(
       modifier = Modifier.weight(1f).fillMaxWidth(),
       onSelected = { view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS) },
       option = { optionIndex ->
+        val isSelected = optionIndex == pickerState.selectedOption
         Text(
           text = stableItems[optionIndex],
           style = MaterialTheme.typography.body2,
           textAlign = TextAlign.Center,
+          color = if (isSelected) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface,
           modifier = Modifier.fillMaxWidth()
         )
       }
     )
 
-    // Optimized callback with reduced debounce
+    // Debounced callback to prevent recomposition storms
     LaunchedEffect(pickerState.selectedOption) {
       if (!isFirstComposition.value) {
-        kotlinx.coroutines.delay(50) // Reduced from 100ms to 50ms
+        kotlinx.coroutines.delay(200) // Critical: debounce rapid changes
         onSelectionChanged(pickerState.selectedOption)
       }
     }

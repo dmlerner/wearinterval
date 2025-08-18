@@ -174,30 +174,16 @@ class TimerService : Service() {
     // Initialize with current configuration to ensure consistency - do this synchronously
     val currentConfig = configurationRepository.currentConfiguration.value
     _timerState.value = TimerState.stopped(currentConfig)
-    android.util.Log.d(
-      "TimerService",
-      "Initialized state with config: ${currentConfig.laps} laps, ${currentConfig.workDuration}"
-    )
   }
 
   private fun observeConfigurationChanges() {
     serviceScope.launch {
       configurationRepository.currentConfiguration.collect { config ->
-        android.util.Log.d(
-          "TimerService",
-          "Config changed: ${config.laps} laps, ${config.workDuration}"
-        )
         // Only update if timer is stopped to maintain single source of truth
         if (_timerState.value.isStopped) {
-          android.util.Log.d("TimerService", "Timer is stopped, updating state")
           _timerState.value = TimerState.stopped(config)
           timerNotificationManager.updateTimerNotification(_timerState.value)
-        } else {
-          android.util.Log.d(
-            "TimerService",
-            "Timer is not stopped, phase: ${_timerState.value.phase}"
-          )
-        }
+        } else {}
       }
     }
   }

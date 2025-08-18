@@ -67,16 +67,8 @@ constructor(
         val rawLaps = preferences[CURRENT_CONFIG_LAPS]
         val rawWork = preferences[CURRENT_CONFIG_WORK_DURATION]
         val rawRest = preferences[CURRENT_CONFIG_REST_DURATION]
-        android.util.Log.d(
-          "DataStore",
-          "RAW preferences - ID: $configId, laps: $rawLaps, work: $rawWork, rest: $rawRest"
-        )
 
         if (configId == null) {
-          android.util.Log.d(
-            "DataStore",
-            "No config ID, returning DEFAULT: ${TimerConfiguration.DEFAULT}"
-          )
           TimerConfiguration.DEFAULT
         } else {
           val config =
@@ -90,7 +82,6 @@ constructor(
               lastUsed = preferences[CURRENT_CONFIG_LAST_USED]
                   ?: TimerConfiguration.DEFAULT.lastUsed,
             )
-          android.util.Log.d("DataStore", "Constructed config: $config")
           config
         }
       }
@@ -105,22 +96,16 @@ constructor(
   }
 
   suspend fun updateCurrentConfiguration(config: TimerConfiguration) {
-    android.util.Log.d("DataStore", "UPDATING config: $config")
     context.dataStore.edit { preferences ->
       preferences[CURRENT_CONFIG_ID] = config.id
       preferences[CURRENT_CONFIG_LAPS] = config.laps
       preferences[CURRENT_CONFIG_WORK_DURATION] = config.workDuration.inWholeSeconds
       preferences[CURRENT_CONFIG_REST_DURATION] = config.restDuration.inWholeSeconds
       preferences[CURRENT_CONFIG_LAST_USED] = config.lastUsed
-      android.util.Log.d(
-        "DataStore",
-        "SAVED to preferences - laps: ${config.laps}, work: ${config.workDuration.inWholeSeconds}, rest: ${config.restDuration.inWholeSeconds}"
-      )
     }
   }
 
   suspend fun clearAllData() {
-    android.util.Log.d("DataStore", "CLEARING all DataStore data")
     context.dataStore.edit { preferences -> preferences.clear() }
   }
 }

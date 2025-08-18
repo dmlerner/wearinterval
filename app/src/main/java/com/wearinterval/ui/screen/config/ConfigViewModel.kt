@@ -37,13 +37,7 @@ constructor(
 
   val uiState: StateFlow<ConfigUiState> =
     configurationRepository.currentConfiguration
-      .map { config ->
-        android.util.Log.d(
-          "ConfigViewModel",
-          "MAP: Config received: ${config.laps} laps, ${config.workDuration}, ${config.restDuration}",
-        )
-        config.toUiState().copy(isLoading = false)
-      }
+      .map { config -> config.toUiState().copy(isLoading = false) }
       .stateIn(
         scope = viewModelScope,
         started = SharingStarted.Eagerly,
@@ -87,12 +81,10 @@ constructor(
             currentConfig.copy(restDuration = 5.minutes)
           }
           ConfigEvent.ClearAllData -> {
-            android.util.Log.d("ConfigViewModel", "CLEARING all data")
             configurationRepository.clearAllData()
             return@launch
           }
         }
-      android.util.Log.d("ConfigViewModel", "ON_EVENT: event=$event, updatedConfig=$updatedConfig")
       configurationRepository.updateConfiguration(updatedConfig)
     }
   }

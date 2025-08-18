@@ -33,12 +33,6 @@ constructor(
         timerRepository.isServiceBound,
         flashScreen,
       ) { timerState, configuration, isServiceBound, flash ->
-        android.util.Log.d(
-          "MainViewModel",
-          "COMBINE: TimerState: ${timerState.currentLap}/${timerState.totalLaps} (${timerState.timeRemaining}), " +
-            "Config: ${configuration.laps} laps (${configuration.workDuration}), " +
-            "Phase: ${timerState.phase}, ServiceBound: $isServiceBound",
-        )
 
         // When stopped, always use configuration values to avoid race conditions
         val displayLaps = if (timerState.isStopped) configuration.laps else timerState.totalLaps
@@ -69,7 +63,6 @@ constructor(
       )
 
   fun onEvent(event: MainEvent) {
-    android.util.Log.d("MainViewModel", "ON_EVENT: event=$event")
     when (event) {
       MainEvent.PlayPauseClicked -> handlePlayPauseClick()
       MainEvent.StopClicked -> handleStopClick()

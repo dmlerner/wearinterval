@@ -99,10 +99,6 @@ object ConfigPickerValues {
   fun findLapsIndex(laps: Int): Int {
     val closest = LAPS_VALUES.minByOrNull { abs(it - laps) } ?: return LAPS_VALUES.size - 1
     val index = LAPS_VALUES.indexOf(closest).takeIf { it >= 0 } ?: (LAPS_VALUES.size - 1)
-    android.util.Log.d(
-      "ConfigPicker",
-      "findLapsIndex: laps=$laps, closest=$closest, index=$index, LAPS_VALUES[index]=${LAPS_VALUES[index]}"
-    )
     return index
   }
 
@@ -113,10 +109,6 @@ object ConfigPickerValues {
       values.minByOrNull { abs(it.inWholeMilliseconds - duration.inWholeMilliseconds) }
         ?: return values.size - 1
     val index = values.indexOf(closest).takeIf { it >= 0 } ?: (values.size - 1)
-    android.util.Log.d(
-      "ConfigPicker",
-      "findDurationIndex: duration=$duration, isRest=$isRest, closest=$closest, index=$index, values[index]=${values[index]}"
-    )
     return index
   }
 }
