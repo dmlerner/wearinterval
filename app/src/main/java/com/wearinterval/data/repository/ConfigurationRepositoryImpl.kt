@@ -137,7 +137,11 @@ constructor(
           config.withUpdatedTimestamp()
         }
 
-      configurationDao.updateLastUsed(finalConfig.id, finalConfig.lastUsed)
+      // Use insertConfiguration with REPLACE strategy to ensure proper LRU behavior
+      // This prevents duplicates and ensures the entry is properly updated
+      configurationDao.insertConfiguration(
+        TimerConfigurationEntity.fromDomain(finalConfig),
+      )
       dataStoreManager.updateCurrentConfiguration(finalConfig)
 
       Result.success(Unit)
