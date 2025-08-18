@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -28,7 +27,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.material.MaterialTheme
 import com.wearinterval.ui.component.ScrollablePicker
 import com.wearinterval.util.Constants
-import com.wearinterval.util.DebugLogger
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -43,82 +41,35 @@ fun ConfigScreen(viewModel: ConfigViewModel = hiltViewModel()) {
 
 @Composable
 internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Unit) {
-  DebugLogger.logConfigScreen(
-    "ConfigScreen",
-    "ConfigContent COMPOSITION START - laps=${uiState.laps}, work=${uiState.workMinutes}:${uiState.workSeconds}, rest=${uiState.restMinutes}:${uiState.restSeconds}, loading=${uiState.isLoading}"
-  )
 
   Box(
     modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.background),
     contentAlignment = Alignment.Center,
   ) {
     if (uiState.isLoading) {
-      DebugLogger.logConfigScreen("ConfigScreen", "ConfigContent - SHOWING LOADING")
       androidx.wear.compose.material.CircularProgressIndicator()
     } else {
       // Calculate current indices for each picker - use remember to prevent recalculation
-      val lapsIndex =
-        remember(uiState.laps) {
-          val index = ConfigPickerValues.findLapsIndex(uiState.laps)
-          DebugLogger.logConfigScreen(
-            "ConfigScreen",
-            "ConfigContent - LAPS INDEX CALCULATED: laps=${uiState.laps} -> index=$index"
-          )
-          index
-        }
+      val lapsIndex = remember(uiState.laps) { ConfigPickerValues.findLapsIndex(uiState.laps) }
       val workDuration =
         remember(uiState.workMinutes, uiState.workSeconds) {
-          val duration = (uiState.workMinutes * 60 + uiState.workSeconds).seconds
-          DebugLogger.logConfigScreen(
-            "ConfigScreen",
-            "ConfigContent - WORK DURATION CALCULATED: ${uiState.workMinutes}:${uiState.workSeconds} -> $duration"
-          )
-          duration
+          (uiState.workMinutes * 60 + uiState.workSeconds).seconds
         }
       val restDuration =
         remember(uiState.restMinutes, uiState.restSeconds) {
-          val duration = (uiState.restMinutes * 60 + uiState.restSeconds).seconds
-          DebugLogger.logConfigScreen(
-            "ConfigScreen",
-            "ConfigContent - REST DURATION CALCULATED: ${uiState.restMinutes}:${uiState.restSeconds} -> $duration"
-          )
-          duration
+          (uiState.restMinutes * 60 + uiState.restSeconds).seconds
         }
       val workDurationIndex =
         remember(workDuration) {
-          val index = ConfigPickerValues.findDurationIndex(workDuration, isRest = false)
-          DebugLogger.logConfigScreen(
-            "ConfigScreen",
-            "ConfigContent - WORK INDEX CALCULATED: $workDuration -> index=$index"
-          )
-          index
+          ConfigPickerValues.findDurationIndex(workDuration, isRest = false)
         }
       val restDurationIndex =
-        remember(restDuration) {
-          val index = ConfigPickerValues.findDurationIndex(restDuration, isRest = true)
-          DebugLogger.logConfigScreen(
-            "ConfigScreen",
-            "ConfigContent - REST INDEX CALCULATED: $restDuration -> index=$index"
-          )
-          index
-        }
+        remember(restDuration) { ConfigPickerValues.findDurationIndex(restDuration, isRest = true) }
 
       // Use pre-computed display lists (no runtime computation needed)
       val lapsDisplayItems = ConfigPickerValues.LAPS_DISPLAY_ITEMS
       val durationDisplayItems = ConfigPickerValues.DURATION_DISPLAY_ITEMS
       val restDurationDisplayItems = ConfigPickerValues.REST_DURATION_DISPLAY_ITEMS
-
-      // Track overall state in side effect
-      SideEffect {
-        DebugLogger.logConfigScreen(
-          "ConfigScreen",
-          "ConfigContent - SIDE_EFFECT: lapsIndex=$lapsIndex, workIndex=$workDurationIndex, restIndex=$restDurationIndex"
-        )
-        DebugLogger.logConfigScreen(
-          "ConfigScreen",
-          "ConfigContent - SIDE_EFFECT: items sizes - laps=${lapsDisplayItems.size}, work=${durationDisplayItems.size}, rest=${restDurationDisplayItems.size}"
-        )
-      }
 
       // Three-column picker layout using full screen height
       Row(
@@ -132,45 +83,18 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
         verticalAlignment = Alignment.CenterVertically,
       ) {
         // Laps Picker
-        DebugLogger.logConfigScreen(
-          "ConfigScreen",
-          "ConfigContent - RENDERING LAPS PICKER: selectedIndex=$lapsIndex, items.size=${lapsDisplayItems.size}"
-        )
         ConfigScrollPicker(
           title = "",
           items = lapsDisplayItems,
           selectedIndex = lapsIndex,
           onSelectionChanged = { index ->
-            DebugLogger.logConfigScreen(
-              "ConfigScreen",
-              "ConfigContent - LAPS PICKER onSelectionChanged: index=$index"
-            )
             val selectedLaps = ConfigPickerValues.LAPS_VALUES[index]
-            DebugLogger.logConfigScreen(
-              "ConfigScreen",
-              "ConfigContent - LAPS PICKER: selectedLaps=$selectedLaps, current uiState.laps=${uiState.laps}"
-            )
             if (selectedLaps != uiState.laps) {
-              DebugLogger.logConfigScreen(
-                "ConfigScreen",
-                "ConfigContent - LAPS PICKER: SENDING SetLaps event"
-              )
               onEvent(ConfigEvent.SetLaps(selectedLaps))
-            } else {
-              DebugLogger.logConfigScreen(
-                "ConfigScreen",
-                "ConfigContent - LAPS PICKER: SKIPPING - same value"
-              )
             }
           },
-          onSingleTap = {
-            DebugLogger.logConfigScreen("ConfigScreen", "ConfigContent - LAPS PICKER: onSingleTap")
-            onEvent(ConfigEvent.ResetLaps)
-          },
-          onLongPress = {
-            DebugLogger.logConfigScreen("ConfigScreen", "ConfigContent - LAPS PICKER: onLongPress")
-            onEvent(ConfigEvent.SetLapsToInfinite)
-          },
+          onSingleTap = { onEvent(ConfigEvent.ResetLaps) },
+          onLongPress = { onEvent(ConfigEvent.SetLapsToInfinite) },
           modifier = Modifier.weight(1f),
         )
 
