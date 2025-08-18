@@ -4,11 +4,11 @@ import com.wearinterval.util.Constants
 
 data class ConfigUiState(
   val isLoading: Boolean = true,
-  val laps: Int = 2,
-  val workMinutes: Int = 0,
-  val workSeconds: Int = 3,
-  val restMinutes: Int = 0,
-  val restSeconds: Int = 3,
+  val laps: Int = Constants.TimerLimits.INFINITE_LAPS, // 999 = infinite
+  val workMinutes: Int = 1, // 1 minute
+  val workSeconds: Int = 0, // 0 seconds (total = 1:00)
+  val restMinutes: Int = 0, // 0 minutes
+  val restSeconds: Int = 0, // 0 seconds (no rest)
 ) {
   val totalWorkTimeText: String
     get() =

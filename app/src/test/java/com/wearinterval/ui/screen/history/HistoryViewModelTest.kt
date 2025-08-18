@@ -4,6 +4,7 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.repository.ConfigurationRepository
+import com.wearinterval.domain.repository.TimerRepository
 import com.wearinterval.util.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -24,6 +25,7 @@ class HistoryViewModelTest {
   @get:Rule val mainDispatcherRule = MainDispatcherRule()
 
   private val mockConfigurationRepository = mockk<ConfigurationRepository>()
+  private val mockTimerRepository = mockk<TimerRepository>(relaxed = true)
   private lateinit var viewModel: HistoryViewModel
 
   private val sampleConfigurations =
@@ -52,7 +54,7 @@ class HistoryViewModelTest {
   fun setup() {
     every { mockConfigurationRepository.recentConfigurations } returns MutableStateFlow(emptyList())
 
-    viewModel = HistoryViewModel(mockConfigurationRepository)
+    viewModel = HistoryViewModel(mockConfigurationRepository, mockTimerRepository)
   }
 
   @Test
@@ -62,7 +64,7 @@ class HistoryViewModelTest {
     every { mockConfigurationRepository.recentConfigurations } returns emptyFlow
 
     // Create fresh viewModel
-    val testViewModel = HistoryViewModel(mockConfigurationRepository)
+    val testViewModel = HistoryViewModel(mockConfigurationRepository, mockTimerRepository)
 
     testViewModel.uiState.test {
       val initialState = awaitItem()
@@ -79,7 +81,7 @@ class HistoryViewModelTest {
     every { mockConfigurationRepository.recentConfigurations } returns configurationsFlow
 
     // Create new viewModel with updated mock
-    val testViewModel = HistoryViewModel(mockConfigurationRepository)
+    val testViewModel = HistoryViewModel(mockConfigurationRepository, mockTimerRepository)
 
     // When/Then
     testViewModel.uiState.test {
@@ -97,7 +99,7 @@ class HistoryViewModelTest {
     every { mockConfigurationRepository.recentConfigurations } returns configurationsFlow
 
     // Create new viewModel with updated mock
-    val testViewModel = HistoryViewModel(mockConfigurationRepository)
+    val testViewModel = HistoryViewModel(mockConfigurationRepository, mockTimerRepository)
 
     // When/Then
     testViewModel.uiState.test {
@@ -116,7 +118,7 @@ class HistoryViewModelTest {
     every { mockConfigurationRepository.recentConfigurations } returns errorFlow
 
     // Create new viewModel
-    val testViewModel = HistoryViewModel(mockConfigurationRepository)
+    val testViewModel = HistoryViewModel(mockConfigurationRepository, mockTimerRepository)
 
     // When/Then - Verify the viewModel handles the flow correctly
     testViewModel.uiState.test {
@@ -133,11 +135,13 @@ class HistoryViewModelTest {
     val configToSelect = sampleConfigurations[0]
     coEvery { mockConfigurationRepository.selectRecentConfiguration(any()) } returns
       Result.success(Unit)
+    coEvery { mockTimerRepository.stopTimer() } returns Result.success(Unit)
 
     // When
     viewModel.onEvent(HistoryEvent.ConfigurationSelected(configToSelect))
 
     // Then
+    coVerify { mockTimerRepository.stopTimer() }
     coVerify { mockConfigurationRepository.selectRecentConfiguration(configToSelect) }
   }
 
@@ -166,7 +170,7 @@ class HistoryViewModelTest {
     every { mockConfigurationRepository.recentConfigurations } returns configurationsFlow
 
     // Create new viewModel with flow
-    val testViewModel = HistoryViewModel(mockConfigurationRepository)
+    val testViewModel = HistoryViewModel(mockConfigurationRepository, mockTimerRepository)
 
     testViewModel.uiState.test {
       // Initial empty state
@@ -180,21 +184,20 @@ class HistoryViewModelTest {
 
       // Then - UI state updates
       val updatedState = awaitItem()
-      assertThat(updatedState.recentConfigurations).containsExactlyElementsIn(sampleConfigurations)
+      assertThat(updatedState.configurations).containsExactlyElementsIn(sampleConfigurations)
       assertThat(updatedState.hasConfigurations).isTrue()
       assertThat(updatedState.isLoading).isFalse()
-      assertThat(updatedState.error).isNull()
     }
   }
 
   @Test
   fun `hasConfigurations computed property works correctly`() {
     // Test with empty list
-    val emptyState = HistoryUiState(recentConfigurations = emptyList())
+    val emptyState = HistoryUiState(configurations = emptyList())
     assertThat(emptyState.hasConfigurations).isFalse()
 
     // Test with configurations
-    val filledState = HistoryUiState(recentConfigurations = sampleConfigurations)
+    val filledState = HistoryUiState(configurations = sampleConfigurations)
     assertThat(filledState.hasConfigurations).isTrue()
   }
 }

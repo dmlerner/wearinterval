@@ -49,9 +49,9 @@ data class TimerConfiguration(
   companion object {
     val DEFAULT =
       TimerConfiguration(
-        laps = 2,
-        workDuration = 3.seconds,
-        restDuration = 3.seconds,
+        laps = Constants.TimerLimits.INFINITE_LAPS, // 999 = infinite
+        workDuration = 1.minutes,
+        restDuration = 0.seconds, // no rest
       )
 
     fun validate(laps: Int, workDuration: Duration, restDuration: Duration): TimerConfiguration {
