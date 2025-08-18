@@ -2,6 +2,7 @@ package com.wearinterval.ui.screen.config
 
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,9 +13,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.contentDescription
@@ -40,6 +47,11 @@ fun ConfigScreen(viewModel: ConfigViewModel = hiltViewModel()) {
 
 @Composable
 internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Unit) {
+  // Focus management for multiple pickers - crown control
+  var selectedColumn by remember { mutableIntStateOf(1) } // Start with work duration (middle)
+  val lapsFocusRequester = remember { FocusRequester() }
+  val workDurationFocusRequester = remember { FocusRequester() }
+  val restDurationFocusRequester = remember { FocusRequester() }
 
   Box(
     modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.background),
@@ -85,10 +97,11 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
           },
           onSingleTap = { onEvent(ConfigEvent.ResetLaps) },
           onLongPress = { onEvent(ConfigEvent.SetLapsToInfinite) },
-          modifier = Modifier.weight(1f),
+          modifier =
+            Modifier.weight(1f).focusRequester(lapsFocusRequester).clickable { selectedColumn = 0 },
         )
 
-        // Work Duration Picker
+        // Work Duration Picker (receives crown control by default)
         ConfigScrollPicker(
           title = "",
           items = durationDisplayItems,
@@ -101,7 +114,10 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
           },
           onSingleTap = { onEvent(ConfigEvent.ResetWork) },
           onLongPress = { onEvent(ConfigEvent.SetWorkToLong) },
-          modifier = Modifier.weight(1f),
+          modifier =
+            Modifier.weight(1f).focusRequester(workDurationFocusRequester).clickable {
+              selectedColumn = 1
+            },
         )
 
         // Rest Duration Picker
@@ -120,9 +136,19 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
             // Debug: Long press rest to clear data
             onEvent(ConfigEvent.ClearAllData)
           },
-          modifier = Modifier.weight(1f),
+          modifier =
+            Modifier.weight(1f).focusRequester(restDurationFocusRequester).clickable {
+              selectedColumn = 2
+            },
         )
       }
+    }
+
+    // Handle focus changes for crown control - follows Wear OS documentation pattern
+    LaunchedEffect(selectedColumn) {
+      val focusRequesters =
+        listOf(lapsFocusRequester, workDurationFocusRequester, restDurationFocusRequester)
+      focusRequesters[selectedColumn].requestFocus()
     }
   }
 }
