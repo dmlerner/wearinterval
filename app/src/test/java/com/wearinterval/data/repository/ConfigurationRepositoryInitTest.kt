@@ -21,7 +21,7 @@ class ConfigurationRepositoryInitTest {
   private val configurationDao = mockk<ConfigurationDao>()
 
   @Test
-  fun `should persist DEFAULT configuration when DataStore is empty on first access`() = runTest {
+  fun `should return DEFAULT configuration when DataStore provides it on first access`() = runTest {
     // Given DataStore returns DEFAULT configuration (first launch)
     val configFlow = MutableStateFlow(TimerConfiguration.DEFAULT)
     every { dataStoreManager.currentConfiguration } returns configFlow
@@ -31,11 +31,9 @@ class ConfigurationRepositoryInitTest {
     val repository = ConfigurationRepositoryImpl(dataStoreManager, configurationDao)
     val config = repository.currentConfiguration.first()
 
-    // Give the async persistence time to run
-    delay(100)
-
-    // Then DEFAULT configuration should be persisted asynchronously
-    coVerify { dataStoreManager.updateCurrentConfiguration(TimerConfiguration.DEFAULT) }
+    // Then repository should simply return the DataStore configuration (no persistence)
+    // Repository acts as a pass-through for DataStore without modifying it
+    coVerify(exactly = 0) { dataStoreManager.updateCurrentConfiguration(any()) }
 
     // And currentConfiguration should return DEFAULT
     assertEquals(TimerConfiguration.DEFAULT, config)

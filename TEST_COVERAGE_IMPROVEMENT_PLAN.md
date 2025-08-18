@@ -1,24 +1,34 @@
 # WearInterval Test Coverage Improvement Plan
 
-## Current State
-- **Test Count:** 257 tests, 0 failing ✅
-- **Overall Coverage:** 19% instruction coverage
-- **Target:** 90% instruction coverage
+## Current State (Updated: Aug 18, 2025)
+- **Test Count:** 291 tests, 0 failing ✅
+- **Overall Coverage:** 19% instruction coverage (unchanged from baseline)
+- **Target:** 90% instruction coverage  
 - **Strategy:** Focus on unit tests first (faster, more maintainable) before instrumented tests
 
-## Coverage Analysis by Layer
+### Recent Progress Summary
+**✅ Completed comprehensive edge case testing** with 38 new test cases added:
+- **TimerServiceLogicTest**: +10 tests (configuration changes, countdown accuracy, phase transitions, boundary conditions)
+- **ConfigViewModelTest**: +17 tests (UI state management, error handling, input validation)
+- **MainViewModelTest**: +11 tests (state transitions, service handling, error scenarios)
 
-| Layer | Current Coverage | Target | Test Type | Priority |
-|-------|------------------|--------|-----------|----------|
-| Domain Models | 99% | ✅ Complete | Unit | N/A |
-| Domain Repositories (interfaces) | 100% | ✅ Complete | Unit | N/A |
-| Data Repositories | 65% | 90% | Unit | High |
-| UI ViewModels | 8-21% | 90% | Unit | Critical |
-| Service Logic | 6% | 80% | Unit | High |
-| WearOS Logic | 0-3% | 70% | Unit | Medium |
-| UI Components | 1% | 60% | Instrumented | Low |
-| MainActivity | 0% | 60% | Instrumented | Low |
-| System Integration | 0% | 50% | Instrumented | Low |
+## Coverage Analysis by Layer (Actual JaCoCo Data)
+
+| Layer | Current Coverage | Target | Test Type | Priority | Status |
+|-------|------------------|--------|-----------|----------|--------|
+| Domain Models | 99% | ✅ Complete | Unit | N/A | ✅ |
+| Domain Repositories (interfaces) | 100% | ✅ Complete | Unit | N/A | ✅ |
+| Data Repositories | 65% | 90% | Unit | High | 🟡 Partial |
+| Service Logic | 6% | 80% | Unit | High | 🔴 Critical Gap |
+| UI Config Screen | 12% | 90% | Unit | Critical | 🔴 Critical Gap |
+| UI Main Screen | 21% | 90% | Unit | Critical | 🔴 Critical Gap |
+| UI History Screen | 8% | 90% | Unit | Critical | 🔴 Critical Gap |  
+| UI Settings Screen | 17% | 90% | Unit | Critical | 🔴 Critical Gap |
+| UI Components | 1% | 60% | Instrumented | Low | 🔴 Low Priority |
+| WearOS Tile | 0% | 70% | Unit | Medium | 🔴 Medium Priority |
+| WearOS Notification | 3% | 70% | Unit | Medium | 🔴 Medium Priority |
+| Utils | 65% | 90% | Unit | Low | 🟡 Nearly Complete |
+| DataStore | 14% | 80% | Unit | Medium | 🔴 Medium Priority |
 
 ---
 
@@ -53,69 +63,50 @@
 
 ---
 
-## Phase 2: Critical Unit Test Coverage (Week 2-3)
-**Goal:** Target 60% overall coverage through high-impact unit tests
+## Phase 2: Address Critical Coverage Gaps (Current Phase)
+**Goal:** Target 35-40% overall coverage through high-impact areas
+**Status:** 🔄 **IN PROGRESS** - Recent edge case tests added, now focus on production code coverage
 
-### 2.1: Complete ViewModel Test Coverage
-**Impact:** ~15% coverage gain
-**Files to enhance:**
+### 2.1: UI Screen Implementation Coverage 🔴 **HIGH PRIORITY**
+**Current Impact:** UI screens are only 8-21% covered despite extensive ViewModel tests
+**Root Cause:** Tests exercise ViewModels but not the actual UI composables and state logic
 
-#### ConfigViewModel (Current: ~76% → Target: 95%)
+#### Strategy: Target UI State Logic, not Composables
 ```kotlin
-// New test cases needed:
-- SetLapsToInfinite event handling
-- SetWorkToLong/SetRestToLong edge cases  
-- ClearAllData event
-- Error handling scenarios
-- State validation edge cases
-```
-
-#### MainViewModel (Current: ~85% → Target: 95%)
-```kotlin
-// New test cases needed:
-- Timer state edge transitions
-- Flash screen timing
+// Focus on testing these areas in UI packages:
+- Screen state management functions
+- Event handling implementations  
+- Data transformation logic
+- Navigation state updates
 - Error state handling
-- Configuration changes during timer
-- Service disconnection scenarios
 ```
 
-#### HistoryViewModel (Current: ~100% → Maintain)
-- Already well-covered, minimal additions needed
+#### Immediate Targets:
+- **Config Screen**: 12% → 50% (+3,100 instructions covered)
+- **Main Screen**: 21% → 50% (+1,400 instructions covered)  
+- **History Screen**: 8% → 40% (+1,500 instructions covered)
+- **Settings Screen**: 17% → 40% (+800 instructions covered)
 
-#### SettingsViewModel (Current: ~100% → Maintain)  
-- Already well-covered, minimal additions needed
+### 2.2: Service Implementation Coverage 🔴 **CRITICAL** 
+**Current:** 6% (914 of 978 instructions missed)
+**Target:** 50% (+450 instructions covered)
+**Status:** ✅ Logic tests added, now need **actual service implementation testing**
 
-### 2.2: Service Business Logic Tests
-**Impact:** ~10% coverage gain
-**New file:** `TimerServiceLogicTest.kt` (enhance existing)
-
+#### Strategy: Focus on TimerService Implementation
 ```kotlin
-// Test scenarios:
-class TimerServiceLogicTest {
-    // Core timer logic
-    - Countdown progression accuracy
-    - Work/rest phase transitions
-    - Lap progression handling
-    - Timer completion detection
-    - Pause/resume state management
-    
-    // Configuration changes
-    - Mid-timer configuration updates
-    - Invalid configuration handling
-    - Configuration persistence
-    
-    // Error scenarios  
-    - Invalid timer states
-    - Negative time handling
-    - Boundary conditions (0 laps, 0 duration)
-    
-    // Integration points
-    - Notification triggers
-    - State broadcast accuracy
-    - Observer pattern compliance
-}
+// Target these uncovered areas in data.service package:
+- Service lifecycle methods (onCreate, onDestroy, onBind)
+- Foreground service notification management  
+- Timer state persistence during service restart
+- Background/foreground transitions
+- Service binding/unbinding scenarios
+- Exception handling in service methods
+- Resource cleanup on service destruction
 ```
+
+#### Recent Work Completed: ✅
+- TimerServiceLogicTest: 10 comprehensive edge case tests added
+- **Next:** Need integration tests for actual service implementation
 
 ### 2.3: Repository Implementation Coverage
 **Impact:** ~8% coverage gain (65% → 90%)
@@ -141,11 +132,17 @@ class TimerServiceLogicTest {
 - Multiple observer management
 ```
 
-### Success Criteria:
-- 60%+ overall instruction coverage
-- All ViewModel state flows tested
-- Core service logic covered
-- Repository error scenarios covered
+### 2.3: Updated Phase 2 Success Criteria:
+- **35-40% overall instruction coverage** (realistic based on current data)
+- **UI screen implementations** tested for state management logic  
+- **Service implementation** methods covered (not just logic)
+- **Repository error scenarios** completed (currently 65% → 85%)
+
+### Phase 2 Progress Status:
+- ✅ **Edge case testing completed** (38 new tests added)
+- 🔄 **UI implementation coverage** (in progress)
+- 🔄 **Service implementation testing** (next priority)
+- 🟡 **Repository completion** (partial - error handling needed)
 
 ---
 
