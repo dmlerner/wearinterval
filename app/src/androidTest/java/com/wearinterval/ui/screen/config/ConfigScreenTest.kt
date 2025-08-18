@@ -1,5 +1,6 @@
 package com.wearinterval.ui.screen.config
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
@@ -39,24 +40,21 @@ class ConfigScreenTest {
         ConfigContent(
           uiState = uiState,
           onEvent = {},
-          onNavigateBack = {},
         )
       }
     }
 
-    // Then - Check column titles
-    composeTestRule.onNodeWithText("Laps").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Work").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Rest").assertIsDisplayed()
-
-    // Then - Check values
+    // Then - Check picker values are displayed
     composeTestRule.onNodeWithText("5").assertIsDisplayed()
     composeTestRule.onNodeWithText("1:30").assertIsDisplayed()
     composeTestRule.onNodeWithText("15s").assertIsDisplayed()
+
+    // Then - Check picker content descriptions
+    composeTestRule.onNodeWithContentDescription("Select value").assertIsDisplayed()
   }
 
   @Test
-  fun incrementButtonsAreDisplayed() {
+  fun pickerContentDescriptionsArePresent() {
     // Given
     val uiState = ConfigUiState()
 
@@ -66,37 +64,12 @@ class ConfigScreenTest {
         ConfigContent(
           uiState = uiState,
           onEvent = {},
-          onNavigateBack = {},
         )
       }
     }
 
-    // Then
-    composeTestRule.onNodeWithContentDescription("Increase laps").assertIsDisplayed()
-    composeTestRule.onNodeWithContentDescription("Increase work duration").assertIsDisplayed()
-    composeTestRule.onNodeWithContentDescription("Increase rest duration").assertIsDisplayed()
-  }
-
-  @Test
-  fun decrementButtonsAreDisplayed() {
-    // Given
-    val uiState = ConfigUiState()
-
-    // When
-    composeTestRule.setContent {
-      MaterialTheme {
-        ConfigContent(
-          uiState = uiState,
-          onEvent = {},
-          onNavigateBack = {},
-        )
-      }
-    }
-
-    // Then
-    composeTestRule.onNodeWithContentDescription("Decrease laps").assertIsDisplayed()
-    composeTestRule.onNodeWithContentDescription("Decrease work duration").assertIsDisplayed()
-    composeTestRule.onNodeWithContentDescription("Decrease rest duration").assertIsDisplayed()
+    // Then - Check that picker content descriptions are present (accessibility)
+    composeTestRule.onAllNodesWithContentDescription("Select value").assertCountEquals(3)
   }
 
   @Test
@@ -110,7 +83,6 @@ class ConfigScreenTest {
         ConfigContent(
           uiState = uiState,
           onEvent = {},
-          onNavigateBack = {},
         )
       }
     }
@@ -133,14 +105,14 @@ class ConfigScreenTest {
         ConfigContent(
           uiState = uiState,
           onEvent = { eventReceived = it },
-          onNavigateBack = {},
         )
       }
     }
 
-    // When
+    // When - Find the laps picker tap area (first picker)
     composeTestRule
-      .onNodeWithContentDescription("Tap to reset , long press for alternate value")
+      .onAllNodesWithContentDescription("Tap to reset , long press for alternate value")
+      .onFirst()
       .performClick()
 
     // Then
@@ -158,14 +130,14 @@ class ConfigScreenTest {
         ConfigContent(
           uiState = uiState,
           onEvent = { eventReceived = it },
-          onNavigateBack = {},
         )
       }
     }
 
-    // When
+    // When - Find the laps picker tap area (first picker)
     composeTestRule
-      .onNodeWithContentDescription("Tap to reset , long press for alternate value")
+      .onAllNodesWithContentDescription("Tap to reset , long press for alternate value")
+      .onFirst()
       .performTouchInput { longClick() }
 
     // Then
@@ -183,15 +155,14 @@ class ConfigScreenTest {
         ConfigContent(
           uiState = uiState,
           onEvent = { eventReceived = it },
-          onNavigateBack = {},
         )
       }
     }
 
-    // When - Find the work duration picker tap area
+    // When - Find the work duration picker tap area (second picker)
     composeTestRule
       .onAllNodesWithContentDescription("Tap to reset , long press for alternate value")
-      .onFirst()
+      .get(1)
       .performClick()
 
     // Then
@@ -209,15 +180,14 @@ class ConfigScreenTest {
         ConfigContent(
           uiState = uiState,
           onEvent = { eventReceived = it },
-          onNavigateBack = {},
         )
       }
     }
 
-    // When - Find the work duration picker tap area
+    // When - Find the work duration picker tap area (second picker)
     composeTestRule
       .onAllNodesWithContentDescription("Tap to reset , long press for alternate value")
-      .onFirst()
+      .get(1)
       .performTouchInput { longClick() }
 
     // Then
@@ -235,15 +205,14 @@ class ConfigScreenTest {
         ConfigContent(
           uiState = uiState,
           onEvent = { eventReceived = it },
-          onNavigateBack = {},
         )
       }
     }
 
-    // When - Find the rest duration picker tap area (third one)
+    // When - Find the rest duration picker tap area (third picker)
     composeTestRule
-      .onAllNodesWithContentDescription("Tap to reset Rest, long press for alternate value")
-      .onFirst()
+      .onAllNodesWithContentDescription("Tap to reset , long press for alternate value")
+      .get(2)
       .performClick()
 
     // Then
@@ -261,15 +230,14 @@ class ConfigScreenTest {
         ConfigContent(
           uiState = uiState,
           onEvent = { eventReceived = it },
-          onNavigateBack = {},
         )
       }
     }
 
-    // When - Find the rest duration picker tap area (third one)
+    // When - Find the rest duration picker tap area (third picker)
     composeTestRule
-      .onAllNodesWithContentDescription("Tap to reset Rest, long press for alternate value")
-      .onFirst()
+      .onAllNodesWithContentDescription("Tap to reset , long press for alternate value")
+      .get(2)
       .performTouchInput { longClick() }
 
     // Then
@@ -294,7 +262,6 @@ class ConfigScreenTest {
         ConfigContent(
           uiState = uiState,
           onEvent = {},
-          onNavigateBack = {},
         )
       }
     }
@@ -323,7 +290,6 @@ class ConfigScreenTest {
         ConfigContent(
           uiState = uiState,
           onEvent = {},
-          onNavigateBack = {},
         )
       }
     }

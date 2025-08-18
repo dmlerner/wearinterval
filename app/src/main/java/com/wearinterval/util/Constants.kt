@@ -61,10 +61,7 @@ object Constants {
     const val MEDIUM_SPACING = 8
     const val LARGE_SPACING = 24
 
-    // ScrollablePicker
-    const val SCROLL_PICKER_ITEM_SPACING = 12
-    const val SCROLL_PICKER_PADDING_HEIGHT = 40
-    const val SCROLL_PICKER_ITEM_VERTICAL_PADDING = 6
+    // ScrollablePicker (now using Wear OS Picker)
     const val SCROLL_PICKER_CONTAINER_PADDING = 4
     const val SCROLL_PICKER_CORNER_RADIUS = 12
 
@@ -89,8 +86,7 @@ object Constants {
     val PLAY_BUTTON_BACKGROUND = Color.Green
     val PLAY_BUTTON_ICON = Color.Black
 
-    // ScrollablePicker Colors
-    val SCROLLABLE_PICKER_SELECTED = Color(0xFF2196F3) // Bright blue for selected items
+    // ScrollablePicker Colors (now handled by Wear OS Picker theme)
 
     // Background Colors
     val CONFIG_SECTION_BACKGROUND = Color.White.copy(alpha = 0.08f) // Subtle background
