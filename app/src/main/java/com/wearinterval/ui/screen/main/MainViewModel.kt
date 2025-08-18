@@ -24,17 +24,7 @@ constructor(
 
   private val flashScreen = MutableStateFlow(false)
 
-  init {
-    android.util.Log.d("MainViewModel", "INIT: MainViewModel created")
-    viewModelScope.launch {
-      configurationRepository.currentConfiguration.collect { config ->
-        android.util.Log.d(
-          "MainViewModel",
-          "INIT: Config from repo: ${config.laps} laps, ${config.workDuration}, ${config.restDuration}",
-        )
-      }
-    }
-  }
+  // MainViewModel initialized - all state managed via StateFlow combine
 
   val uiState: StateFlow<MainUiState> =
     combine(

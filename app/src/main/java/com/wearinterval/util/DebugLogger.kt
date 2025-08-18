@@ -14,7 +14,7 @@ object DebugLogger {
    * Master debug flag - set to false to disable all debug logging app-wide. This should be false in
    * production builds.
    */
-  private const val DEBUG_ENABLED = true
+  private const val DEBUG_ENABLED = BuildConfig.DEBUG
 
   /** Specific debug flags for different components */
   private const val UI_COMPOSITION_DEBUG = false

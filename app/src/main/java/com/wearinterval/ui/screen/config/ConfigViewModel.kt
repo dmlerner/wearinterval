@@ -11,7 +11,6 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -24,17 +23,7 @@ constructor(
   private val timerRepository: TimerRepository,
 ) : ViewModel() {
 
-  init {
-    android.util.Log.d("ConfigViewModel", "INIT: ConfigViewModel created")
-    viewModelScope.launch {
-      configurationRepository.currentConfiguration.collect { config ->
-        android.util.Log.d(
-          "ConfigViewModel",
-          "INIT: Config from repo: ${config.laps} laps, ${config.workDuration}, ${config.restDuration}",
-        )
-      }
-    }
-  }
+  // ConfigViewModel initialized - configuration state managed by StateFlow
 
   // Helper function to convert TimerConfiguration to ConfigUiState
   private fun TimerConfiguration.toUiState() =
@@ -64,7 +53,7 @@ constructor(
 
   fun onEvent(event: ConfigEvent) {
     viewModelScope.launch {
-      val currentConfig = configurationRepository.currentConfiguration.first()
+      val currentConfig = configurationRepository.currentConfiguration.value
       val updatedConfig =
         when (event) {
           is ConfigEvent.SetLaps -> {
