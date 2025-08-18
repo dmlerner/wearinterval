@@ -1,6 +1,5 @@
 package com.wearinterval.ui.screen.config
 
-import android.util.Log
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -29,6 +28,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.material.MaterialTheme
 import com.wearinterval.ui.component.ScrollablePicker
 import com.wearinterval.util.Constants
+import com.wearinterval.util.DebugLogger
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -43,7 +43,7 @@ fun ConfigScreen(viewModel: ConfigViewModel = hiltViewModel()) {
 
 @Composable
 internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Unit) {
-  Log.d(
+  DebugLogger.logConfigScreen(
     "ConfigScreen",
     "ConfigContent COMPOSITION START - laps=${uiState.laps}, work=${uiState.workMinutes}:${uiState.workSeconds}, rest=${uiState.restMinutes}:${uiState.restSeconds}, loading=${uiState.isLoading}"
   )
@@ -53,14 +53,14 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
     contentAlignment = Alignment.Center,
   ) {
     if (uiState.isLoading) {
-      Log.d("ConfigScreen", "ConfigContent - SHOWING LOADING")
+      DebugLogger.logConfigScreen("ConfigScreen", "ConfigContent - SHOWING LOADING")
       androidx.wear.compose.material.CircularProgressIndicator()
     } else {
       // Calculate current indices for each picker - use remember to prevent recalculation
       val lapsIndex =
         remember(uiState.laps) {
           val index = ConfigPickerValues.findLapsIndex(uiState.laps)
-          Log.d(
+          DebugLogger.logConfigScreen(
             "ConfigScreen",
             "ConfigContent - LAPS INDEX CALCULATED: laps=${uiState.laps} -> index=$index"
           )
@@ -69,7 +69,7 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
       val workDuration =
         remember(uiState.workMinutes, uiState.workSeconds) {
           val duration = (uiState.workMinutes * 60 + uiState.workSeconds).seconds
-          Log.d(
+          DebugLogger.logConfigScreen(
             "ConfigScreen",
             "ConfigContent - WORK DURATION CALCULATED: ${uiState.workMinutes}:${uiState.workSeconds} -> $duration"
           )
@@ -78,7 +78,7 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
       val restDuration =
         remember(uiState.restMinutes, uiState.restSeconds) {
           val duration = (uiState.restMinutes * 60 + uiState.restSeconds).seconds
-          Log.d(
+          DebugLogger.logConfigScreen(
             "ConfigScreen",
             "ConfigContent - REST DURATION CALCULATED: ${uiState.restMinutes}:${uiState.restSeconds} -> $duration"
           )
@@ -87,7 +87,7 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
       val workDurationIndex =
         remember(workDuration) {
           val index = ConfigPickerValues.findDurationIndex(workDuration, isRest = false)
-          Log.d(
+          DebugLogger.logConfigScreen(
             "ConfigScreen",
             "ConfigContent - WORK INDEX CALCULATED: $workDuration -> index=$index"
           )
@@ -96,7 +96,7 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
       val restDurationIndex =
         remember(restDuration) {
           val index = ConfigPickerValues.findDurationIndex(restDuration, isRest = true)
-          Log.d(
+          DebugLogger.logConfigScreen(
             "ConfigScreen",
             "ConfigContent - REST INDEX CALCULATED: $restDuration -> index=$index"
           )
@@ -105,25 +105,31 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
 
       // Create display lists - use remember to prevent recreation on recomposition
       val lapsDisplayItems = remember {
-        Log.d("ConfigScreen", "ConfigContent - LAPS DISPLAY ITEMS RECREATED")
+        DebugLogger.logConfigScreen("ConfigScreen", "ConfigContent - LAPS DISPLAY ITEMS RECREATED")
         ConfigPickerValues.LAPS_VALUES.map { ConfigPickerValues.lapsDisplayText(it) }
       }
       val durationDisplayItems = remember {
-        Log.d("ConfigScreen", "ConfigContent - DURATION DISPLAY ITEMS RECREATED")
+        DebugLogger.logConfigScreen(
+          "ConfigScreen",
+          "ConfigContent - DURATION DISPLAY ITEMS RECREATED"
+        )
         ConfigPickerValues.DURATION_VALUES.map { ConfigPickerValues.durationDisplayText(it) }
       }
       val restDurationDisplayItems = remember {
-        Log.d("ConfigScreen", "ConfigContent - REST DURATION DISPLAY ITEMS RECREATED")
+        DebugLogger.logConfigScreen(
+          "ConfigScreen",
+          "ConfigContent - REST DURATION DISPLAY ITEMS RECREATED"
+        )
         ConfigPickerValues.REST_DURATION_VALUES.map { ConfigPickerValues.durationDisplayText(it) }
       }
 
       // Track overall state in side effect
       SideEffect {
-        Log.d(
+        DebugLogger.logConfigScreen(
           "ConfigScreen",
           "ConfigContent - SIDE_EFFECT: lapsIndex=$lapsIndex, workIndex=$workDurationIndex, restIndex=$restDurationIndex"
         )
-        Log.d(
+        DebugLogger.logConfigScreen(
           "ConfigScreen",
           "ConfigContent - SIDE_EFFECT: items sizes - laps=${lapsDisplayItems.size}, work=${durationDisplayItems.size}, rest=${restDurationDisplayItems.size}"
         )
@@ -141,7 +147,7 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
         verticalAlignment = Alignment.CenterVertically,
       ) {
         // Laps Picker
-        Log.d(
+        DebugLogger.logConfigScreen(
           "ConfigScreen",
           "ConfigContent - RENDERING LAPS PICKER: selectedIndex=$lapsIndex, items.size=${lapsDisplayItems.size}"
         )
@@ -150,25 +156,34 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
           items = lapsDisplayItems,
           selectedIndex = lapsIndex,
           onSelectionChanged = { index ->
-            Log.d("ConfigScreen", "ConfigContent - LAPS PICKER onSelectionChanged: index=$index")
+            DebugLogger.logConfigScreen(
+              "ConfigScreen",
+              "ConfigContent - LAPS PICKER onSelectionChanged: index=$index"
+            )
             val selectedLaps = ConfigPickerValues.LAPS_VALUES[index]
-            Log.d(
+            DebugLogger.logConfigScreen(
               "ConfigScreen",
               "ConfigContent - LAPS PICKER: selectedLaps=$selectedLaps, current uiState.laps=${uiState.laps}"
             )
             if (selectedLaps != uiState.laps) {
-              Log.d("ConfigScreen", "ConfigContent - LAPS PICKER: SENDING SetLaps event")
+              DebugLogger.logConfigScreen(
+                "ConfigScreen",
+                "ConfigContent - LAPS PICKER: SENDING SetLaps event"
+              )
               onEvent(ConfigEvent.SetLaps(selectedLaps))
             } else {
-              Log.d("ConfigScreen", "ConfigContent - LAPS PICKER: SKIPPING - same value")
+              DebugLogger.logConfigScreen(
+                "ConfigScreen",
+                "ConfigContent - LAPS PICKER: SKIPPING - same value"
+              )
             }
           },
           onSingleTap = {
-            Log.d("ConfigScreen", "ConfigContent - LAPS PICKER: onSingleTap")
+            DebugLogger.logConfigScreen("ConfigScreen", "ConfigContent - LAPS PICKER: onSingleTap")
             onEvent(ConfigEvent.ResetLaps)
           },
           onLongPress = {
-            Log.d("ConfigScreen", "ConfigContent - LAPS PICKER: onLongPress")
+            DebugLogger.logConfigScreen("ConfigScreen", "ConfigContent - LAPS PICKER: onLongPress")
             onEvent(ConfigEvent.SetLapsToInfinite)
           },
           modifier = Modifier.weight(1f),

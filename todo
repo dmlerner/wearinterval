@@ -1,0 +1,7 @@
+when starting
+main has 2lapsx45s 
+but config has 4x1:15
+these should never be out of sync of each other
+did we violate mvvm here? what happened?
+fix it.
+

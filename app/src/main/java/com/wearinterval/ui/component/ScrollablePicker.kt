@@ -1,6 +1,5 @@
 package com.wearinterval.ui.component
 
-import android.util.Log
 import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,6 +21,7 @@ import androidx.wear.compose.material.Picker
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.rememberPickerState
 import com.wearinterval.util.Constants
+import com.wearinterval.util.DebugLogger
 
 @Composable
 fun ScrollablePicker(
@@ -33,7 +33,7 @@ fun ScrollablePicker(
 ) {
   val componentId = remember { "ScrollablePicker-${title.ifEmpty { "noTitle" }}" }
 
-  Log.d(
+  DebugLogger.logScrollPicker(
     "ScrollablePicker",
     "[$componentId] COMPOSITION START - items.size=${items.size}, selectedIndex=$selectedIndex, title='$title'"
   )
@@ -43,7 +43,10 @@ fun ScrollablePicker(
   // Stabilize items to prevent unnecessary recreations
   val stableItems =
     remember(items) {
-      Log.d("ScrollablePicker", "[$componentId] ITEMS RECREATED - new size: ${items.size}")
+      DebugLogger.logScrollPicker(
+        "ScrollablePicker",
+        "[$componentId] ITEMS RECREATED - new size: ${items.size}"
+      )
       items
     }
 
@@ -60,7 +63,7 @@ fun ScrollablePicker(
   // Only set initial position on first composition
   if (isFirstComposition.value) {
     LaunchedEffect(Unit) {
-      Log.d(
+      DebugLogger.logScrollPicker(
         "ScrollablePicker",
         "[$componentId] FIRST COMPOSITION - setting initial position to $selectedIndex"
       )
@@ -73,7 +76,7 @@ fun ScrollablePicker(
 
   // Log picker state details
   SideEffect {
-    Log.d(
+    DebugLogger.logScrollPicker(
       "ScrollablePicker",
       "[$componentId] SIDE_EFFECT - pickerState.selectedOption=${pickerState.selectedOption}, external_selectedIndex=$selectedIndex"
     )
@@ -83,11 +86,14 @@ fun ScrollablePicker(
     modifier = modifier,
     horizontalAlignment = Alignment.CenterHorizontally,
   ) {
-    Log.d("ScrollablePicker", "[$componentId] COLUMN COMPOSITION - about to render UI")
+    DebugLogger.logComposition(
+      "ScrollablePicker",
+      "[$componentId] COLUMN COMPOSITION - about to render UI"
+    )
 
     // Title (only show if not empty)
     if (title.isNotEmpty()) {
-      Log.d("ScrollablePicker", "[$componentId] RENDERING TITLE: '$title'")
+      DebugLogger.logComposition("ScrollablePicker", "[$componentId] RENDERING TITLE: '$title'")
       Text(
         text = title,
         style = MaterialTheme.typography.caption2,
@@ -97,7 +103,7 @@ fun ScrollablePicker(
       )
     }
 
-    Log.d(
+    DebugLogger.logComposition(
       "ScrollablePicker",
       "[$componentId] RENDERING PICKER - state.selectedOption=${pickerState.selectedOption}, items.size=${stableItems.size}"
     )
@@ -108,13 +114,16 @@ fun ScrollablePicker(
       contentDescription = "Select ${title.ifEmpty { "value" }}",
       modifier = Modifier.weight(1f).fillMaxWidth(),
       onSelected = {
-        Log.d("ScrollablePicker", "[$componentId] PICKER onSelected - performing haptic feedback")
+        DebugLogger.logScrollPicker(
+          "ScrollablePicker",
+          "[$componentId] PICKER onSelected - performing haptic feedback"
+        )
         view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
       },
       option = { optionIndex ->
-        // Log every option render (might be verbose)
+        // Log only selected option to reduce noise
         if (optionIndex == pickerState.selectedOption) {
-          Log.d(
+          DebugLogger.logComposition(
             "ScrollablePicker",
             "[$componentId] OPTION RENDER - index=$optionIndex (SELECTED), text='${stableItems[optionIndex]}'"
           )
@@ -128,17 +137,17 @@ fun ScrollablePicker(
       }
     )
 
-    Log.d("ScrollablePicker", "[$componentId] PICKER RENDERED")
+    DebugLogger.logComposition("ScrollablePicker", "[$componentId] PICKER RENDERED")
 
     // Only call callback when user actually stops scrolling
     LaunchedEffect(pickerState.selectedOption) {
       if (!isFirstComposition.value) { // Don't fire on initial setup
-        Log.d(
+        DebugLogger.logScrollPicker(
           "ScrollablePicker",
           "[$componentId] LAUNCHED_EFFECT(pickerState.selectedOption) - debouncing for ${pickerState.selectedOption}"
         )
-        kotlinx.coroutines.delay(200) // Longer debounce
-        Log.d(
+        kotlinx.coroutines.delay(100) // Reduced debounce for better responsiveness
+        DebugLogger.logScrollPicker(
           "ScrollablePicker",
           "[$componentId] LAUNCHED_EFFECT(pickerState.selectedOption) - calling callback with ${pickerState.selectedOption}"
         )
@@ -147,5 +156,5 @@ fun ScrollablePicker(
     }
   }
 
-  Log.d("ScrollablePicker", "[$componentId] COMPOSITION END")
+  DebugLogger.logComposition("ScrollablePicker", "[$componentId] COMPOSITION END")
 }
