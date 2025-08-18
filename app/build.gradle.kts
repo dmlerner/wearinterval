@@ -194,6 +194,10 @@ dependencies {
     implementation("androidx.wear:wear:1.3.0")
     implementation("androidx.core:core-splashscreen:1.0.1")
 
+    // Horologist - Google's high-quality Wear OS components
+    implementation("com.google.android.horologist:horologist-composables:0.6.19")
+    implementation("com.google.android.horologist:horologist-compose-layout:0.6.19")
+
     // Standard Compose
     implementation("androidx.compose.ui:ui:1.6.8")
     implementation("androidx.compose.ui:ui-tooling-preview:1.6.8")
