@@ -257,9 +257,9 @@ class TimerConfigurationTest {
   @Test
   fun `DEFAULT configuration is valid`() {
     assertThat(TimerConfiguration.DEFAULT.isValid()).isTrue()
-    assertThat(TimerConfiguration.DEFAULT.laps).isEqualTo(2)
-    assertThat(TimerConfiguration.DEFAULT.workDuration).isEqualTo(3.seconds)
-    assertThat(TimerConfiguration.DEFAULT.restDuration).isEqualTo(3.seconds)
+    assertThat(TimerConfiguration.DEFAULT.laps).isEqualTo(999)
+    assertThat(TimerConfiguration.DEFAULT.workDuration).isEqualTo(1.minutes)
+    assertThat(TimerConfiguration.DEFAULT.restDuration).isEqualTo(0.seconds)
   }
 
   @Test

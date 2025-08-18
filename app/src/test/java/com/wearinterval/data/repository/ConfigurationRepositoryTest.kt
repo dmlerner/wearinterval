@@ -77,7 +77,7 @@ class ConfigurationRepositoryTest {
 
   @Test
   fun `recentConfigurations exposes DAO flow as domain models`() = runTest {
-    // Given
+    // Given - create fresh flow and repository for this test
     val entitiesFlow = MutableStateFlow(recentConfigs)
     every {
       mockConfigurationDao.getRecentConfigurationsFlow(
@@ -88,7 +88,17 @@ class ConfigurationRepositoryTest {
 
     // When/Then
     repository.recentConfigurations.test {
-      val configs = awaitItem()
+      // WhileSubscribed flows may emit initial value (empty list) first
+      val firstEmission = awaitItem()
+
+      val configs =
+        if (firstEmission.isEmpty()) {
+          // If first emission is empty, wait for the real data
+          awaitItem()
+        } else {
+          firstEmission
+        }
+
       assertThat(configs).hasSize(2)
       // Compare domain properties instead of whole objects due to timestamp differences
       assertThat(configs[0].id).isEqualTo(customConfig.id)
@@ -126,7 +136,7 @@ class ConfigurationRepositoryTest {
       mockDataStoreManager.updateCurrentConfiguration(
         match { config ->
           config.laps == 999 && // Corrected to max
-          config.workDuration == 5.seconds && // Corrected to min
+          config.workDuration == 1.seconds && // Corrected to min (actual MIN_WORK_DURATION)
             config.restDuration == 10.minutes // Corrected to max
         },
       )
@@ -136,7 +146,7 @@ class ConfigurationRepositoryTest {
       mockConfigurationDao.insertConfiguration(
         match { entity ->
           entity.laps == 999 &&
-            entity.workDurationSeconds == 5L &&
+            entity.workDurationSeconds == 1L && // Corrected to min (1 second)
             entity.restDurationSeconds == 600L
         },
       )
@@ -167,13 +177,21 @@ class ConfigurationRepositoryTest {
     coEvery { mockConfigurationDao.getConfigurationCount() } returns 25 // Over limit
     coEvery { mockDataStoreManager.updateCurrentConfiguration(any()) } returns Unit
     coEvery { mockConfigurationDao.insertConfiguration(any()) } returns Unit
-    coEvery { mockConfigurationDao.cleanupOldConfigurations(20) } returns Unit
+    coEvery {
+      mockConfigurationDao.cleanupOldConfigurations(
+        Constants.Dimensions.RECENT_CONFIGURATIONS_COUNT
+      )
+    } returns Unit
 
     // When
     repository.updateConfiguration(customConfig)
 
     // Then
-    coVerify { mockConfigurationDao.cleanupOldConfigurations(20) }
+    coVerify {
+      mockConfigurationDao.cleanupOldConfigurations(
+        Constants.Dimensions.RECENT_CONFIGURATIONS_COUNT
+      )
+    }
   }
 
   @Test
@@ -196,6 +214,7 @@ class ConfigurationRepositoryTest {
     val originalTime = customConfig.lastUsed
     coEvery { mockDataStoreManager.updateCurrentConfiguration(any()) } returns Unit
     coEvery { mockConfigurationDao.updateLastUsed(any(), any()) } returns Unit
+    coEvery { mockConfigurationDao.findConfigurationByValues(any(), any(), any()) } returns null
 
     // When
     val result = repository.selectRecentConfiguration(customConfig)
@@ -382,7 +401,7 @@ class ConfigurationRepositoryTest {
     coEvery { mockConfigurationDao.findConfigurationByValues(any(), any(), any()) } returns null
     coEvery { mockConfigurationDao.insertConfiguration(any()) } returns Unit
     coEvery { mockDataStoreManager.updateCurrentConfiguration(any()) } returns Unit
-    coEvery { mockConfigurationDao.getConfigurationCount() } returns 5 // Exceeds capacity of 4
+    coEvery { mockConfigurationDao.getConfigurationCount() } returns 7 // Exceeds capacity of 6
     coEvery {
       mockConfigurationDao.cleanupOldConfigurations(
         Constants.Dimensions.RECENT_CONFIGURATIONS_COUNT

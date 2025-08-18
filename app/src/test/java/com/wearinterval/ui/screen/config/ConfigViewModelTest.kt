@@ -93,7 +93,7 @@ class ConfigViewModelTest {
     // Then
     coVerify {
       mockConfigRepository.updateConfiguration(
-        initialConfig.copy(laps = 2),
+        initialConfig.copy(laps = 999),
       )
     }
   }
@@ -147,7 +147,7 @@ class ConfigViewModelTest {
     // Then
     coVerify {
       mockConfigRepository.updateConfiguration(
-        initialConfig.copy(workDuration = 3.seconds),
+        initialConfig.copy(workDuration = 1.minutes),
       )
     }
   }
@@ -201,7 +201,7 @@ class ConfigViewModelTest {
     // Then
     coVerify {
       mockConfigRepository.updateConfiguration(
-        initialConfig.copy(restDuration = 3.seconds),
+        initialConfig.copy(restDuration = 0.seconds),
       )
     }
   }

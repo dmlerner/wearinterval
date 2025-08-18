@@ -61,8 +61,7 @@ constructor(
       is ComplicationType.LongText -> {
         val text =
           when (timerState.phase) {
-            TimerPhase.Stopped ->
-              "${TimeUtils.formatTimeCompact(timerState.configuration.workDuration)} × ${timerState.totalLaps}"
+            TimerPhase.Stopped -> timerState.configuration.shortDisplayString()
             TimerPhase.Running ->
               "${TimeUtils.formatTimeCompact(timerState.timeRemaining)} - Lap ${timerState.displayCurrentLap}"
             TimerPhase.Resting ->

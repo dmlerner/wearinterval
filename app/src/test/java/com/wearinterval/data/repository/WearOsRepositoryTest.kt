@@ -175,7 +175,7 @@ class WearOsRepositoryTest {
     // Then
     assertThat(data).isInstanceOf(ComplicationData.LongText::class.java)
     val longText = data as ComplicationData.LongText
-    assertThat(longText.text).isEqualTo("1:00 × 1")
+    assertThat(longText.text).isEqualTo("∞×1:00")
     assertThat(longText.title).isEqualTo("Ready")
   }
 

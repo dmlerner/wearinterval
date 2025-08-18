@@ -63,9 +63,9 @@ class DataStoreLogicTest {
     // Test default timer configuration
     val defaultConfig = TimerConfiguration.DEFAULT
 
-    assertThat(defaultConfig.laps).isEqualTo(2)
-    assertThat(defaultConfig.workDuration).isEqualTo(3.seconds)
-    assertThat(defaultConfig.restDuration).isEqualTo(3.seconds)
+    assertThat(defaultConfig.laps).isEqualTo(999)
+    assertThat(defaultConfig.workDuration).isEqualTo(1.minutes)
+    assertThat(defaultConfig.restDuration).isEqualTo(0.seconds)
   }
 
   @Test

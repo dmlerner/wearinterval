@@ -18,6 +18,7 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -68,7 +69,7 @@ class MainViewModelTest {
       assertThat(initialState.timerPhase).isEqualTo(TimerPhase.Stopped)
       assertThat(initialState.timeRemaining).isEqualTo(TimerConfiguration.DEFAULT.workDuration)
       assertThat(initialState.currentLap).isEqualTo(1)
-      assertThat(initialState.totalLaps).isEqualTo(2)
+      assertThat(initialState.totalLaps).isEqualTo(999)
       assertThat(initialState.isPaused).isFalse()
       assertThat(initialState.configuration).isEqualTo(TimerConfiguration.DEFAULT)
       assertThat(initialState.isPlayButtonEnabled).isFalse()
@@ -305,21 +306,30 @@ class MainViewModelTest {
 
   @Test
   fun `ui state computed properties work correctly`() = runTest {
-    viewModel.uiState.test {
-      // Skip initial state
-      awaitItem()
+    // Set up the timer state first
+    timerStateFlow.value =
+      TimerState(
+        phase = TimerPhase.Stopped,
+        timeRemaining = 60.seconds,
+        currentLap = 0,
+        totalLaps = 5,
+        isPaused = false,
+        configuration = TimerConfiguration.DEFAULT,
+      )
 
+    // Create fresh ViewModel for this test to ensure proper initialization
+    val testViewModel =
+      MainViewModel(
+        timerRepository = mockTimerRepository,
+        configurationRepository = mockConfigurationRepository,
+        settingsRepository = mockSettingsRepository,
+      )
+
+    // Allow ViewModels and flows to initialize
+    advanceUntilIdle()
+
+    testViewModel.uiState.test {
       // Test stopped state
-      timerStateFlow.value =
-        TimerState(
-          phase = TimerPhase.Stopped,
-          timeRemaining = 60.seconds,
-          currentLap = 0,
-          totalLaps = 5,
-          isPaused = false,
-          configuration = TimerConfiguration.DEFAULT,
-        )
-
       var uiState = awaitItem()
       assertThat(uiState.isStopped).isTrue()
       assertThat(uiState.isRunning).isFalse()

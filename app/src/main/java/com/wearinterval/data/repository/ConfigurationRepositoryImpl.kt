@@ -146,8 +146,17 @@ constructor(
       // Update DataStore with selected configuration
       dataStoreManager.updateCurrentConfiguration(finalConfig)
 
-      // Optionally update the timestamp of this history entry to show recent selection
-      configurationDao.updateLastUsed(config.id, finalConfig.lastUsed)
+      // LRU behavior: Check if a configuration with the same values already exists
+      val existingConfig =
+        configurationDao.findConfigurationByValues(
+          laps = config.laps,
+          workDurationSeconds = config.workDuration.inWholeSeconds,
+          restDurationSeconds = config.restDuration.inWholeSeconds,
+        )
+
+      // Update the timestamp using the existing ID if found, otherwise the config's ID
+      val idToUpdate = existingConfig?.id ?: config.id
+      configurationDao.updateLastUsed(idToUpdate, finalConfig.lastUsed)
 
       Result.success(Unit)
     } catch (e: Exception) {
