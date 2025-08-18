@@ -47,7 +47,7 @@ class HistoryScreenTest {
     // Given
     val uiState =
       HistoryUiState(
-        recentConfigurations = emptyList(),
+        configurations = emptyList(),
         isLoading = true,
       )
 
@@ -57,7 +57,7 @@ class HistoryScreenTest {
         HistoryContent(
           uiState = uiState,
           onEvent = {},
-          onNavigateBack = {},
+          onNavigateToMain = {},
         )
       }
     }
@@ -72,7 +72,7 @@ class HistoryScreenTest {
     // Given
     val uiState =
       HistoryUiState(
-        recentConfigurations = emptyList(),
+        configurations = emptyList(),
         isLoading = false,
       )
 
@@ -82,7 +82,7 @@ class HistoryScreenTest {
         HistoryContent(
           uiState = uiState,
           onEvent = {},
-          onNavigateBack = {},
+          onNavigateToMain = {},
         )
       }
     }
@@ -95,68 +95,14 @@ class HistoryScreenTest {
       .assertIsDisplayed()
   }
 
-  @Test
-  fun errorStateDisplaysErrorMessage() {
-    // Given
-    val errorMessage = "Network error"
-    val uiState =
-      HistoryUiState(
-        recentConfigurations = emptyList(),
-        isLoading = false,
-        error = errorMessage,
-      )
-
-    // When
-    composeTestRule.setContent {
-      MaterialTheme {
-        HistoryContent(
-          uiState = uiState,
-          onEvent = {},
-          onNavigateBack = {},
-        )
-      }
-    }
-
-    // Then
-    composeTestRule.onNodeWithText("Error").assertIsDisplayed()
-    composeTestRule.onNodeWithText(errorMessage).assertIsDisplayed()
-    composeTestRule.onNodeWithContentDescription("Retry loading history").assertIsDisplayed()
-  }
-
-  @Test
-  fun retryButtonTriggersRefreshEvent() {
-    // Given
-    var eventReceived: HistoryEvent? = null
-    val uiState =
-      HistoryUiState(
-        recentConfigurations = emptyList(),
-        isLoading = false,
-        error = "Test error",
-      )
-
-    composeTestRule.setContent {
-      MaterialTheme {
-        HistoryContent(
-          uiState = uiState,
-          onEvent = { eventReceived = it },
-          onNavigateBack = {},
-        )
-      }
-    }
-
-    // When
-    composeTestRule.onNodeWithContentDescription("Retry loading history").performClick()
-
-    // Then
-    assertThat(eventReceived).isEqualTo(HistoryEvent.Refresh)
-  }
+  // Note: Error handling tests removed as HistoryUiState doesn't include error state
 
   @Test
   fun configurationsListDisplaysCorrectly() {
     // Given
     val uiState =
       HistoryUiState(
-        recentConfigurations = sampleConfigurations,
+        configurations = sampleConfigurations,
         isLoading = false,
       )
 
@@ -166,7 +112,7 @@ class HistoryScreenTest {
         HistoryContent(
           uiState = uiState,
           onEvent = {},
-          onNavigateBack = {},
+          onNavigateToMain = {},
         )
       }
     }
@@ -201,10 +147,10 @@ class HistoryScreenTest {
   fun configurationItemClickTriggersSelectEvent() {
     // Given
     var eventReceived: HistoryEvent? = null
-    var navigateBackCalled = false
+    var navigateToMainCalled = false
     val uiState =
       HistoryUiState(
-        recentConfigurations = sampleConfigurations,
+        configurations = sampleConfigurations,
         isLoading = false,
       )
 
@@ -213,7 +159,7 @@ class HistoryScreenTest {
         HistoryContent(
           uiState = uiState,
           onEvent = { eventReceived = it },
-          onNavigateBack = { navigateBackCalled = true },
+          onNavigateToMain = { navigateToMainCalled = true },
         )
       }
     }
@@ -225,9 +171,9 @@ class HistoryScreenTest {
     // Then
     assertThat(eventReceived)
       .isEqualTo(
-        HistoryEvent.SelectConfiguration(sampleConfigurations[0]),
+        HistoryEvent.ConfigurationSelected(sampleConfigurations[0]),
       )
-    assertThat(navigateBackCalled).isTrue()
+    assertThat(navigateToMainCalled).isTrue()
   }
 
   @Test
@@ -244,7 +190,7 @@ class HistoryScreenTest {
       )
     val uiState =
       HistoryUiState(
-        recentConfigurations = configWithZeroRest,
+        configurations = configWithZeroRest,
         isLoading = false,
       )
 
@@ -254,7 +200,7 @@ class HistoryScreenTest {
         HistoryContent(
           uiState = uiState,
           onEvent = {},
-          onNavigateBack = {},
+          onNavigateToMain = {},
         )
       }
     }
@@ -273,7 +219,7 @@ class HistoryScreenTest {
     // Given
     val uiState =
       HistoryUiState(
-        recentConfigurations = sampleConfigurations,
+        configurations = sampleConfigurations,
         isLoading = false,
       )
 
@@ -283,7 +229,7 @@ class HistoryScreenTest {
         HistoryContent(
           uiState = uiState,
           onEvent = {},
-          onNavigateBack = {},
+          onNavigateToMain = {},
         )
       }
     }

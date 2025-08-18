@@ -33,7 +33,6 @@ class SettingsScreenTest {
         SettingsContent(
           uiState = uiState,
           onEvent = {},
-          onNavigateBack = {},
         )
       }
     }
@@ -59,7 +58,6 @@ class SettingsScreenTest {
         SettingsContent(
           uiState = uiState,
           onEvent = { eventReceived = it },
-          onNavigateBack = {},
         )
       }
     }
@@ -82,7 +80,6 @@ class SettingsScreenTest {
         SettingsContent(
           uiState = uiState,
           onEvent = { eventReceived = it },
-          onNavigateBack = {},
         )
       }
     }
@@ -105,7 +102,6 @@ class SettingsScreenTest {
         SettingsContent(
           uiState = uiState,
           onEvent = { eventReceived = it },
-          onNavigateBack = {},
         )
       }
     }
@@ -128,7 +124,6 @@ class SettingsScreenTest {
         SettingsContent(
           uiState = uiState,
           onEvent = { eventReceived = it },
-          onNavigateBack = {},
         )
       }
     }
@@ -151,7 +146,6 @@ class SettingsScreenTest {
         SettingsContent(
           uiState = uiState,
           onEvent = { eventsReceived.add(it) },
-          onNavigateBack = {},
         )
       }
     }

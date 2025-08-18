@@ -144,9 +144,6 @@ class MainScreenTest {
         MainContent(
           uiState = uiState,
           onEvent = { eventReceived = it },
-          onNavigateToConfig = {},
-          onNavigateToHistory = {},
-          onNavigateToSettings = {},
         )
       }
     }
@@ -173,9 +170,6 @@ class MainScreenTest {
         MainContent(
           uiState = uiState,
           onEvent = { eventReceived = it },
-          onNavigateToConfig = {},
-          onNavigateToHistory = {},
-          onNavigateToSettings = {},
         )
       }
     }
@@ -222,9 +216,6 @@ class MainScreenTest {
               timerPhase = TimerPhase.Running,
             ),
           onEvent = {},
-          onNavigateToConfig = {},
-          onNavigateToHistory = {},
-          onNavigateToSettings = {},
         )
       }
     }
