@@ -289,4 +289,185 @@ class ConfigViewModelTest {
       assertThat(uiState.workSeconds).isEqualTo(45)
     }
   }
+
+  @Test
+  fun `clear all data event calls repository clear method`() = runTest {
+    // Given
+    coEvery { mockConfigRepository.clearAllData() } returns Result.success(Unit)
+
+    // When
+    viewModel.onEvent(ConfigEvent.ClearAllData)
+
+    // Then
+    coVerify { mockConfigRepository.clearAllData() }
+    coVerify(exactly = 0) { mockConfigRepository.updateConfiguration(any()) }
+  }
+
+  @Test
+  fun `ui state loading is false when configuration loaded`() = runTest {
+    // Given
+    val testConfig = TimerConfiguration.DEFAULT.copy(laps = 5)
+    currentConfigFlow.value = testConfig
+
+    // When/Then
+    viewModel.uiState.test {
+      val uiState = awaitItem()
+      assertThat(uiState.isLoading).isFalse()
+    }
+  }
+
+  @Test
+  fun `ui state computes total work time text correctly`() = runTest {
+    // Given
+    val testConfig =
+      TimerConfiguration(laps = 1, workDuration = 3.minutes + 25.seconds, restDuration = 0.seconds)
+    currentConfigFlow.value = testConfig
+
+    // When/Then
+    viewModel.uiState.test {
+      val uiState = awaitItem()
+      assertThat(uiState.totalWorkTimeText).isEqualTo("3:25")
+    }
+  }
+
+  @Test
+  fun `ui state computes total work time text for seconds only`() = runTest {
+    // Given
+    val testConfig =
+      TimerConfiguration(laps = 1, workDuration = 45.seconds, restDuration = 0.seconds)
+    currentConfigFlow.value = testConfig
+
+    // When/Then
+    viewModel.uiState.test {
+      val uiState = awaitItem()
+      assertThat(uiState.totalWorkTimeText).isEqualTo("45s")
+    }
+  }
+
+  @Test
+  fun `ui state computes total rest time text correctly`() = runTest {
+    // Given
+    val testConfig =
+      TimerConfiguration(laps = 1, workDuration = 60.seconds, restDuration = 2.minutes + 15.seconds)
+    currentConfigFlow.value = testConfig
+
+    // When/Then
+    viewModel.uiState.test {
+      val uiState = awaitItem()
+      assertThat(uiState.totalRestTimeText).isEqualTo("2:15")
+    }
+  }
+
+  @Test
+  fun `ui state computes total rest time text for seconds only`() = runTest {
+    // Given
+    val testConfig =
+      TimerConfiguration(laps = 1, workDuration = 60.seconds, restDuration = 30.seconds)
+    currentConfigFlow.value = testConfig
+
+    // When/Then
+    viewModel.uiState.test {
+      val uiState = awaitItem()
+      assertThat(uiState.totalRestTimeText).isEqualTo("30s")
+    }
+  }
+
+  @Test
+  fun `ui state shows none for zero rest duration`() = runTest {
+    // Given
+    val testConfig =
+      TimerConfiguration(laps = 1, workDuration = 60.seconds, restDuration = 0.seconds)
+    currentConfigFlow.value = testConfig
+
+    // When/Then
+    viewModel.uiState.test {
+      val uiState = awaitItem()
+      assertThat(uiState.totalRestTimeText).isEqualTo("None")
+    }
+  }
+
+  @Test
+  fun `repository update configuration failure is handled gracefully`() = runTest {
+    // Given
+    coEvery { mockConfigRepository.updateConfiguration(any()) } returns
+      Result.failure(RuntimeException("Update failed"))
+
+    // When
+    viewModel.onEvent(ConfigEvent.SetLaps(10))
+
+    // Then - Should not crash, repository method still called
+    coVerify { mockConfigRepository.updateConfiguration(any()) }
+  }
+
+  @Test
+  fun `repository clear all data failure is handled gracefully`() = runTest {
+    // Given
+    coEvery { mockConfigRepository.clearAllData() } returns
+      Result.failure(RuntimeException("Clear failed"))
+
+    // When
+    viewModel.onEvent(ConfigEvent.ClearAllData)
+
+    // Then - Should not crash, repository method still called
+    coVerify { mockConfigRepository.clearAllData() }
+  }
+
+  @Test
+  fun `set laps event validates input boundary values`() = runTest {
+    // Given
+    val initialConfig = TimerConfiguration.DEFAULT
+    currentConfigFlow.value = initialConfig
+
+    // When
+    viewModel.onEvent(ConfigEvent.SetLaps(1))
+
+    // Then
+    coVerify { mockConfigRepository.updateConfiguration(initialConfig.copy(laps = 1)) }
+  }
+
+  @Test
+  fun `set work duration event handles zero duration`() = runTest {
+    // Given
+    val initialConfig = TimerConfiguration.DEFAULT
+    currentConfigFlow.value = initialConfig
+
+    // When
+    viewModel.onEvent(ConfigEvent.SetWorkDuration(0.seconds))
+
+    // Then
+    coVerify {
+      mockConfigRepository.updateConfiguration(initialConfig.copy(workDuration = 0.seconds))
+    }
+  }
+
+  @Test
+  fun `set rest duration event handles zero duration`() = runTest {
+    // Given
+    val initialConfig = TimerConfiguration.DEFAULT
+    currentConfigFlow.value = initialConfig
+
+    // When
+    viewModel.onEvent(ConfigEvent.SetRestDuration(0.seconds))
+
+    // Then
+    coVerify {
+      mockConfigRepository.updateConfiguration(initialConfig.copy(restDuration = 0.seconds))
+    }
+  }
+
+  @Test
+  fun `ui state handles very large durations correctly`() = runTest {
+    // Given - 59:59 duration
+    val testConfig =
+      TimerConfiguration(laps = 1, workDuration = 59.minutes + 59.seconds, restDuration = 0.seconds)
+    currentConfigFlow.value = testConfig
+
+    // When/Then
+    viewModel.uiState.test {
+      val uiState = awaitItem()
+      assertThat(uiState.workMinutes).isEqualTo(59)
+      assertThat(uiState.workSeconds).isEqualTo(59)
+      assertThat(uiState.totalWorkTimeText).isEqualTo("59:59")
+    }
+  }
 }

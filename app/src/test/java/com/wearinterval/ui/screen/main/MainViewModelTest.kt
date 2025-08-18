@@ -500,4 +500,332 @@ class MainViewModelTest {
     coVerify { mockTimerRepository.startTimer() }
     coVerify { mockTimerRepository.stopTimer() }
   }
+
+  @Test
+  fun `play pause clicked when paused resumes timer`() = runTest {
+    // Given - service is bound and timer is paused
+    isServiceBoundFlow.value = true
+    timerStateFlow.value =
+      TimerState(
+        phase = TimerPhase.Paused,
+        timeRemaining = 30.seconds,
+        currentLap = 1,
+        totalLaps = 5,
+        isPaused = true,
+        configuration = TimerConfiguration.DEFAULT,
+      )
+
+    // When
+    viewModel.onEvent(MainEvent.PlayPauseClicked)
+
+    // Then
+    coVerify { mockTimerRepository.resumeTimer() }
+  }
+
+  @Test
+  fun `play pause clicked when running pauses timer`() = runTest {
+    // Given - service is bound and timer is running
+    isServiceBoundFlow.value = true
+    timerStateFlow.value =
+      TimerState(
+        phase = TimerPhase.Running,
+        timeRemaining = 30.seconds,
+        currentLap = 1,
+        totalLaps = 5,
+        isPaused = false,
+        configuration = TimerConfiguration.DEFAULT,
+      )
+
+    // When
+    viewModel.onEvent(MainEvent.PlayPauseClicked)
+
+    // Then
+    coVerify { mockTimerRepository.pauseTimer() }
+  }
+
+  @Test
+  fun `play pause clicked when resting pauses timer`() = runTest {
+    // Given - service is bound and timer is in rest phase
+    isServiceBoundFlow.value = true
+    timerStateFlow.value =
+      TimerState(
+        phase = TimerPhase.Resting,
+        timeRemaining = 15.seconds,
+        currentLap = 1,
+        totalLaps = 5,
+        isPaused = false,
+        configuration = TimerConfiguration.DEFAULT,
+      )
+
+    // When
+    viewModel.onEvent(MainEvent.PlayPauseClicked)
+
+    // Then
+    coVerify { mockTimerRepository.pauseTimer() }
+  }
+
+  @Test
+  fun `service disconnection disables play button`() = runTest {
+    viewModel.uiState.test {
+      // Skip initial state
+      awaitItem()
+
+      // Given - service is bound initially
+      isServiceBoundFlow.value = true
+      var uiState = awaitItem()
+      assertThat(uiState.isPlayButtonEnabled).isTrue()
+
+      // When - service becomes unbound
+      isServiceBoundFlow.value = false
+      uiState = awaitItem()
+
+      // Then - play button should be disabled
+      assertThat(uiState.isPlayButtonEnabled).isFalse()
+      assertThat(uiState.isServiceBound).isFalse()
+    }
+  }
+
+  @Test
+  fun `timer repository start timer failure is handled gracefully`() = runTest {
+    // Given
+    coEvery { mockTimerRepository.startTimer() } returns
+      Result.failure(RuntimeException("Service error"))
+    isServiceBoundFlow.value = true
+
+    // When
+    viewModel.onEvent(MainEvent.PlayPauseClicked)
+
+    // Then - should not crash, repository method still called
+    coVerify { mockTimerRepository.startTimer() }
+  }
+
+  @Test
+  fun `timer repository pause timer failure is handled gracefully`() = runTest {
+    // Given
+    coEvery { mockTimerRepository.pauseTimer() } returns
+      Result.failure(RuntimeException("Service error"))
+    isServiceBoundFlow.value = true
+    timerStateFlow.value =
+      TimerState(
+        phase = TimerPhase.Running,
+        timeRemaining = 30.seconds,
+        currentLap = 1,
+        totalLaps = 5,
+        isPaused = false,
+        configuration = TimerConfiguration.DEFAULT,
+      )
+
+    // When
+    viewModel.onEvent(MainEvent.PlayPauseClicked)
+
+    // Then - should not crash, repository method still called
+    coVerify { mockTimerRepository.pauseTimer() }
+  }
+
+  @Test
+  fun `timer repository stop timer failure is handled gracefully`() = runTest {
+    // Given
+    coEvery { mockTimerRepository.stopTimer() } returns
+      Result.failure(RuntimeException("Service error"))
+
+    // When
+    viewModel.onEvent(MainEvent.StopClicked)
+
+    // Then - should not crash, repository method still called
+    coVerify { mockTimerRepository.stopTimer() }
+  }
+
+  @Test
+  fun `timer repository dismiss alarm failure is handled gracefully`() = runTest {
+    // Given
+    coEvery { mockTimerRepository.dismissAlarm() } returns
+      Result.failure(RuntimeException("Service error"))
+
+    // When
+    viewModel.onEvent(MainEvent.DismissAlarm)
+
+    // Then - should not crash, repository method still called
+    coVerify { mockTimerRepository.dismissAlarm() }
+  }
+
+  @Test
+  fun `configuration changes during timer preserve timer state display`() = runTest {
+    viewModel.uiState.test {
+      // Skip initial state
+      awaitItem()
+
+      // Given - timer is running with specific state
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Running,
+          timeRemaining = 25.seconds,
+          currentLap = 3,
+          totalLaps = 8,
+          isPaused = false,
+          configuration = TimerConfiguration.DEFAULT,
+        )
+
+      var uiState = awaitItem()
+      assertThat(uiState.currentLap).isEqualTo(3)
+      assertThat(uiState.totalLaps).isEqualTo(8)
+      assertThat(uiState.timeRemaining).isEqualTo(25.seconds)
+
+      // When - configuration changes (e.g., user switches to different config)
+      val newConfig =
+        TimerConfiguration(
+          laps = 15,
+          workDuration = 90.seconds,
+          restDuration = 60.seconds,
+        )
+      configurationFlow.value = newConfig
+
+      uiState = awaitItem()
+
+      // Then - timer state should take precedence over configuration while running
+      assertThat(uiState.currentLap).isEqualTo(3) // From timer state
+      assertThat(uiState.totalLaps).isEqualTo(8) // From timer state
+      assertThat(uiState.timeRemaining).isEqualTo(25.seconds) // From timer state
+      assertThat(uiState.configuration).isEqualTo(newConfig) // But config still updates
+    }
+  }
+
+  @Test
+  fun `timer state edge transitions are handled correctly`() = runTest {
+    viewModel.uiState.test {
+      // Skip initial state
+      awaitItem()
+
+      // Test transition: Stopped -> Running
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Running,
+          timeRemaining = 60.seconds,
+          currentLap = 1,
+          totalLaps = 5,
+          isPaused = false,
+          configuration = TimerConfiguration.DEFAULT,
+        )
+
+      var uiState = awaitItem()
+      assertThat(uiState.isRunning).isTrue()
+      assertThat(uiState.isStopButtonEnabled).isTrue()
+
+      // Test transition: Running -> Paused
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Paused,
+          timeRemaining = 45.seconds,
+          currentLap = 1,
+          totalLaps = 5,
+          isPaused = true,
+          configuration = TimerConfiguration.DEFAULT,
+        )
+
+      uiState = awaitItem()
+      assertThat(uiState.isPaused).isTrue()
+      assertThat(uiState.isStopButtonEnabled).isTrue()
+
+      // Test transition: Paused -> Resting
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Resting,
+          timeRemaining = 30.seconds,
+          currentLap = 1,
+          totalLaps = 5,
+          isPaused = false,
+          configuration = TimerConfiguration.DEFAULT,
+        )
+
+      uiState = awaitItem()
+      assertThat(uiState.isResting).isTrue()
+      assertThat(uiState.isPaused).isFalse()
+
+      // Test transition: Resting -> AlarmActive
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.AlarmActive,
+          timeRemaining = 0.seconds,
+          currentLap = 5,
+          totalLaps = 5,
+          isPaused = false,
+          configuration = TimerConfiguration.DEFAULT,
+        )
+
+      uiState = awaitItem()
+      assertThat(uiState.isAlarmActive).isTrue()
+      assertThat(uiState.isStopButtonEnabled).isTrue()
+
+      // Test transition: AlarmActive -> Stopped
+      timerStateFlow.value = TimerState.stopped()
+
+      uiState = awaitItem()
+      assertThat(uiState.isStopped).isTrue()
+      assertThat(uiState.isStopButtonEnabled).isFalse()
+    }
+  }
+
+  @Test
+  fun `flash screen timing works correctly`() = runTest {
+    viewModel.uiState.test {
+      // Skip initial state
+      var uiState = awaitItem()
+      assertThat(uiState.flashScreen).isFalse()
+
+      // When - flash is triggered
+      viewModel.triggerFlash()
+      uiState = awaitItem()
+      assertThat(uiState.flashScreen).isTrue()
+
+      // Flash state persists until explicitly dismissed
+      expectNoEvents() // Should not automatically clear
+
+      // When - flash is dismissed
+      viewModel.onEvent(MainEvent.FlashScreenDismissed)
+      uiState = awaitItem()
+      assertThat(uiState.flashScreen).isFalse()
+    }
+  }
+
+  @Test
+  fun `stop button enabled state changes correctly`() = runTest {
+    viewModel.uiState.test {
+      // Initial stopped state - stop button disabled
+      var uiState = awaitItem()
+      assertThat(uiState.isStopButtonEnabled).isFalse()
+
+      // Running state - stop button enabled
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Running,
+          timeRemaining = 60.seconds,
+          currentLap = 1,
+          totalLaps = 5,
+          isPaused = false,
+          configuration = TimerConfiguration.DEFAULT,
+        )
+
+      uiState = awaitItem()
+      assertThat(uiState.isStopButtonEnabled).isTrue()
+
+      // Paused state - stop button still enabled
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Paused,
+          timeRemaining = 45.seconds,
+          currentLap = 1,
+          totalLaps = 5,
+          isPaused = true,
+          configuration = TimerConfiguration.DEFAULT,
+        )
+
+      uiState = awaitItem()
+      assertThat(uiState.isStopButtonEnabled).isTrue()
+
+      // Back to stopped - stop button disabled
+      timerStateFlow.value = TimerState.stopped()
+
+      uiState = awaitItem()
+      assertThat(uiState.isStopButtonEnabled).isFalse()
+    }
+  }
 }
