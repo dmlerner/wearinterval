@@ -1,8 +1,8 @@
 package com.wearinterval.ui.component
 
 import android.view.HapticFeedbackConstants
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
+import androidx.compose.foundation.gestures.FlingBehavior
+import androidx.compose.foundation.gestures.ScrollScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,15 +20,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import com.wearinterval.util.Constants
+import kotlin.math.abs
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ScrollablePicker(
   items: List<String>,
@@ -37,76 +36,54 @@ fun ScrollablePicker(
   title: String,
   modifier: Modifier = Modifier,
 ) {
-  val listState = rememberLazyListState()
-  val snapBehavior = rememberSnapFlingBehavior(lazyListState = listState)
   val view = LocalView.current
-  val density = LocalDensity.current
+  val listState =
+    rememberLazyListState(
+      initialFirstVisibleItemIndex = selectedIndex + 1 // +1 for padding item
+    )
 
-  // Calculate the visible center index based on scroll position
+  // No-fling behavior - only scroll by direct touch, no momentum
+  val noFlingBehavior = remember {
+    object : FlingBehavior {
+      override suspend fun ScrollScope.performFling(initialVelocity: Float): Float {
+        // Return 0 to prevent any fling/momentum scrolling
+        return 0f
+      }
+    }
+  }
+
+  // Calculate center index based on scroll position
   val centerIndex by derivedStateOf {
     val layoutInfo = listState.layoutInfo
     if (layoutInfo.visibleItemsInfo.isEmpty()) {
       0
     } else {
-      // Calculate center position for item selection
       val center = layoutInfo.viewportEndOffset / 2
-
       val centerItem =
-        layoutInfo.visibleItemsInfo.minByOrNull {
-          kotlin.math.abs((it.offset + it.size / 2) - center)
-        }
-      // Adjust for padding items (first item is padding, so subtract 1)
+        layoutInfo.visibleItemsInfo.minByOrNull { abs((it.offset + it.size / 2) - center) }
       val rawIndex = centerItem?.index ?: 0
-      val adjustedIndex = rawIndex - 1
-      val finalIndex = kotlin.math.max(0, kotlin.math.min(adjustedIndex, items.size - 1))
-      android.util.Log.d(
-        "ScrollablePicker",
-        "centerIndex calc: center=$center, rawIndex=$rawIndex, adjustedIndex=$adjustedIndex, finalIndex=$finalIndex"
-      )
-      finalIndex
+      val adjustedIndex = rawIndex - 1 // Account for padding
+      kotlin.math.max(0, kotlin.math.min(adjustedIndex, items.size - 1))
     }
   }
 
-  // Track if we're currently responding to a user scroll to prevent circular updates
-  val isUserScrolling = remember { mutableStateOf(false) }
-  // Track if we're programmatically scrolling due to external selectedIndex change
-  val isProgrammaticScroll = remember { mutableStateOf(false) }
-  // Track previous center index to only vibrate on actual changes
-  val previousCenterIndex = remember { mutableStateOf(-1) }
+  // Track previous selection
+  val previousSelection = remember { mutableStateOf(selectedIndex) }
 
-  // Handle selection changes with haptic feedback
+  // Handle center index changes
   LaunchedEffect(centerIndex) {
-    if (
-      !isProgrammaticScroll.value &&
-        centerIndex != previousCenterIndex.value &&
-        centerIndex >= 0 &&
-        centerIndex < items.size &&
-        previousCenterIndex.value != -1
-    ) { // Don't vibrate on initial load
-      isUserScrolling.value = true
+    if (centerIndex != previousSelection.value && centerIndex >= 0 && centerIndex < items.size) {
       onSelectionChanged(centerIndex)
-      // Provide haptic feedback for option change
       view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-      // Reset after a delay to allow the external state change to propagate
-      kotlinx.coroutines.delay(Constants.UI.SCROLL_PICKER_DEBOUNCE.inWholeMilliseconds)
-      isUserScrolling.value = false
+      previousSelection.value = centerIndex
     }
-    // Always update previous index
-    previousCenterIndex.value = centerIndex
   }
 
-  // Scroll to selected item when selectedIndex changes externally (but not from user scrolling)
+  // Handle external selection changes
   LaunchedEffect(selectedIndex) {
-    if (
-      !isUserScrolling.value &&
-        selectedIndex != centerIndex &&
-        selectedIndex >= 0 &&
-        selectedIndex < items.size
-    ) {
-      isProgrammaticScroll.value = true
-      listState.scrollToItem(selectedIndex + 1) // +1 to account for padding item
-      kotlinx.coroutines.delay(Constants.UI.SCROLL_PICKER_DEBOUNCE.inWholeMilliseconds)
-      isProgrammaticScroll.value = false
+    if (selectedIndex != centerIndex && selectedIndex >= 0 && selectedIndex < items.size) {
+      listState.animateScrollToItem(selectedIndex + 1) // +1 for padding
+      previousSelection.value = selectedIndex
     }
   }
 
@@ -125,63 +102,38 @@ fun ScrollablePicker(
       )
     }
 
-    // Scrollable picker - use remaining height
+    // Controlled LazyColumn with no fling behavior
     LazyColumn(
       state = listState,
-      flingBehavior = snapBehavior,
+      flingBehavior = noFlingBehavior,
       verticalArrangement =
-        Arrangement.spacedBy(
-          Constants.Dimensions.SCROLL_PICKER_ITEM_SPACING.dp,
-        ), // More spacing for better selection visibility
+        Arrangement.spacedBy(Constants.Dimensions.SCROLL_PICKER_ITEM_SPACING.dp),
       modifier = Modifier.weight(1f).fillMaxWidth(),
     ) {
-      // Add padding item at start for proper centering
-      // Use weight-based padding to ensure perfect centering
-      item {
-        Box(
-          modifier =
-            Modifier.height(Constants.Dimensions.SCROLL_PICKER_PADDING_HEIGHT.dp).fillMaxWidth()
-        )
-      }
+      // Top padding for centering
+      item { Box(modifier = Modifier.height(Constants.Dimensions.SCROLL_PICKER_PADDING_HEIGHT.dp)) }
 
       itemsIndexed(items) { index, item ->
-        // Use selectedIndex for highlighting when not actively scrolling, centerIndex when
-        // scrolling
-        val isSelected = if (isUserScrolling.value) index == centerIndex else index == selectedIndex
-        android.util.Log.d(
-          "ScrollablePicker",
-          "Item[$index]='$item', centerIndex=$centerIndex, selectedIndex=$selectedIndex, " +
-            "isUserScrolling=${isUserScrolling.value}, isSelected=$isSelected"
-        )
+        val isSelected = index == centerIndex
         Text(
           text = item,
           style =
-            if (isSelected) {
-              MaterialTheme.typography.title3 // Larger, more prominent font
-            } else {
-              MaterialTheme.typography.body2
-            },
+            if (isSelected) MaterialTheme.typography.title3 else MaterialTheme.typography.body2,
           color =
             if (isSelected) {
-              Constants.Colors.SCROLLABLE_PICKER_SELECTED // Bright blue for selected
+              Constants.Colors.SCROLLABLE_PICKER_SELECTED
             } else {
-              MaterialTheme.colors.onSurface.copy(alpha = 0.4f) // More dimmed non-selected
+              MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
             },
           textAlign = TextAlign.Center,
           modifier =
             Modifier.fillMaxWidth()
-              .padding(
-                vertical = Constants.Dimensions.SCROLL_PICKER_ITEM_VERTICAL_PADDING.dp
-              ), // Slightly more padding
+              .padding(vertical = Constants.Dimensions.SCROLL_PICKER_ITEM_VERTICAL_PADDING.dp)
         )
       }
 
-      item {
-        Box(
-          modifier =
-            Modifier.height(Constants.Dimensions.SCROLL_PICKER_PADDING_HEIGHT.dp).fillMaxWidth()
-        )
-      }
+      // Bottom padding for centering
+      item { Box(modifier = Modifier.height(Constants.Dimensions.SCROLL_PICKER_PADDING_HEIGHT.dp)) }
     }
   }
 }
