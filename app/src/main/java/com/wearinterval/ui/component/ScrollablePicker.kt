@@ -87,6 +87,8 @@ fun ScrollablePicker(
     // Debounced callback to prevent recomposition storms
     LaunchedEffect(pickerState.selectedOption) {
       if (!isFirstComposition.value) {
+        // Add haptic feedback for selection change
+        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
         kotlinx.coroutines.delay(200) // Critical: debounce rapid changes
         onSelectionChanged(pickerState.selectedOption)
       }
