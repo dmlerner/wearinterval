@@ -260,12 +260,14 @@ class TimerServiceRobolectricTest {
     service.startTimer(testConfiguration)
 
     // When/Then - Starting timer again should throw exception
+    var exceptionThrown = false
     try {
       service.startTimer(testConfiguration)
-      assertThat(false).isTrue() // Should not reach here
     } catch (e: IllegalStateException) {
+      exceptionThrown = true
       assertThat(e.message).contains("Timer is already running")
     }
+    assertThat(exceptionThrown).isTrue()
   }
 
   @Test
