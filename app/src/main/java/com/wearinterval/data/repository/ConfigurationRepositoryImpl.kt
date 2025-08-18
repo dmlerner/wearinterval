@@ -93,37 +93,18 @@ constructor(
     return try {
       val validatedConfig =
         TimerConfiguration.validate(
-          config.laps,
-          config.workDuration,
-          config.restDuration,
-        )
-
-      // Check if a configuration with the same values already exists (LRU behavior)
-      val existingConfig =
-        configurationDao.findConfigurationByValues(
-          laps = validatedConfig.laps,
-          workDurationSeconds = validatedConfig.workDuration.inWholeSeconds,
-          restDurationSeconds = validatedConfig.restDuration.inWholeSeconds,
-        )
-
-      val finalConfig =
-        if (existingConfig != null) {
-          // Use existing ID but update timestamp (LRU: move to front)
-          validatedConfig.copy(
-            id = existingConfig.id,
+            config.laps,
+            config.workDuration,
+            config.restDuration,
+          )
+          .copy(
+            id = config.id, // Use provided ID (should be new UUID from timer start)
             lastUsed = System.currentTimeMillis(),
           )
-        } else {
-          // New configuration - use provided ID or generate new one
-          validatedConfig.copy(
-            id = config.id,
-            lastUsed = System.currentTimeMillis(),
-          )
-        }
 
-      // Save with LRU deduplication to prevent duplicates
+      // Always save to history - each timer run gets its own entry
       configurationDao.insertConfiguration(
-        TimerConfigurationEntity.fromDomain(finalConfig),
+        TimerConfigurationEntity.fromDomain(validatedConfig),
       )
 
       cleanupRecentConfigurations()
@@ -136,32 +117,15 @@ constructor(
 
   override suspend fun selectRecentConfiguration(config: TimerConfiguration): Result<Unit> {
     return try {
-      // Check if a configuration with the same values already exists (LRU behavior)
-      val existingConfig =
-        configurationDao.findConfigurationByValues(
-          laps = config.laps,
-          workDurationSeconds = config.workDuration.inWholeSeconds,
-          restDurationSeconds = config.restDuration.inWholeSeconds,
-        )
+      // Just update the current configuration - don't modify history
+      // History entries should only be created when timers actually run
+      val finalConfig = config.withUpdatedTimestamp()
 
-      val finalConfig =
-        if (existingConfig != null) {
-          // Use existing ID but update timestamp (LRU: move to front)
-          config.copy(
-            id = existingConfig.id,
-            lastUsed = System.currentTimeMillis(),
-          )
-        } else {
-          // This shouldn't happen if selecting from recent, but handle gracefully
-          config.withUpdatedTimestamp()
-        }
-
-      // Use insertConfiguration with REPLACE strategy to ensure proper LRU behavior
-      // This prevents duplicates and ensures the entry is properly updated
-      configurationDao.insertConfiguration(
-        TimerConfigurationEntity.fromDomain(finalConfig),
-      )
+      // Update DataStore with selected configuration
       dataStoreManager.updateCurrentConfiguration(finalConfig)
+
+      // Optionally update the timestamp of this history entry to show recent selection
+      configurationDao.updateLastUsed(config.id, finalConfig.lastUsed)
 
       Result.success(Unit)
     } catch (e: Exception) {
