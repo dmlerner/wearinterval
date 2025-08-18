@@ -1,299 +1,283 @@
-# WearInterval Test Coverage Plan - Robolectric-First Strategy
+# WearInterval Test Coverage Plan - Revised Reality-Based Strategy
 
 ## Current State (Aug 18, 2025)
-- **Test Count:** 347+ tests (14 new Robolectric tests added)
-- **Overall Coverage:** 28% instruction coverage (previous: 25%, baseline: 19%)
-- **Target:** 70% instruction coverage (realistic production goal)
-- **Strategy:** ✅ **HYBRID APPROACH IMPLEMENTED** - Unit tests + Robolectric for Android framework + Minimal emulator tests
+- **Test Count:** 45 test files (28 unit tests, 17 instrumented tests)
+- **Overall Coverage:** 28% instruction coverage
+- **Target:** 60% instruction coverage (realistic production goal)
+- **Strategy:** **TARGETED HIGH-IMPACT TESTING** - Focus on missing critical components first
 
-## Key Insights from Robolectric Implementation
-✅ **PHASE 3 COMPLETE: Robolectric Infrastructure Successfully Implemented**
-1. **Robolectric is highly effective** for Android framework testing (Service lifecycle, notifications, power management)
-2. **Unit tests remain king** for business logic and utility classes (MainUiState: 96% coverage)
-3. **Emulator tests should be minimal** - only for true device-dependent behavior
+## Reality Check: Previous Plan Assessment
+❌ **Previous plan was OVERLY OPTIMISTIC and poorly structured**
+1. **Phase 3 was NOT complete** - Major gaps exist in critical Android components
+2. **Coverage targets were unrealistic** - 70% target vs 28% current with existing effort
+3. **Phase prioritization was wrong** - UI logic extraction before completing core Android testing
+4. **Impact estimations were inflated** - Expected gains don't match actual component sizes
 
-### Robolectric Success Results:
-- **TimerServiceRobolectricTest**: 9 comprehensive Service lifecycle tests (onCreate, onBind, onDestroy, power management)
-- **WearOsComponentsRobolectricTest**: 9 WearOS framework tests (notifications, vibration, alerts, channels)
-- **Service Testing**: Now possible without emulator - 5% coverage achieved for data.service package
-- **WearOS Components**: 53% coverage for wearos.notification package with Android framework integration
-- **Execution Time**: ~16 seconds for all Robolectric tests vs minutes for emulator equivalent
-
----
-
-## Revised Coverage Strategy by Test Type
-
-### **UNIT TESTABLE (Business Logic) - Primary Focus**
-| Component | Current | Target | Strategy | Priority |
-|-----------|---------|--------|----------|----------|
-| Domain Models | 99% | ✅ | Unit | Complete |
-| Domain Repositories | 100% | ✅ | Unit | Complete |
-| **MainUiState** | **96%** | ✅ | Unit | Complete |
-| ConfigPickerValues | High | ✅ | Unit | Complete |
-| Data Repositories | 66% | 85% | Unit + Mock | **High** |
-| DataStore | 44% | 75% | Unit + Mock | High |
-| Utils | 54% | 85% | Unit | Medium |
-
-### **ROBOLECTRIC TESTABLE (Android Framework) - Proven Effective**
-| Component | Current | Target | Strategy | Priority |
-|-----------|---------|--------|----------|----------|
-| TimerService | 5% | 60% | Robolectric | **High** |
-| WearOS Notification | 53% | 75% | Robolectric | **High** |
-| WearOS Tile | 0% | 50% | Robolectric | Medium |
-| MainActivity | 0% | 40% | Robolectric | Medium |
-| Notification Receiver | 0% | 60% | Robolectric | Medium |
-
-### **UI LOGIC EXTRACTABLE (Move to Unit Tests) - Critical Path**
-| Component | Current | Target | Strategy | Priority |
-|-----------|---------|--------|----------|----------|
-| History Screen Logic | 9% | 70% | Extract → Unit | **Critical** |
-| Settings Screen Logic | 17% | 70% | Extract → Unit | **Critical** |
-| Config Screen Logic | 40% | 75% | Enhance Unit | High |
-| Main Screen Logic | 23% | 60% | Enhance Unit | Medium |
-
-### **EMULATOR ONLY (True Device Dependencies) - Minimal**
-| Component | Current | Target | Strategy | Priority |
-|-----------|---------|--------|----------|----------|
-| UI Components (Visual) | 1% | 30% | Emulator | Low |
-| Navigation Flow | 0% | 25% | Emulator | Low |
+### Actual Current State Analysis:
+- **MainActivity**: 0% coverage - NO Robolectric tests exist (only basic emulator tests)
+- **TimerService**: 5% coverage - Only 9 basic Robolectric tests (needs 20+ more)
+- **WearOS Tile**: 0% coverage - Basic unit test only, no framework testing
+- **Notification Receiver**: 0% coverage - Completely missing
+- **UI Screens**: Massive embedded logic (History: 9%, Settings: 17%, Main: 23%)
 
 ---
 
-## Implementation Phases
+## Realistic Coverage Strategy by Impact
 
-### **Phase 4: UI Logic Extraction (Current Priority) 🔄 IN PROGRESS**
-**Goal:** Extract testable business logic from UI screens to achieve massive coverage gains
+### **CRITICAL MISSING COMPONENTS (Immediate Priority)**
+| Component | Current | Lines Missing | Impact | Test Type | Priority |
+|-----------|---------|---------------|--------|-----------|----------|
+| **MainActivity** | **0%** | **~300 lines** | **Massive** | Robolectric | **URGENT** |
+| **TimerService Advanced** | **5%** | **~700 lines** | **Massive** | Robolectric | **URGENT** |
+| **Notification Receiver** | **0%** | **~200 lines** | **High** | Robolectric | **High** |
+| **WearOS Tile Framework** | **0%** | **~400 lines** | **High** | Robolectric | **High** |
+| **DataStore Edge Cases** | **44%** | **~150 lines** | **Medium** | Unit | **Medium** |
 
-#### 4.1: History Screen Logic Extraction
-**Target:** 9% → 70% coverage
-```kotlin
-// CREATE: HistoryContract.kt with utility functions
-object HistoryScreenUtils {
-    fun formatConfigurationDisplay(config: TimerConfiguration): String
-    fun sortConfigurationsByRecentUsage(configs: List<TimerConfiguration>): List<TimerConfiguration>
-    fun filterValidConfigurations(configs: List<TimerConfiguration>): List<TimerConfiguration>
-    fun getEmptyStateMessage(isLoading: Boolean): String
-}
+### **COMPLETED FOUNDATIONS (Good Coverage)**
+| Component | Current | Status | Notes |
+|-----------|---------|--------|---------|
+| Domain Models | 99% | ✅ Complete | Excellent unit test coverage |
+| Domain Repositories | 100% | ✅ Complete | Full interface coverage |
+| Data Repositories | 66% | 🟡 Good | Some edge cases missing |
+| WearOS Notification | 53% | 🟡 Partial | Basic framework testing exists |
+| Utils | 54% | 🟡 Partial | Core functions covered |
 
-// CREATE: HistoryScreenUtilsTest.kt - Unit tests for extracted logic
-class HistoryScreenUtilsTest {
-    - formatConfigurationDisplay() with various timer configurations
-    - sortConfigurationsByRecentUsage() algorithm correctness
-    - filterValidConfigurations() edge cases
-    - getEmptyStateMessage() logic branches
-}
-```
+### **LARGE UI LOGIC PROBLEMS (Later Priority)**
+| Component | Current | Lines of Logic | Complexity | Extract Priority |
+|-----------|---------|----------------|------------|------------------|
+| History Screen | 9% | ~800 lines | High | After Android components |
+| Settings Screen | 17% | ~600 lines | Medium | After Android components |
+| Config Screen | 40% | ~400 lines | Medium | Low (already decent) |
+| Main Screen | 23% | ~500 lines | High | After Android components |
 
-#### 4.2: Settings Screen Logic Extraction  
-**Target:** 17% → 70% coverage
-```kotlin
-// CREATE: SettingsContract.kt with utility functions
-object SettingsScreenUtils {
-    fun validateSettingsCombination(settings: NotificationSettings): ValidationResult
-    fun getToggleButtonState(setting: Boolean, isEnabled: Boolean): ButtonState
-    fun shouldShowSettingsWarning(settings: NotificationSettings): Boolean
-    fun getSettingsDescription(settings: NotificationSettings): String
-}
+---
 
-// CREATE: SettingsScreenUtilsTest.kt - Unit tests
-class SettingsScreenUtilsTest {
-    - validateSettingsCombination() business rules
-    - getToggleButtonState() UI state logic
-    - shouldShowSettingsWarning() condition checks
-    - getSettingsDescription() text generation
-}
-```
+## Implementation Phases (Revised)
 
-**Expected Impact:** +17% overall coverage gain
+### **Phase 1: Critical Android Components (IMMEDIATE) 🚨**
+**Goal:** Cover the massive gaps in core Android framework components
+**Expected Impact:** +15-20% coverage (focusing on highest line count gaps)
 
-### **Phase 5: Enhanced Service Testing (Robolectric) 📋 PLANNED**
-**Goal:** Comprehensive Android framework component testing
-
-#### 5.1: Advanced TimerService Testing
-**Target:** 5% → 60% coverage
-```kotlin
-// EXPAND: TimerServiceRobolectricTest.kt (currently 9 tests → 25+ tests)
-class TimerServiceRobolectricTest {
-    // ADD: Advanced service scenarios
-    - Service restart and recovery scenarios
-    - Multiple client binding edge cases
-    - Foreground service notification update flows
-    - Wake lock management in different states
-    - Service command queuing and processing
-    - Background execution limit handling
-    - Service crash recovery mechanisms
-    - Timer state persistence during restarts
-    - Service memory management
-    - Concurrent access scenarios
-}
-```
-
-#### 5.2: MainActivity Robolectric Testing
-**Target:** 0% → 40% coverage
+#### 1.1: MainActivity Robolectric Testing (URGENT)
+**Current:** 0% | **Target:** 50% | **Impact:** ~300 lines
 ```kotlin
 // CREATE: MainActivityRobolectricTest.kt
 class MainActivityRobolectricTest {
-    - Activity lifecycle (onCreate, onResume, onPause, onDestroy)
-    - Intent handling and deep link processing
-    - Service binding and unbinding lifecycle
-    - Configuration change handling
-    - Permission request flows
-    - Navigation state management
-    - Theme application and display settings
-    - Background/foreground transition handling
+    @Test fun onCreate_initializesCorrectly()
+    @Test fun onCreate_setsUpDependencyInjection()
+    @Test fun onCreate_installsSplashScreen()
+    @Test fun handleTileIntent_withValidConfigId()
+    @Test fun handleTileIntent_withInvalidConfigId()
+    @Test fun handleTileIntent_withNullIntent()
+    @Test fun onNewIntent_updatesIntentAndHandlesTile()
+    @Test fun lifecycle_handlesConfigurationChanges()
+    @Test fun service_bindsAndUnbindsCorrectly()
+    @Test fun errorHandling_silentlyHandlesRepositoryErrors()
 }
 ```
 
-**Expected Impact:** +10% overall coverage gain
-
-### **Phase 6: Data Layer Enhancement 📋 PLANNED**
-**Goal:** Complete data layer testing with proper error scenarios
-
-#### 6.1: Repository Error Scenario Testing
-**Target:** 66% → 85% coverage
+#### 1.2: Enhanced TimerService Testing (URGENT)
+**Current:** 5% (9 tests) | **Target:** 45% | **Impact:** ~700 lines
 ```kotlin
-// EXPAND: Repository tests with comprehensive error scenarios
-- DataStore corruption and recovery
-- Room database transaction failures
-- Concurrent access race conditions
-- Network connectivity issues (if applicable)
-- Memory pressure scenarios
-- Cache invalidation edge cases
-- Flow error propagation chains
-- Configuration migration failures
+// EXPAND: TimerServiceRobolectricTest.kt (9 → 25+ tests)
+class TimerServiceRobolectricTest {
+    // ADD: Missing critical scenarios
+    @Test fun service_handlesMultipleClientBindings()
+    @Test fun service_managesWakeLockProperly()
+    @Test fun service_persistsStateOnRestart()
+    @Test fun service_handlesLowMemoryConditions()
+    @Test fun service_processesCommandQueue()
+    @Test fun service_updatesNotificationProperly()
+    @Test fun service_handlesInterruptions()
+    @Test fun service_recoversFromCrashes()
+    // ... 15+ more comprehensive scenarios
+}
 ```
 
-#### 6.2: DataStore Comprehensive Testing
-**Target:** 44% → 75% coverage
+#### 1.3: Notification Receiver Testing (HIGH)
+**Current:** 0% | **Target:** 60% | **Impact:** ~200 lines
 ```kotlin
-// EXPAND: DataStoreManager testing
-- Preference corruption recovery mechanisms
-- Concurrent write/read scenarios
-- Default value fallback logic
-- Flow exception handling and recovery
-- Migration between preference versions
-- Storage quota exceeded scenarios
-- File system permission issues
+// CREATE: TimerNotificationReceiverRobolectricTest.kt
+class TimerNotificationReceiverRobolectricTest {
+    @Test fun onReceive_handlesPauseAction()
+    @Test fun onReceive_handlesResumeAction()
+    @Test fun onReceive_handlesStopAction()
+    @Test fun onReceive_handlesSkipAction()
+    @Test fun onReceive_ignoresInvalidActions()
+    @Test fun onReceive_withNullIntent()
+    @Test fun onReceive_communicatesWithService()
+    @Test fun onReceive_updatesNotificationState()
+}
 ```
 
-**Expected Impact:** +7% overall coverage gain
-
-### **Phase 7: WearOS Integration (Robolectric) 📋 PLANNED**
-**Goal:** Complete WearOS platform integration testing
-
-#### 7.1: WearOS Tile Service Testing
-**Target:** 0% → 50% coverage
+#### 1.4: WearOS Tile Service Framework Testing (HIGH)
+**Current:** 0% | **Target:** 40% | **Impact:** ~400 lines
 ```kotlin
 // CREATE: WearIntervalTileServiceRobolectricTest.kt
 class WearIntervalTileServiceRobolectricTest {
-    - Tile layout generation and updates
-    - State-dependent tile content changes
-    - Action button functionality testing
-    - Progress display accuracy validation
-    - Resource management and cleanup
-    - Update frequency optimization
-    - Tile interaction event handling
-    - Performance under different states
+    @Test fun onTileRequest_generatesCorrectLayout()
+    @Test fun onTileRequest_withActiveTimer()
+    @Test fun onTileRequest_withPausedTimer()
+    @Test fun onTileRequest_withNoConfiguration()
+    @Test fun onResourcesRequest_providesCorrectResources()
+    @Test fun tileService_handlesUserInteraction()
+    @Test fun tileService_updatesOnStateChange()
 }
 ```
 
-#### 7.2: Enhanced WearOS Components
-**Target:** 53% → 75% coverage  
+**Phase 1 Expected Impact:** +15% overall coverage
+
+### **Phase 2: Data Layer Gap Filling 📋 PLANNED**
+**Goal:** Complete the remaining data layer edge cases
+**Expected Impact:** +3-5% coverage (smaller line count gaps)
+
+#### 2.1: DataStore Edge Cases
+**Current:** 44% | **Target:** 70% | **Impact:** ~150 lines
 ```kotlin
-// EXPAND: WearOsComponentsRobolectricTest.kt (currently 9 tests → 20+ tests)
-- Advanced notification scenarios
-- Custom notification action handling
-- Vibration pattern accuracy
-- Alert sound management
-- Screen flash coordination
-- Multi-timer notification management
-- Notification priority and channel management
-- Workout completion alert flows
+// EXPAND: DataStoreLogicTest.kt with missing scenarios
+class DataStoreLogicTest {
+    @Test fun dataStore_handlesCorruptedPreferences()
+    @Test fun dataStore_handlesConcurrentWrites()
+    @Test fun dataStore_recoversFromIOErrors()
+    @Test fun dataStore_migratesOldPreferences()
+    @Test fun dataStore_handlesStorageQuotaExceeded()
+    @Test fun flows_handleExceptionsProperly()
+}
 ```
 
-**Expected Impact:** +5% overall coverage gain
-
-### **Phase 8: Emulator Polish (Final Phase) 📋 PLANNED**  
-**Goal:** Cover only truly device-dependent behavior
-
-#### 8.1: Visual UI Component Testing (Minimal)
+#### 2.2: Repository Error Scenarios
+**Current:** 66% | **Target:** 80% | **Impact:** ~100 lines
 ```kotlin
-// Minimal emulator tests for truly device-dependent behavior:
-- ProgressRing animation smoothness on real hardware
-- Color accuracy and accessibility compliance
-- Touch interaction responsiveness
-- Screen size adaptation validation
+// EXPAND existing repository tests with error cases
+- Service disconnection handling
+- Database transaction failures
+- Flow error propagation
+- Memory pressure scenarios
+- Concurrent access edge cases
 ```
 
-**Expected Impact:** +3% overall coverage gain
+### **Phase 3: UI Logic Extraction (FUTURE) 📋 PLANNED**
+**Goal:** Extract large amounts of UI-embedded business logic
+**Expected Impact:** +8-12% coverage (focus on highest logic density screens)
+
+#### 3.1: History Screen Logic Extraction (LATER)
+**Current:** 9% | **Impact:** ~800 lines of mixed UI/logic
+```kotlin
+// Only AFTER Phase 1-2 are complete
+// Extract: configuration formatting, sorting, filtering logic
+// Move to: HistoryScreenUtils with comprehensive unit tests
+```
+
+#### 3.2: Settings Screen Logic Extraction (LATER)
+**Current:** 17% | **Impact:** ~600 lines of mixed UI/logic
+```kotlin
+// Only AFTER Phase 1-2 are complete
+// Extract: validation logic, state management, warning logic
+// Move to: SettingsScreenUtils with comprehensive unit tests
+```
+
+### **Phase 4: Polish & Optimization (FINAL) 📋 PLANNED**
+**Goal:** Achieve final coverage target through remaining gaps
+
+#### 4.1: Remaining Component Coverage
+- Enhanced WearOS notification scenarios
+- Advanced UI component edge cases
+- Navigation flow testing (minimal emulator tests)
+- Performance and edge case testing
 
 ---
 
-## Coverage Progression Targets
+## Realistic Coverage Progression Targets
 
-| Phase | Coverage Target | Key Focus | Timeline |
-|-------|-----------------|-----------|----------|
-| **Current** | 28% | ✅ Robolectric Infrastructure | Complete |
-| **Phase 4** | 45% | UI Logic Extraction | Week 1 |
-| **Phase 5** | 55% | Enhanced Service/Activity Testing | Week 2 |
-| **Phase 6** | 62% | Data Layer Error Scenarios | Week 3 |
-| **Phase 7** | 67% | Complete WearOS Integration | Week 4 |
-| **Phase 8** | 70% | Emulator Polish (Minimal) | Week 5 |
+| Phase | Coverage Target | Key Focus | Expected Gain | Timeline |
+|-------|-----------------|-----------|---------------|----------|
+| **Current** | 28% | Foundation Complete | - | - |
+| **Phase 1** | 43-48% | Critical Android Components | +15-20% | Week 1-2 |
+| **Phase 2** | 48-53% | Data Layer Gap Filling | +3-5% | Week 3 |
+| **Phase 3** | 56-65% | UI Logic Extraction | +8-12% | Week 4-5 |
+| **Phase 4** | 60-70% | Polish & Remaining Gaps | +4-5% | Week 6 |
 
 ## Success Metrics & Gates
 
+### Phase 1 Success Criteria (CRITICAL):
+- [ ] MainActivity Robolectric tests created (10+ tests covering lifecycle, intents, DI)
+- [ ] TimerService advanced scenarios tested (15+ additional tests)
+- [ ] Notification Receiver comprehensive testing (8+ tests)
+- [ ] WearOS Tile Service framework testing (7+ tests)
+- [ ] Overall coverage reaches 43%+ (15% gain minimum)
+- [ ] All Robolectric tests execute in <45 seconds
+
+### Phase 2 Success Criteria:
+- [ ] DataStore edge case testing comprehensive
+- [ ] Repository error scenarios fully covered
+- [ ] Data layer gaps eliminated
+- [ ] Overall coverage reaches 48%+ (5% additional gain)
+- [ ] All tests remain fast (<60 seconds total)
+
+### Phase 3 Success Criteria:
+- [ ] History screen logic extraction completed
+- [ ] Settings screen logic extraction completed
+- [ ] UI utility classes achieve 90%+ coverage
+- [ ] Overall coverage reaches 56%+ (8% additional gain)
+- [ ] Test execution remains under 90 seconds
+
 ### Phase 4 Success Criteria:
-- [ ] History screen utility logic extracted and 70% covered
-- [ ] Settings screen utility logic extracted and 70% covered  
-- [ ] Overall coverage reaches 45%+
-- [ ] All new tests execute in <2 seconds (unit test speed)
-
-### Phase 5 Success Criteria:
-- [ ] TimerService coverage reaches 60%+
-- [ ] MainActivity basic lifecycle coverage achieved
-- [ ] Advanced service scenarios fully tested
-- [ ] All Robolectric tests execute in <30 seconds
-
-### Phase 6 Success Criteria:
-- [ ] Repository error scenarios comprehensively tested
-- [ ] DataStore edge cases covered
-- [ ] Data layer coverage reaches 85%+
-- [ ] All tests remain fast (no emulator dependency)
-
-### Phase 7 Success Criteria:
-- [ ] WearOS Tile Service testing implemented
-- [ ] Notification system fully covered
-- [ ] WearOS integration tests complete
-- [ ] Overall coverage reaches 67%+
-
-### Phase 8 Success Criteria:
-- [ ] Critical UI components validated on real hardware
-- [ ] Device-specific behavior verified
-- [ ] Final coverage target of 70%+ achieved
-- [ ] Emulator test suite remains minimal (<10 tests)
+- [ ] All remaining component gaps addressed
+- [ ] WearOS integration fully tested
+- [ ] Final coverage target of 60%+ achieved (realistic target)
+- [ ] Complete test suite executes in <2 minutes
+- [ ] Production-ready test coverage established
 
 ## Key Development Principles
 
-1. **Extract First, Test Second:** Move complex UI logic to testable utility classes before writing tests
-2. **Robolectric for Android Framework:** Use Robolectric for all Service, Activity, Notification, and system integration testing  
-3. **Unit Tests for Business Logic:** Keep core logic testing fast and reliable
-4. **Mock Strategically:** Create controlled test environments for complex scenarios
-5. **Emulator Last Resort:** Only use emulator for truly device-dependent visual/interaction testing
-6. **Quality Over Quantity:** Focus on instruction count impact and meaningful test scenarios
-7. **Fast Feedback Loops:** Maintain sub-30-second test suite execution for rapid development
+1. **Critical Components First:** Address the largest coverage gaps in core Android components before optimization
+2. **Robolectric for Android Framework:** Proven effective for Service, Activity, Notification testing
+3. **Unit Tests for Pure Logic:** Keep business logic testing fast and reliable
+4. **Realistic Impact Assessment:** Focus on actual line counts and instruction coverage impact
+5. **Incremental Progress:** Build on existing foundation rather than complete rewrites
+6. **Fast Feedback Loops:** Maintain test execution under 2 minutes for full suite
+7. **Evidence-Based Planning:** Base phases on actual component analysis, not assumptions
 
 ## Risk Mitigation
 
 ### Technical Risks:
-- **Robolectric Limitations:** Some Android framework features may not work perfectly in Robolectric
-  - *Mitigation:* Identify limitations early and fallback to emulator only when necessary
-- **UI Logic Extraction Complexity:** Some UI logic may be tightly coupled to Compose
-  - *Mitigation:* Start with simple utility functions and gradually extract more complex logic
+- **Android Component Complexity:** MainActivity and Service testing may reveal framework limitations
+  - *Mitigation:* Start with basic lifecycle tests, incrementally add complexity
+- **Test Execution Time:** Adding significant Android framework tests may slow feedback
+  - *Mitigation:* Monitor test execution time, parallelize where possible
 
-### Schedule Risks:
-- **Over-ambitious Targets:** 70% coverage may still be challenging
-  - *Mitigation:* Focus on high-impact areas first, adjust targets based on real progress
-- **Robolectric Learning Curve:** Team may need time to master advanced Robolectric techniques
-  - *Mitigation:* Build on proven patterns from current successful implementation
+### Scope Risks:
+- **Overly Optimistic Gains:** Previous plan overestimated coverage impact
+  - *Mitigation:* Conservative estimates based on actual line count analysis
+- **UI Logic Extraction Complexity:** May be more coupled to Compose than anticipated
+  - *Mitigation:* Defer to Phase 3, focus on proven Android component testing first
 
-This plan leverages proven Robolectric effectiveness while maintaining realistic, achievable targets based on actual implementation experience.
+### Success Factors:
+- **Proven Robolectric Foundation:** Build on existing successful WearOS/Service testing
+- **Component-by-Component Approach:** Complete each major component before moving on
+- **Realistic 60% Target:** Achievable goal based on current 28% + identified gaps
+
+This revised plan focuses on the largest, most impactful coverage gaps first, with realistic expectations based on actual codebase analysis.
+
+## Summary: Why This Plan is Better
+
+**Previous Plan Problems:**
+- ❌ Claimed Phase 3 was "complete" when major gaps existed
+- ❌ Prioritized UI logic extraction over critical Android components  
+- ❌ Overestimated coverage impact (+17% from UI extraction was unrealistic)
+- ❌ Wrong sequence: tried to extract UI logic before completing core testing
+
+**New Plan Strengths:**
+- ✅ **Reality-based assessment:** MainActivity has 0% coverage, needs immediate attention
+- ✅ **Impact-focused priorities:** Target highest line-count gaps first (MainActivity ~300 lines, TimerService ~700 lines)
+- ✅ **Conservative estimates:** 15% gain from Phase 1 based on actual component sizes
+- ✅ **Proven foundation:** Build on existing successful Robolectric patterns
+- ✅ **Achievable target:** 60% vs previous unrealistic 70% target
+
+**Immediate Actions:**
+1. **Start with MainActivity Robolectric tests** - massive 0% → 50% potential gain
+2. **Expand TimerService testing** - from 9 basic tests to 25+ comprehensive tests  
+3. **Add missing Notification Receiver tests** - completely absent component
+4. **Complete WearOS Tile framework testing** - move beyond basic unit tests
+
+This approach will achieve the highest coverage gains with the least effort by targeting the largest gaps first.
