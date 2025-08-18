@@ -6,6 +6,8 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
+import android.media.ToneGenerator
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.core.app.NotificationCompat
@@ -36,6 +38,14 @@ constructor(
   private val notificationManager: NotificationManager,
   private val vibrator: Vibrator,
 ) {
+
+  private val toneGenerator: ToneGenerator? by lazy {
+    try {
+      ToneGenerator(AudioManager.STREAM_ALARM, 80) // 80% volume
+    } catch (e: Exception) {
+      null // Graceful degradation if ToneGenerator fails
+    }
+  }
 
   companion object {
     const val TIMER_CHANNEL_ID = Constants.Notifications.TIMER_CHANNEL_ID
@@ -301,8 +311,19 @@ constructor(
   }
 
   private fun playAlertSound(isAlarm: Boolean) {
-    // TODO: Implement sound alerts with proper audio stream handling
-    // For now, rely on notification channel sound settings
+    try {
+      toneGenerator?.let { generator ->
+        if (isAlarm) {
+          // Continuous beep for alarms - play high pitch tone for 1 second
+          generator.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 1000)
+        } else {
+          // Single beep for alerts - short high pitch tone
+          generator.startTone(ToneGenerator.TONE_CDMA_PIP, 200)
+        }
+      }
+    } catch (e: Exception) {
+      // Graceful degradation if sound playback fails
+    }
   }
 
   private fun triggerScreenFlash() {
@@ -368,6 +389,15 @@ constructor(
           Thread.sleep(300)
         }
       }
+    }
+  }
+
+  /** Cleanup resources when notification manager is no longer needed. */
+  fun release() {
+    try {
+      toneGenerator?.release()
+    } catch (e: Exception) {
+      // Graceful degradation
     }
   }
 }
