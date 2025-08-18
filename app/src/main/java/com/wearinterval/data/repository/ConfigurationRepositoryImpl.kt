@@ -93,18 +93,37 @@ constructor(
     return try {
       val validatedConfig =
         TimerConfiguration.validate(
-            config.laps,
-            config.workDuration,
-            config.restDuration,
-          )
-          .copy(
-            id = config.id, // Use provided ID (should be new UUID from timer start)
+          config.laps,
+          config.workDuration,
+          config.restDuration,
+        )
+
+      // Check if a configuration with the same values already exists (LRU behavior)
+      val existingConfig =
+        configurationDao.findConfigurationByValues(
+          laps = validatedConfig.laps,
+          workDurationSeconds = validatedConfig.workDuration.inWholeSeconds,
+          restDurationSeconds = validatedConfig.restDuration.inWholeSeconds,
+        )
+
+      val finalConfig =
+        if (existingConfig != null) {
+          // Use existing ID but update timestamp (LRU: move to front)
+          validatedConfig.copy(
+            id = existingConfig.id,
             lastUsed = System.currentTimeMillis(),
           )
+        } else {
+          // New configuration - use provided ID or generate new one
+          validatedConfig.copy(
+            id = config.id,
+            lastUsed = System.currentTimeMillis(),
+          )
+        }
 
-      // Force save to history without LRU deduplication
+      // Save with LRU deduplication to prevent duplicates
       configurationDao.insertConfiguration(
-        TimerConfigurationEntity.fromDomain(validatedConfig),
+        TimerConfigurationEntity.fromDomain(finalConfig),
       )
 
       cleanupRecentConfigurations()
