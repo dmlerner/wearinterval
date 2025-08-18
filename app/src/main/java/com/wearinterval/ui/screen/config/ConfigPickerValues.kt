@@ -3,6 +3,7 @@ package com.wearinterval.ui.screen.config
 import com.wearinterval.util.Constants
 import kotlin.math.abs
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -38,7 +39,7 @@ object ConfigPickerValues {
       Constants.TimerLimits.INFINITE_LAPS,
     )
 
-  // Duration values as defined in design spec
+  // Duration values - extended up to 24 hours
   val DURATION_VALUES =
     listOf(
       1.seconds,
@@ -62,6 +63,32 @@ object ConfigPickerValues {
       6.minutes,
       8.minutes,
       10.minutes,
+      12.minutes,
+      15.minutes,
+      20.minutes,
+      25.minutes,
+      30.minutes,
+      35.minutes,
+      40.minutes,
+      45.minutes,
+      50.minutes,
+      55.minutes,
+      1.hours,
+      1.hours + 15.minutes,
+      1.hours + 30.minutes,
+      1.hours + 45.minutes,
+      2.hours,
+      2.hours + 30.minutes,
+      3.hours,
+      4.hours,
+      5.hours,
+      6.hours,
+      8.hours,
+      10.hours,
+      12.hours,
+      16.hours,
+      20.hours,
+      24.hours,
     )
 
   // Rest duration values (same as duration but with 0 at start for "no rest")
@@ -78,6 +105,16 @@ object ConfigPickerValues {
   fun durationDisplayText(duration: Duration): String =
     when {
       duration == Constants.TimerLimits.MIN_REST_DURATION -> "None"
+      duration.inWholeHours > 0 -> {
+        val hours = duration.inWholeHours
+        val minutes = ((duration.inWholeMinutes % 60)).toInt()
+        val seconds = (duration.inWholeSeconds % 60).toInt()
+        when {
+          seconds > 0 -> "${hours}h${minutes}m${seconds}s"
+          minutes > 0 -> "${hours}h${minutes}m"
+          else -> "${hours}h"
+        }
+      }
       duration.inWholeMinutes > 0 -> {
         val minutes = duration.inWholeMinutes
         val seconds = (duration.inWholeSeconds % 60).toInt()

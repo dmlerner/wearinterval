@@ -91,9 +91,7 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
           selectedIndex = lapsIndex,
           onSelectionChanged = { index ->
             val selectedLaps = ConfigPickerValues.LAPS_VALUES[index]
-            if (selectedLaps != uiState.laps) {
-              onEvent(ConfigEvent.SetLaps(selectedLaps))
-            }
+            onEvent(ConfigEvent.SetLaps(selectedLaps))
           },
           onSingleTap = { onEvent(ConfigEvent.ResetLaps) },
           onLongPress = { onEvent(ConfigEvent.SetLapsToInfinite) },
@@ -108,9 +106,7 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
           selectedIndex = workDurationIndex,
           onSelectionChanged = { index ->
             val selectedDuration = ConfigPickerValues.DURATION_VALUES[index]
-            if (selectedDuration != workDuration) {
-              onEvent(ConfigEvent.SetWorkDuration(selectedDuration))
-            }
+            onEvent(ConfigEvent.SetWorkDuration(selectedDuration))
           },
           onSingleTap = { onEvent(ConfigEvent.ResetWork) },
           onLongPress = { onEvent(ConfigEvent.SetWorkToLong) },
@@ -127,9 +123,7 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
           selectedIndex = restDurationIndex,
           onSelectionChanged = { index ->
             val selectedDuration = ConfigPickerValues.REST_DURATION_VALUES[index]
-            if (selectedDuration != restDuration) {
-              onEvent(ConfigEvent.SetRestDuration(selectedDuration))
-            }
+            onEvent(ConfigEvent.SetRestDuration(selectedDuration))
           },
           onSingleTap = { onEvent(ConfigEvent.ResetRest) },
           onLongPress = {

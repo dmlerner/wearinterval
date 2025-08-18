@@ -33,11 +33,12 @@ fun ScrollablePicker(
   // Stabilize items to prevent unnecessary recreations
   val stableItems = remember(items) { items }
 
-  // Create self-managed picker state
+  // Create self-managed picker state with bounded scrolling (no wrap-around)
   val pickerState =
     rememberPickerState(
       initialNumberOfOptions = stableItems.size,
-      initiallySelectedOption = 0 // Always start at 0
+      initiallySelectedOption = 0, // Always start at 0
+      repeatItems = false // Disable wrap-around to prevent jumping back to start
     )
 
   // One-time initialization only
@@ -99,7 +100,12 @@ fun ScrollablePicker(
         // Add haptic feedback for selection change
         view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
         kotlinx.coroutines.delay(200) // Critical: debounce rapid changes
-        onSelectionChanged(pickerState.selectedOption)
+
+        // Bounds check to prevent wraparound issues
+        val selectedOption = pickerState.selectedOption
+        if (selectedOption in 0 until stableItems.size) {
+          onSelectionChanged(selectedOption)
+        }
       }
     }
   }
