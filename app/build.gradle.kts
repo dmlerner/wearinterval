@@ -236,7 +236,7 @@ dependencies {
     testImplementation("androidx.arch.core:core-testing:2.2.0")
 
     // Robolectric for Android framework testing without emulator
-    testImplementation("org.robolectric:robolectric:4.11.1")
+    testImplementation("org.robolectric:robolectric:4.15.1")
     testImplementation("androidx.test:core:1.5.0")
 
     // Testing - Android/Integration Tests
