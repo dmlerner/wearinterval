@@ -314,7 +314,7 @@ private fun TimerControlsInside(uiState: MainUiState, onEvent: (MainEvent) -> Un
     // Stop button with Material icon (matching wearinterval style - stop button first)
     Button(
       onClick = {
-        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+        view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
         onEvent(MainEvent.StopClicked)
       },
       modifier =
@@ -337,7 +337,7 @@ private fun TimerControlsInside(uiState: MainUiState, onEvent: (MainEvent) -> Un
     // Play/Pause button with Material icons (matching wearinterval style)
     Button(
       onClick = {
-        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+        view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
         onEvent(MainEvent.PlayPauseClicked)
       },
       modifier =

@@ -101,7 +101,7 @@ private fun SettingsToggleButton(
 
   Button(
     onClick = {
-      view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+      view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
       onClick()
     },
     modifier = modifier.size(72.dp).semantics { this.contentDescription = contentDescription },

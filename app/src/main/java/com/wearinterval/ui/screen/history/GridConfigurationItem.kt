@@ -43,7 +43,7 @@ fun GridConfigurationItem(
           if (configuration != null) {
             Modifier.background(Constants.Colors.HISTORY_ITEM_BACKGROUND)
               .clickable {
-                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 onClick(configuration)
               }
               .semantics {
