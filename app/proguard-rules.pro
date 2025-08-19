@@ -25,6 +25,8 @@
 -keep class **_HiltModules** { *; }
 -keep class **_Factory { *; }
 -keep class **_MembersInjector { *; }
+-keep class **_GeneratedInjector { *; }
+-dontwarn com.wearinterval.WearIntervalApplication_GeneratedInjector
 
 # Keep Room entity classes
 -keep class com.wearinterval.data.database.entity.** { *; }
