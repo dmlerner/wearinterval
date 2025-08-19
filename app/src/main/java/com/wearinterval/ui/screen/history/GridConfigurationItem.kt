@@ -36,9 +36,9 @@ fun GridConfigurationItem(
   Box(
     modifier =
       modifier
-        .width(62.dp)
-        .height(48.dp)
-        .clip(RoundedCornerShape(8.dp))
+        .width(Constants.Dimensions.GRID_ITEM_WIDTH.dp)
+        .height(Constants.Dimensions.GRID_ITEM_HEIGHT.dp)
+        .clip(RoundedCornerShape(Constants.Dimensions.GRID_CORNER_RADIUS.dp))
         .then(
           if (configuration != null) {
             Modifier.background(Constants.Colors.HISTORY_ITEM_BACKGROUND)
@@ -60,7 +60,7 @@ fun GridConfigurationItem(
     if (configuration != null) {
       Text(
         text = configuration.displayString(),
-        fontSize = 14.sp, // Increased from 12sp to 14sp
+        fontSize = Constants.Dimensions.GRID_TEXT_SIZE_SP.sp,
         color = Constants.Colors.HISTORY_ITEM_TEXT,
         textAlign = TextAlign.Center,
         maxLines = 2,

@@ -68,7 +68,7 @@ private fun ConfigurationGrid(
   onConfigurationSelect: (TimerConfiguration) -> Unit
 ) {
   val actualItems = configurations.size
-  val columns = 2
+  val columns = Constants.Dimensions.GRID_COLUMNS
   val gridDimensions = GridLayoutUtils.calculateGridDimensions(actualItems, columns)
   val rows = gridDimensions.rows
 
@@ -77,13 +77,13 @@ private fun ConfigurationGrid(
     contentAlignment = Alignment.Center,
   ) {
     Column(
-      modifier = Modifier.padding(4.dp),
-      verticalArrangement = Arrangement.spacedBy(6.dp),
+      modifier = Modifier.padding(Constants.Dimensions.GRID_PADDING.dp),
+      verticalArrangement = Arrangement.spacedBy(Constants.Dimensions.GRID_ITEM_SPACING.dp),
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
       repeat(rows) { rowIndex ->
         Row(
-          horizontalArrangement = Arrangement.spacedBy(6.dp),
+          horizontalArrangement = Arrangement.spacedBy(Constants.Dimensions.GRID_ITEM_SPACING.dp),
         ) {
           repeat(columns) { colIndex ->
             val itemIndex = GridLayoutUtils.calculateItemIndex(rowIndex, colIndex, columns)
@@ -94,7 +94,9 @@ private fun ConfigurationGrid(
               )
             } else {
               Box(
-                modifier = Modifier.width(62.dp).height(48.dp),
+                modifier =
+                  Modifier.width(Constants.Dimensions.GRID_ITEM_WIDTH.dp)
+                    .height(Constants.Dimensions.GRID_ITEM_HEIGHT.dp),
               )
             }
           }
@@ -108,7 +110,7 @@ private fun ConfigurationGrid(
 private fun EmptyConfigurationsContent() {
   Text(
     text = "No recent sets",
-    fontSize = 14.sp,
+    fontSize = Constants.Dimensions.GRID_TEXT_SIZE_SP.sp,
     color = Constants.Colors.DIVIDER_COLOR,
     textAlign = TextAlign.Center,
     modifier = Modifier.semantics { contentDescription = "No recent timer configurations" },

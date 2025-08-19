@@ -1,6 +1,5 @@
 package com.wearinterval.wearos.tile
 
-import android.content.Intent
 import androidx.wear.tiles.ActionBuilders
 import androidx.wear.tiles.ColorBuilders
 import androidx.wear.tiles.DimensionBuilders
@@ -18,6 +17,7 @@ import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.model.TimerPhase
 import com.wearinterval.domain.repository.TileData
 import com.wearinterval.domain.repository.WearOsRepository
+import com.wearinterval.util.Constants
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -93,103 +93,33 @@ class WearIntervalTileService : TileService() {
         .setModifiers(
           ModifiersBuilders.Modifiers.Builder()
             .setPadding(
-              ModifiersBuilders.Padding.Builder().setAll(DimensionBuilders.dp(4f)).build()
+              ModifiersBuilders.Padding.Builder()
+                .setAll(DimensionBuilders.dp(Constants.Dimensions.GRID_PADDING.toFloat()))
+                .build()
             )
             .build()
         )
-        .addContent(createGrid(configurations))
+        .addContent(
+          TileStyleUtils.createGrid(configurations.map { it.displayString() }) { index ->
+            createClickAction(configurations[index])
+          }
+        )
         .build()
     }
   }
 
-  private fun createGrid(
-    configurations: List<TimerConfiguration>
-  ): LayoutElementBuilders.LayoutElement {
-    val columns = 2
-    val rows = maxOf(1, (configurations.size + columns - 1) / columns)
-
-    val columnBuilder =
-      LayoutElementBuilders.Column.Builder()
-        .setWidth(DimensionBuilders.expand())
-        .setHeight(DimensionBuilders.expand())
-
-    repeat(rows) { rowIndex ->
-      val rowBuilder =
-        LayoutElementBuilders.Row.Builder()
-          .setWidth(DimensionBuilders.expand())
-          .setHeight(DimensionBuilders.wrap())
-
-      repeat(columns) { colIndex ->
-        val itemIndex = rowIndex * columns + colIndex
-        if (itemIndex < configurations.size) {
-          rowBuilder.addContent(createGridItem(configurations[itemIndex]))
-        } else {
-          rowBuilder.addContent(createEmptyGridItem())
-        }
-      }
-
-      columnBuilder.addContent(rowBuilder.build())
-    }
-
-    return columnBuilder.build()
-  }
-
-  private fun createGridItem(
-    configuration: TimerConfiguration
-  ): LayoutElementBuilders.LayoutElement {
-    val intent =
-      Intent(this, MainActivity::class.java).apply {
-        putExtra("config_id", configuration.id)
-        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-      }
-
-    return LayoutElementBuilders.Box.Builder()
-      .setWidth(DimensionBuilders.dp(62f))
-      .setHeight(DimensionBuilders.dp(48f))
-      .setModifiers(
-        ModifiersBuilders.Modifiers.Builder()
-          .setBackground(
-            ModifiersBuilders.Background.Builder()
-              .setColor(ColorBuilders.argb(-2960686)) // Dark gray
+  private fun createClickAction(configuration: TimerConfiguration): ModifiersBuilders.Clickable {
+    return ModifiersBuilders.Clickable.Builder()
+      .setOnClick(
+        ActionBuilders.LaunchAction.Builder()
+          .setAndroidActivity(
+            ActionBuilders.AndroidActivity.Builder()
+              .setClassName(MainActivity::class.java.name)
+              .setPackageName(packageName)
               .build()
           )
-          .setClickable(
-            ModifiersBuilders.Clickable.Builder()
-              .setOnClick(
-                ActionBuilders.LaunchAction.Builder()
-                  .setAndroidActivity(
-                    ActionBuilders.AndroidActivity.Builder()
-                      .setClassName(MainActivity::class.java.name)
-                      .setPackageName(packageName)
-                      .build()
-                  )
-                  .build()
-              )
-              .build()
-          )
-          .setPadding(ModifiersBuilders.Padding.Builder().setAll(DimensionBuilders.dp(4f)).build())
           .build()
       )
-      .addContent(
-        LayoutElementBuilders.Text.Builder()
-          .setText(configuration.displayString())
-          .setFontStyle(
-            LayoutElementBuilders.FontStyle.Builder()
-              .setSize(DimensionBuilders.sp(12f))
-              .setColor(ColorBuilders.argb(-1)) // White
-              .build()
-          )
-          .setMaxLines(2)
-          .setMultilineAlignment(LayoutElementBuilders.TEXT_ALIGN_CENTER)
-          .build()
-      )
-      .build()
-  }
-
-  private fun createEmptyGridItem(): LayoutElementBuilders.LayoutElement {
-    return LayoutElementBuilders.Box.Builder()
-      .setWidth(DimensionBuilders.dp(62f))
-      .setHeight(DimensionBuilders.dp(48f))
       .build()
   }
 
@@ -197,17 +127,7 @@ class WearIntervalTileService : TileService() {
     return LayoutElementBuilders.Box.Builder()
       .setWidth(DimensionBuilders.expand())
       .setHeight(DimensionBuilders.expand())
-      .addContent(
-        LayoutElementBuilders.Text.Builder()
-          .setText("No recent sets")
-          .setFontStyle(
-            LayoutElementBuilders.FontStyle.Builder()
-              .setSize(DimensionBuilders.sp(14f))
-              .setColor(ColorBuilders.argb(-10066330)) // Medium gray
-              .build()
-          )
-          .build()
-      )
+      .addContent(TileStyleUtils.createEmptyStateText("No recent sets"))
       .build()
   }
 
@@ -231,7 +151,7 @@ class WearIntervalTileService : TileService() {
               .setFontStyle(
                 LayoutElementBuilders.FontStyle.Builder()
                   .setSize(DimensionBuilders.sp(18f))
-                  .setColor(ColorBuilders.argb(-1)) // White
+                  .setColor(ColorBuilders.argb(Constants.Colors.Tile.WHITE_ARGB))
                   .build()
               )
               .build()
@@ -242,7 +162,7 @@ class WearIntervalTileService : TileService() {
               .setFontStyle(
                 LayoutElementBuilders.FontStyle.Builder()
                   .setSize(DimensionBuilders.sp(12f))
-                  .setColor(ColorBuilders.argb(-7829368)) // Light gray
+                  .setColor(ColorBuilders.argb(Constants.Colors.Tile.HISTORY_ITEM_TEXT_ARGB))
                   .build()
               )
               .build()
@@ -283,17 +203,7 @@ class WearIntervalTileService : TileService() {
                     LayoutElementBuilders.Box.Builder()
                       .setWidth(DimensionBuilders.expand())
                       .setHeight(DimensionBuilders.expand())
-                      .addContent(
-                        LayoutElementBuilders.Text.Builder()
-                          .setText("Timer Error")
-                          .setFontStyle(
-                            LayoutElementBuilders.FontStyle.Builder()
-                              .setSize(DimensionBuilders.sp(14f))
-                              .setColor(ColorBuilders.argb(-10066330)) // Medium gray
-                              .build()
-                          )
-                          .build()
-                      )
+                      .addContent(TileStyleUtils.createEmptyStateText("Timer Error"))
                       .build()
                   )
                   .build(),

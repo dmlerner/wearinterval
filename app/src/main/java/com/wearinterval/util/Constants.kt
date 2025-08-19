@@ -70,6 +70,15 @@ object Constants {
     const val HISTORY_BUTTON_CORNER_RADIUS = 20
     const val RECENT_CONFIGURATIONS_COUNT =
       6 // Configurable number of recent configurations to show
+
+    // Grid Layout (shared between Compose and Tile)
+    const val GRID_ITEM_WIDTH = 62
+    const val GRID_ITEM_HEIGHT = 48
+    const val GRID_COLUMNS = 2
+    const val GRID_ITEM_SPACING = 6
+    const val GRID_PADDING = 4
+    const val GRID_CORNER_RADIUS = 8
+    const val GRID_TEXT_SIZE_SP = 14
   }
 
   // UI Colors
@@ -95,6 +104,14 @@ object Constants {
     // Text Colors
     val HISTORY_ITEM_TEXT = Color(0xFFBBBBBB) // Light gray text
     val DIVIDER_COLOR = Color.Gray
+
+    // Tile-specific ARGB values for Wear Tiles API compatibility
+    object Tile {
+      const val HISTORY_ITEM_BACKGROUND_ARGB = 0xFF222222.toInt()
+      const val HISTORY_ITEM_TEXT_ARGB = 0xFFBBBBBB.toInt()
+      const val DIVIDER_COLOR_ARGB = 0xFF808080.toInt() // Color.Gray equivalent
+      const val WHITE_ARGB = 0xFFFFFFFF.toInt()
+    }
   }
 
   // Notification Configuration
