@@ -1,11 +1,14 @@
 package com.wearinterval.ui.component
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -61,6 +64,14 @@ fun ProgressRing(
   val density = LocalDensity.current
   val strokeWidthPx = with(density) { strokeWidth.toPx() }
 
+  // Animate progress changes for smoother transitions
+  val animatedProgress by
+    animateFloatAsState(
+      targetValue = progress,
+      animationSpec = tween(durationMillis = 50), // Fast but smooth animation
+      label = "progressAnimation"
+    )
+
   // Determine the final modifier - use size if provided, otherwise use the passed modifier for
   // dynamic sizing
   val finalModifier =
@@ -100,8 +111,8 @@ fun ProgressRing(
       )
 
       // Draw progress arc
-      if (progress > 0f) {
-        val sweepAngle = (progress.coerceIn(0f, 1f) * 360f)
+      if (animatedProgress > 0f) {
+        val sweepAngle = (animatedProgress.coerceIn(0f, 1f) * 360f)
         drawArc(
           color = progressColor,
           startAngle = startAngle,
@@ -143,13 +154,28 @@ fun DualProgressRings(
   val innerStrokeWidth = ProgressRingDefaults.DUAL_RING_INNER_STROKE
   val ringGap = ProgressRingDefaults.DUAL_RING_GAP // Gap between the rings
 
+  // Animate both progress values for smooth transitions
+  val animatedOuterProgress by
+    animateFloatAsState(
+      targetValue = outerProgress,
+      animationSpec = tween(durationMillis = 50), // Fast but smooth animation
+      label = "outerProgressAnimation"
+    )
+
+  val animatedInnerProgress by
+    animateFloatAsState(
+      targetValue = innerProgress,
+      animationSpec = tween(durationMillis = 50), // Fast but smooth animation
+      label = "innerProgressAnimation"
+    )
+
   Box(
     modifier = modifier,
     contentAlignment = Alignment.Center,
   ) {
     // Outer progress ring (overall workout progress) - uses full available size
     ProgressRing(
-      progress = outerProgress,
+      progress = animatedOuterProgress,
       modifier = Modifier.fillMaxSize(),
       strokeWidth = outerStrokeWidth,
       progressColor = outerColor,
@@ -158,7 +184,7 @@ fun DualProgressRings(
 
     // Inner progress ring (current interval progress) - smaller to create the dual ring effect
     ProgressRing(
-      progress = innerProgress,
+      progress = animatedInnerProgress,
       modifier = Modifier.fillMaxSize(0.9f), // 90% of parent size for inner ring (closer to outer)
       strokeWidth = innerStrokeWidth,
       progressColor = innerColor,

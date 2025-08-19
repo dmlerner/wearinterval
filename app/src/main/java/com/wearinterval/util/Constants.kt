@@ -75,7 +75,7 @@ object Constants {
   // UI Colors
   object Colors {
     // Progress Ring Colors
-    val PROGRESS_RING_OUTER_COLOR = Color(0xFF00FF00) // Bright lime green for outer ring
+    val PROGRESS_RING_OUTER_COLOR = Color(0xFF2196F3) // Material Design blue for outer ring
     val PROGRESS_RING_INNER_COLOR = Color(0xFF0099FF) // Electric bright blue for inner ring
     val PROGRESS_RING_DEFAULT_BACKGROUND = Color.Gray
     val PROGRESS_RING_DEFAULT_PROGRESS = Color.Blue

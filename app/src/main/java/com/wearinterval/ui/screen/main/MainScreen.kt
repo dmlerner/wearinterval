@@ -7,11 +7,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,6 +40,9 @@ import com.wearinterval.domain.model.TimerPhase
 import com.wearinterval.ui.component.DualProgressRings
 import com.wearinterval.util.Constants
 import com.wearinterval.util.TimeUtils
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
 
@@ -82,7 +90,9 @@ internal fun MainContent(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
 
   Box(
     modifier =
-      Modifier.fillMaxSize().background(MaterialTheme.colors.background).then(flashModifier),
+      Modifier.fillMaxSize()
+        .background(if (uiState.isLoading) Color.Black else MaterialTheme.colors.background)
+        .then(flashModifier),
     contentAlignment = Alignment.Center,
   ) {
     if (uiState.isLoading) {
@@ -106,7 +116,7 @@ internal fun MainContent(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
 @Composable
 private fun TimerDisplay(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
   // Determine colors based on timer state
-  val outerRingColor = MaterialTheme.colors.primary
+  val outerRingColor = Constants.Colors.PROGRESS_RING_OUTER_COLOR
   val innerRingColor =
     if (uiState.isResting) {
       MaterialTheme.colors.secondary // Yellow/amber for rest periods
@@ -130,6 +140,26 @@ private fun TimerDisplay(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
       ) {
+        // Current time display
+        var currentTime by remember { mutableStateOf("") }
+
+        LaunchedEffect(Unit) {
+          val formatter = SimpleDateFormat("h:mm", Locale.getDefault())
+          while (true) {
+            currentTime = formatter.format(Date())
+            kotlinx.coroutines.delay(1000) // Update every second
+          }
+        }
+
+        Text(
+          text = currentTime,
+          style = MaterialTheme.typography.caption2,
+          color = MaterialTheme.colors.onSurfaceVariant,
+          textAlign = TextAlign.Center,
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
         // Main time display - show configured values when stopped, actual timer when running
         Text(
           text =
@@ -147,7 +177,7 @@ private fun TimerDisplay(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
           textAlign = TextAlign.Center,
         )
 
-        // Lap indicator - show configured laps when stopped, current progress when running
+        // Lap counter
         Text(
           text =
             when {
@@ -166,25 +196,32 @@ private fun TimerDisplay(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
           color = MaterialTheme.colors.onSurfaceVariant,
           textAlign = TextAlign.Center,
         )
-        // Phase indicator (show rest duration when stopped, "REST" when resting)
-        when {
-          uiState.isStopped && uiState.configuration.restDuration.inWholeSeconds > 0 -> {
-            Text(
-              text = "Rest: ${TimeUtils.formatDuration(uiState.configuration.restDuration)}",
-              style = MaterialTheme.typography.caption2,
-              color = MaterialTheme.colors.onSurfaceVariant,
-              textAlign = TextAlign.Center,
-            )
-          }
-          uiState.isResting -> {
-            Text(
-              text = "REST",
-              style = MaterialTheme.typography.caption2,
-              color = MaterialTheme.colors.secondary,
-              textAlign = TextAlign.Center,
-            )
-          }
-        }
+
+        // Minimal config indicator - always shown for consistent width
+        Text(
+          text =
+            when {
+              uiState.configuration.laps == Constants.TimerLimits.INFINITE_LAPS -> {
+                if (uiState.configuration.restDuration.inWholeSeconds > 0) {
+                  "∞ × ${TimeUtils.formatDuration(uiState.configuration.restDuration)}"
+                } else {
+                  "∞ × _"
+                }
+              }
+              else -> {
+                if (uiState.configuration.restDuration.inWholeSeconds > 0) {
+                  "${uiState.configuration.laps} × ${TimeUtils.formatDuration(uiState.configuration.restDuration)}"
+                } else {
+                  "${uiState.configuration.laps} × _"
+                }
+              }
+            },
+          style = MaterialTheme.typography.caption2,
+          color =
+            if (uiState.isResting) MaterialTheme.colors.secondary
+            else MaterialTheme.colors.onSurfaceVariant,
+          textAlign = TextAlign.Center,
+        )
         // Control buttons inside the circle
         TimerControlsInside(
           uiState = uiState,

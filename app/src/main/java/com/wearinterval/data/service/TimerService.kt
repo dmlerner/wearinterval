@@ -245,8 +245,11 @@ class TimerService : Service() {
 
   private suspend fun handleWorkComplete(currentState: TimerState, settings: NotificationSettings) {
     val config = currentState.configuration
+    val nextLap = currentState.currentLap + 1
+    val isFinalLap = !currentState.isInfinite && nextLap > currentState.totalLaps
 
-    if (config.restDuration > Constants.TimerLimits.MIN_REST_DURATION) {
+    // Only rest between laps, not after the final lap
+    if (!isFinalLap && config.restDuration > Constants.TimerLimits.MIN_REST_DURATION) {
       // Start rest period
       _timerState.value =
         currentState.copy(
@@ -270,7 +273,8 @@ class TimerService : Service() {
         timerNotificationManager.triggerContinuousAlarm(settings)
       }
     } else {
-      // No rest period, go directly to next lap or complete
+      // No rest period (either final lap or no rest configured), go directly to next lap or
+      // complete
       advanceToNextLap(currentState, settings)
     }
   }

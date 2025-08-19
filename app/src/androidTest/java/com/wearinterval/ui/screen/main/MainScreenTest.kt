@@ -3,6 +3,7 @@ package com.wearinterval.ui.screen.main
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasTextThat
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
@@ -378,5 +379,27 @@ class MainScreenTest {
     composeTestRule.onNodeWithText("45s").assertIsDisplayed() // Work duration
     composeTestRule.onNodeWithText("5 laps").assertIsDisplayed()
     composeTestRule.onNodeWithText("Rest: 0s").assertDoesNotExist() // Should not show zero rest
+  }
+
+  @Test
+  fun mainContent_displaysCurrentTime() {
+    // Given
+    val uiState = MainUiState(timerPhase = TimerPhase.Stopped)
+
+    // When
+    composeTestRule.setContent {
+      MaterialTheme {
+        MainContent(
+          uiState = uiState,
+          onEvent = {},
+        )
+      }
+    }
+
+    // Then - Should display current time in H:mm format (e.g., "14:30", "9:05")
+    composeTestRule.waitForIdle()
+    composeTestRule
+      .onNode(hasTextThat { text -> text.matches(Regex("^\\d{1,2}:\\d{2}$")) })
+      .assertIsDisplayed()
   }
 }

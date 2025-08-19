@@ -1,5 +1,6 @@
 <resources>
-    <style name="Theme.WearInterval" parent="android:Theme.DeviceDefault.Light">
+    <style name="Theme.WearInterval" parent="android:Theme.DeviceDefault">
         <!-- Wear OS specific theme configurations -->
+        <item name="android:windowBackground">@android:color/black</item>
     </style>
 </resources>

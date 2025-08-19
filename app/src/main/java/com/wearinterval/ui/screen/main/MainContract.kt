@@ -43,6 +43,8 @@ data class MainUiState(
     get() =
       when {
         isStopped -> 1.0f // Show full ring when stopped (ready state)
+        isAlarmActive || timeRemaining.inWholeMilliseconds <= 100 ->
+          0f // No progress when completed, alarm, or <100ms left
         currentIntervalDuration > Duration.ZERO -> {
           // Progress starts full (1.0) and ticks down to empty (0.0) as time remaining decreases
           (timeRemaining.inWholeMilliseconds.toFloat() /
@@ -56,6 +58,8 @@ data class MainUiState(
     get() =
       when {
         isStopped -> 1.0f // Show full ring when stopped (ready state)
+        isAlarmActive || timeRemaining.inWholeMilliseconds <= 100 ->
+          0f // No progress when completed, alarm, or <100ms left
         totalLaps > 0 -> {
           // Calculate overall remaining time as a percentage (starts full, ticks down like inner
           // ring)
