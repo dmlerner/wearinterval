@@ -46,20 +46,20 @@ constructor(
 
   override suspend fun updateConfiguration(config: TimerConfiguration): Result<Unit> {
     return try {
-      // Check if a configuration with the same values already exists (LRU behavior)
-      // Use ORIGINAL values for search, not validated ones, to find actual duplicates
-      val existingConfig =
-        configurationDao.findConfigurationByValues(
-          laps = config.laps,
-          workDurationSeconds = config.workDuration.inWholeSeconds,
-          restDurationSeconds = config.restDuration.inWholeSeconds,
-        )
-
       val validatedConfig =
         TimerConfiguration.validate(
           config.laps,
           config.workDuration,
           config.restDuration,
+        )
+
+      // Check if a configuration with the same VALIDATED values already exists (LRU behavior)
+      // Use VALIDATED values for search to find actual duplicates after validation
+      val existingConfig =
+        configurationDao.findConfigurationByValues(
+          laps = validatedConfig.laps,
+          workDurationSeconds = validatedConfig.workDuration.inWholeSeconds,
+          restDurationSeconds = validatedConfig.restDuration.inWholeSeconds,
         )
 
       val finalConfig =
@@ -92,20 +92,20 @@ constructor(
 
   override suspend fun saveToHistory(config: TimerConfiguration): Result<Unit> {
     return try {
-      // Check if a configuration with the same values already exists (LRU behavior)
-      // Use ORIGINAL values for search, not validated ones, to find actual duplicates
-      val existingConfig =
-        configurationDao.findConfigurationByValues(
-          laps = config.laps,
-          workDurationSeconds = config.workDuration.inWholeSeconds,
-          restDurationSeconds = config.restDuration.inWholeSeconds,
-        )
-
       val validatedConfig =
         TimerConfiguration.validate(
           config.laps,
           config.workDuration,
           config.restDuration,
+        )
+
+      // Check if a configuration with the same VALIDATED values already exists (LRU behavior)
+      // Use VALIDATED values for search to find actual duplicates after validation
+      val existingConfig =
+        configurationDao.findConfigurationByValues(
+          laps = validatedConfig.laps,
+          workDurationSeconds = validatedConfig.workDuration.inWholeSeconds,
+          restDurationSeconds = validatedConfig.restDuration.inWholeSeconds,
         )
 
       val finalConfig =

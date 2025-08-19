@@ -419,4 +419,103 @@ class ConfigurationRepositoryTest {
       )
     }
   }
+
+  @Test
+  fun `saveToHistory prevents duplicate configurations properly`() = runTest {
+    // Given: First config saved to history
+    val config1 =
+      TimerConfiguration(
+        id = "first-id",
+        laps = 5,
+        workDuration = 45.seconds,
+        restDuration = 15.seconds,
+        lastUsed = 1000L
+      )
+
+    // Second config with same functional values but different ID
+    val config2 =
+      TimerConfiguration(
+        id = "second-id",
+        laps = 5,
+        workDuration = 45.seconds,
+        restDuration = 15.seconds,
+        lastUsed = 2000L
+      )
+
+    // Mock that first save finds no existing config
+    coEvery { mockConfigurationDao.findConfigurationByValues(5, 45, 15) } returns null
+    coEvery { mockConfigurationDao.insertConfiguration(any()) } returns Unit
+    coEvery { mockConfigurationDao.getConfigurationCount() } returns 3
+    coEvery { mockConfigurationDao.cleanupOldConfigurations(any()) } returns Unit
+
+    // When: Save first config
+    val result1 = repository.saveToHistory(config1)
+
+    // Then: First config should be saved successfully
+    assertThat(result1.isSuccess).isTrue()
+
+    // Mock that second save finds the existing config from first save
+    val savedEntity = TimerConfigurationEntity("first-id", 5, 45, 15, 1000L)
+    coEvery { mockConfigurationDao.findConfigurationByValues(5, 45, 15) } returns savedEntity
+
+    // When: Save second config with same values
+    val result2 = repository.saveToHistory(config2)
+
+    // Then: Should reuse existing ID, not create duplicate
+    assertThat(result2.isSuccess).isTrue()
+
+    // Verify both configurations use the same ID (LRU behavior working correctly)
+    coVerify(exactly = 2) { // Called twice - once for each config, but both with same ID
+      mockConfigurationDao.insertConfiguration(
+        match { entity ->
+          entity.id == "first-id" && // Both should use first ID (LRU)
+          entity.laps == 5 && entity.workDurationSeconds == 45L && entity.restDurationSeconds == 15L
+        }
+      )
+    }
+  }
+
+  @Test
+  fun `updateConfiguration with invalid values that validate to existing config should reuse existing ID`() =
+    runTest {
+      // Given: Existing config with minimum valid values (edge case scenario)
+      val existingConfig =
+        TimerConfigurationEntity("existing-id", 5, 1, 15, 1000L) // 1 second work duration
+
+      // New config with invalid work duration that will be validated to match existing
+      val newConfigWithInvalidValues =
+        TimerConfiguration(
+          id = "new-id",
+          laps = 5,
+          workDuration = 0.seconds, // Invalid - will be validated to MIN_WORK_DURATION (1 second)
+          restDuration = 15.seconds,
+          lastUsed = 2000L
+        )
+
+      // Mock: Search with validated values (0s becomes 1s) finds existing config
+      coEvery { mockConfigurationDao.findConfigurationByValues(5, 1, 15) } returns existingConfig
+
+      coEvery { mockConfigurationDao.insertConfiguration(any()) } returns Unit
+      coEvery { mockDataStoreManager.updateCurrentConfiguration(any()) } returns Unit
+      coEvery { mockConfigurationDao.getConfigurationCount() } returns 3
+      coEvery { mockConfigurationDao.cleanupOldConfigurations(any()) } returns Unit
+
+      // When: Save config with invalid values
+      val result = repository.updateConfiguration(newConfigWithInvalidValues)
+
+      // Then: Should be successful
+      assertThat(result.isSuccess).isTrue()
+
+      // FIXED: Now reuses existing ID when validated values match existing config
+      coVerify {
+        mockConfigurationDao.insertConfiguration(
+          match { entity ->
+            entity.id == "existing-id" && // FIXED: Uses existing ID, preventing duplicates
+            entity.laps == 5 &&
+              entity.workDurationSeconds == 1L && // Validated value
+              entity.restDurationSeconds == 15L
+          }
+        )
+      }
+    }
 }
