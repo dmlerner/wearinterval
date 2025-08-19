@@ -5,10 +5,16 @@ import kotlin.time.Duration
 object TimeUtils {
 
   /**
-   * Formats a duration for display in UI components. Returns format like "2:30", "45s", or "1:05"
-   * depending on the duration.
+   * Formats a duration for display in UI components. Returns format like "2:30", "45s", "½s", or
+   * "1:05" depending on the duration.
    */
   fun formatDuration(duration: Duration): String {
+    // Handle sub-second durations with fraction symbols
+    when (duration.inWholeMilliseconds) {
+      250L -> return "¼s"
+      500L -> return "½s"
+    }
+
     val totalSeconds = duration.inWholeSeconds
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60

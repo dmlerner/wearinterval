@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,6 +45,7 @@ import com.wearinterval.util.TimeUtils
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
 
@@ -58,6 +61,53 @@ private object MainScreenDefaults {
   val STOP_BUTTON_SIZE =
     Constants.Dimensions.MAIN_STOP_BUTTON_SIZE.dp // Match wearinterval button size
   val ALARM_SPACING = Constants.Dimensions.CONTROL_BUTTON_SPACING.dp
+}
+
+/**
+ * Calculates the total remaining time for the entire workout. This includes the current interval
+ * time remaining plus all remaining intervals in remaining laps.
+ */
+private fun calculateTotalRemainingTime(uiState: MainUiState): Duration {
+  val currentIntervalRemaining = uiState.timeRemaining
+
+  // Calculate remaining intervals in current lap
+  val remainingIntervalsInCurrentLap =
+    if (uiState.isResting) {
+      // If resting, we still need to complete the work interval
+      1
+    } else {
+      // If working, check if there's a rest interval after
+      if (uiState.configuration.restDuration > Duration.ZERO) 1 else 0
+    }
+
+  // Calculate total intervals per lap (work + rest if rest duration > 0)
+  val intervalsPerLap = if (uiState.configuration.restDuration > Duration.ZERO) 2 else 1
+
+  // Calculate remaining complete laps after current lap
+  val remainingCompleteLaps = maxOf(0, uiState.totalLaps - uiState.currentLap)
+
+  // Calculate time for remaining intervals in current lap
+  val remainingCurrentLapTime =
+    if (remainingIntervalsInCurrentLap > 0) {
+      if (uiState.isResting) {
+        // Currently resting, need to add work duration for next interval
+        uiState.configuration.workDuration
+      } else {
+        // Currently working, need to add rest duration if it exists
+        uiState.configuration.restDuration
+      }
+    } else {
+      Duration.ZERO
+    }
+
+  // Calculate time for complete remaining laps
+  val timePerLap =
+    uiState.configuration.workDuration +
+      if (uiState.configuration.restDuration > Duration.ZERO) uiState.configuration.restDuration
+      else Duration.ZERO
+  val remainingCompleteLapsTime = timePerLap * remainingCompleteLaps
+
+  return currentIntervalRemaining + remainingCurrentLapTime + remainingCompleteLapsTime
 }
 
 @Composable
@@ -160,68 +210,89 @@ private fun TimerDisplay(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Main time display - show configured values when stopped, actual timer when running
-        Text(
-          text =
-            when {
-              uiState.isStopped -> TimeUtils.formatDuration(uiState.configuration.workDuration)
-              else -> TimeUtils.formatDuration(uiState.timeRemaining)
-            },
-          style = MaterialTheme.typography.title1, // Smaller to fit with controls
-          color =
-            if (uiState.isResting) {
-              MaterialTheme.colors.secondary
-            } else {
-              MaterialTheme.colors.onSurface
-            },
-          textAlign = TextAlign.Center,
-        )
+        // Time display with lap duration perfectly centered
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          verticalAlignment = Alignment.CenterVertically,
+        ) {
+          // Left side - lap count (show always unless infinite laps)
+          Text(
+            text =
+              if (uiState.totalLaps == Constants.TimerLimits.INFINITE_LAPS) {
+                ""
+              } else {
+                when {
+                  uiState.isStopped -> {
+                    // Show configured laps when stopped
+                    "${uiState.configuration.laps}"
+                  }
+                  else -> {
+                    // Show current progress when running or paused
+                    "${uiState.currentLap}/${uiState.totalLaps}"
+                  }
+                }
+              },
+            style = MaterialTheme.typography.caption2,
+            color = MaterialTheme.colors.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
+            textAlign = TextAlign.End,
+          )
 
-        // Lap counter
-        Text(
-          text =
-            when {
-              uiState.isStopped -> {
-                if (uiState.configuration.laps == Constants.TimerLimits.INFINITE_LAPS) {
-                  "∞ laps"
-                } else {
-                  "${uiState.configuration.laps} laps"
-                }
-              }
-              uiState.totalLaps == Constants.TimerLimits.INFINITE_LAPS ->
-                "Lap ${uiState.currentLap}"
-              else -> "${uiState.currentLap}/${uiState.totalLaps}"
-            },
-          style = MaterialTheme.typography.caption2,
-          color = MaterialTheme.colors.onSurfaceVariant,
-          textAlign = TextAlign.Center,
-        )
+          if (uiState.totalLaps != Constants.TimerLimits.INFINITE_LAPS) {
+            Spacer(modifier = Modifier.width(16.dp))
+          }
 
-        // Minimal config indicator - always shown for consistent width
-        Text(
-          text =
-            when {
-              uiState.configuration.laps == Constants.TimerLimits.INFINITE_LAPS -> {
-                if (uiState.configuration.restDuration.inWholeSeconds > 0) {
-                  "∞ × ${TimeUtils.formatDuration(uiState.configuration.restDuration)}"
-                } else {
-                  "∞ × _"
+          // Center - main time display (always centered)
+          Text(
+            text =
+              when {
+                uiState.isStopped -> TimeUtils.formatDuration(uiState.configuration.workDuration)
+                else -> TimeUtils.formatDuration(uiState.timeRemaining)
+              },
+            style = MaterialTheme.typography.title1,
+            color =
+              if (uiState.isResting) {
+                MaterialTheme.colors.secondary
+              } else {
+                MaterialTheme.colors.onSurface
+              },
+            textAlign = TextAlign.Center,
+          )
+
+          // Right side - total duration (show always unless infinite laps)
+          if (uiState.totalLaps != Constants.TimerLimits.INFINITE_LAPS) {
+            Spacer(modifier = Modifier.width(16.dp))
+          }
+
+          Text(
+            text =
+              if (uiState.totalLaps == Constants.TimerLimits.INFINITE_LAPS) {
+                ""
+              } else {
+                when {
+                  uiState.isStopped -> {
+                    // Show total configured duration when stopped
+                    val totalDuration =
+                      uiState.configuration.workDuration * uiState.configuration.laps +
+                        if (uiState.configuration.restDuration > Duration.ZERO) {
+                          uiState.configuration.restDuration * uiState.configuration.laps
+                        } else {
+                          Duration.ZERO
+                        }
+                    TimeUtils.formatDuration(totalDuration)
+                  }
+                  else -> {
+                    // Show remaining duration when running or paused
+                    TimeUtils.formatDuration(calculateTotalRemainingTime(uiState))
+                  }
                 }
-              }
-              else -> {
-                if (uiState.configuration.restDuration.inWholeSeconds > 0) {
-                  "${uiState.configuration.laps} × ${TimeUtils.formatDuration(uiState.configuration.restDuration)}"
-                } else {
-                  "${uiState.configuration.laps} × _"
-                }
-              }
-            },
-          style = MaterialTheme.typography.caption2,
-          color =
-            if (uiState.isResting) MaterialTheme.colors.secondary
-            else MaterialTheme.colors.onSurfaceVariant,
-          textAlign = TextAlign.Center,
-        )
+              },
+            style = MaterialTheme.typography.caption2,
+            color = MaterialTheme.colors.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
+            textAlign = TextAlign.Start,
+          )
+        }
         // Control buttons inside the circle
         TimerControlsInside(
           uiState = uiState,

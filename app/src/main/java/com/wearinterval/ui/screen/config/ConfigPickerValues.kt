@@ -39,7 +39,7 @@ object ConfigPickerValues {
       Constants.TimerLimits.INFINITE_LAPS,
     )
 
-  // Duration values - extended up to 24 hours
+  // Duration values - extended up to 24 hours (minimum 1 second)
   val DURATION_VALUES =
     listOf(
       1.seconds,

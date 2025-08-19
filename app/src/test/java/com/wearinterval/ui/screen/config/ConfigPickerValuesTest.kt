@@ -125,7 +125,7 @@ class ConfigPickerValuesTest {
 
   @Test
   fun findDurationIndex_handles_edge_cases() {
-    // Test duration below minimum
+    // Test duration below minimum (should return first item which is now 1 second)
     assertEquals(0, ConfigPickerValues.findDurationIndex(0.5.seconds, false))
 
     // Test duration above maximum
