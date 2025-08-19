@@ -220,9 +220,11 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.8.1")
 
-    // Wear OS Platform APIs
-    implementation("androidx.wear.tiles:tiles:1.4.0")
-    implementation("androidx.wear.tiles:tiles-material:1.4.0")
+    // Wear OS Platform APIs - Updated to latest ProtoLayout for Tiles API
+    implementation("androidx.wear.protolayout:protolayout:1.3.0")
+    implementation("androidx.wear.protolayout:protolayout-material:1.3.0")
+    implementation("androidx.wear.protolayout:protolayout-expression:1.3.0")
+    implementation("androidx.wear.tiles:tiles:1.5.0") // TileService and deprecated API interop
     implementation("androidx.wear.watchface:watchface-complications-data-source:1.2.1")
 
     // Testing - Unit Tests

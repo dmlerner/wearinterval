@@ -32,7 +32,10 @@ constructor(
   override suspend fun getTileData(): TileData {
     return TileData(
       timerState = timerRepository.timerState.first(),
-      recentConfigurations = configurationRepository.recentConfigurations.first(),
+      recentConfigurations =
+        configurationRepository.recentConfigurations
+          .first()
+          .take(4), // Match history screen limit for 2x2 grid
     )
   }
 

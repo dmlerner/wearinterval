@@ -1,15 +1,15 @@
 package com.wearinterval.wearos.tile
 
-import androidx.wear.tiles.ActionBuilders
-import androidx.wear.tiles.ColorBuilders
-import androidx.wear.tiles.DimensionBuilders
-import androidx.wear.tiles.LayoutElementBuilders
-import androidx.wear.tiles.ModifiersBuilders
+import androidx.wear.protolayout.ActionBuilders
+import androidx.wear.protolayout.ColorBuilders
+import androidx.wear.protolayout.DimensionBuilders
+import androidx.wear.protolayout.LayoutElementBuilders
+import androidx.wear.protolayout.ModifiersBuilders
+import androidx.wear.protolayout.ResourceBuilders
+import androidx.wear.protolayout.TimelineBuilders
 import androidx.wear.tiles.RequestBuilders
-import androidx.wear.tiles.ResourceBuilders
 import androidx.wear.tiles.TileBuilders
 import androidx.wear.tiles.TileService
-import androidx.wear.tiles.TimelineBuilders
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import com.wearinterval.MainActivity
@@ -53,7 +53,7 @@ class WearIntervalTileService : TileService() {
 
         TileBuilders.Tile.Builder()
           .setResourcesVersion("1")
-          .setTimeline(
+          .setTileTimeline(
             TimelineBuilders.Timeline.Builder()
               .addTimelineEntry(
                 TimelineBuilders.TimelineEntry.Builder()
@@ -90,6 +90,8 @@ class WearIntervalTileService : TileService() {
       LayoutElementBuilders.Box.Builder()
         .setWidth(DimensionBuilders.expand())
         .setHeight(DimensionBuilders.expand())
+        .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
+        .setVerticalAlignment(LayoutElementBuilders.VERTICAL_ALIGN_CENTER)
         .setModifiers(
           ModifiersBuilders.Modifiers.Builder()
             .setPadding(
@@ -193,7 +195,7 @@ class WearIntervalTileService : TileService() {
   private fun createErrorTile(): TileBuilders.Tile {
     return TileBuilders.Tile.Builder()
       .setResourcesVersion("1")
-      .setTimeline(
+      .setTileTimeline(
         TimelineBuilders.Timeline.Builder()
           .addTimelineEntry(
             TimelineBuilders.TimelineEntry.Builder()
@@ -215,7 +217,7 @@ class WearIntervalTileService : TileService() {
       .build()
   }
 
-  override fun onResourcesRequest(
+  override fun onTileResourcesRequest(
     requestParams: RequestBuilders.ResourcesRequest
   ): ListenableFuture<ResourceBuilders.Resources> {
     return Futures.immediateFuture(

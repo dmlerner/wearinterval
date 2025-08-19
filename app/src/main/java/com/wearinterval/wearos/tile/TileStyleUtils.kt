@@ -1,9 +1,9 @@
 package com.wearinterval.wearos.tile
 
-import androidx.wear.tiles.ColorBuilders
-import androidx.wear.tiles.DimensionBuilders
-import androidx.wear.tiles.LayoutElementBuilders
-import androidx.wear.tiles.ModifiersBuilders
+import androidx.wear.protolayout.ColorBuilders
+import androidx.wear.protolayout.DimensionBuilders
+import androidx.wear.protolayout.LayoutElementBuilders
+import androidx.wear.protolayout.ModifiersBuilders
 import com.wearinterval.ui.component.GridLayoutUtils
 import com.wearinterval.util.Constants
 
@@ -63,14 +63,16 @@ object TileStyleUtils {
 
     val columnBuilder =
       LayoutElementBuilders.Column.Builder()
-        .setWidth(DimensionBuilders.expand())
-        .setHeight(DimensionBuilders.expand())
+        .setWidth(DimensionBuilders.wrap())
+        .setHeight(DimensionBuilders.wrap())
+        .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
 
     repeat(dimensions.rows) { rowIndex ->
       val rowBuilder =
         LayoutElementBuilders.Row.Builder()
-          .setWidth(DimensionBuilders.expand())
+          .setWidth(DimensionBuilders.wrap())
           .setHeight(DimensionBuilders.wrap())
+          .setVerticalAlignment(LayoutElementBuilders.VERTICAL_ALIGN_CENTER)
 
       repeat(Constants.Dimensions.GRID_COLUMNS) { colIndex ->
         val itemIndex =
