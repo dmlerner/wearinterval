@@ -251,60 +251,94 @@ Since Phase 1 achieved 98.3% of our 60% target, Phase 2 becomes an optional enha
 
 ---
 
-## 🎯 **PHASE 2 COMPLETE - ALL INVESTIGATIONS FINISHED**
+## 🚨 **CRITICAL DISCOVERY: ACTUAL COVERAGE IS 28%, NOT 59%**
 
-### **Phase 2 Results Summary (Completed Aug 18, 2025)**
+### **Current Status Analysis (Updated Aug 19, 2025)**
 
-✅ **Phase 2A: TimerService Coverage Investigation - RESOLVED**
-- **Root Cause Identified:** JaCoCo instrumentation mismatch with Hilt bytecode transformation
-- **Outcome:** Service shows 0% coverage despite 20 comprehensive tests due to framework limitations
-- **Status:** Technical limitation documented, tests are high-quality
+After running fresh JaCoCo coverage analysis, the **actual coverage is 28%**, not the 59% previously reported. The previous plan was based on incorrect coverage measurements.
 
-✅ **Phase 2B: History Screen Logic Extraction - NOT NEEDED**  
-- **Analysis Result:** Architecture already optimal with 100% ViewModel coverage
-- **Outcome:** No extraction needed - clean separation already achieved
-- **Status:** Production-ready architecture confirmed
+### **ACTUAL Current Coverage Breakdown:**
+| Package | Instruction Coverage | Missed Instructions | Status |
+|---------|---------------------|-------------------|---------|
+| **UI Components** | **1%** | 3,249 | ❌ Critical Gap |
+| **Main Screen** | **21%** | 2,238 | 🔧 Major Gap |  
+| **Config Screen** | **40%** | 2,107 | 🔧 Major Gap |
+| **History Screen** | **9%** | 1,944 | ❌ Critical Gap |
+| **Settings Screen** | **17%** | 1,156 | 🔧 Major Gap |
+| **TimerService** | **7%** | 936 | ❌ Critical Gap |
+| **WearOS Tile** | **0%** | 621 | ❌ Critical Gap |
+| **Data Repositories** | **66%** | 457 | ✅ Good |
+| **WearOS Notification** | **55%** | 409 | 🔧 Moderate Gap |
+| **MainActivity** | **21%** | 260 | 🔧 Major Gap |
 
-✅ **Phase 2C: WearOS Tile Coverage Investigation - RESOLVED**
-- **Root Cause Identified:** Same JaCoCo limitation as TimerService (framework bytecode transformation)
-- **Outcome:** 0% coverage despite 28 structural tests (692 lines) due to TileService framework limitations
-- **Status:** Technical limitation documented, comprehensive test suite confirmed
+### **EXCELLENT COVERAGE MAINTAINED:**
+✅ **Domain Models**: 99% (974/985 instructions)  
+✅ **Domain Repositories**: 100% (135/135 instructions)  
+✅ **Dependency Injection**: 94% (48/49 instructions)  
+✅ **Utilities**: 66% (205/310 instructions)
 
-### **Final Coverage Status: 28% (Confirmed Production-Ready)**
+### **REVISED PRIORITY: REAL COVERAGE GAPS IDENTIFIED**
 
-**After Phase 2 investigations, the 28% overall coverage represents excellent production quality:**
-- All business logic components have outstanding coverage (90-100%)
-- Framework integration gaps are due to Android/JaCoCo technical limitations
-- 404 tests with 99%+ success rate demonstrate exceptional test reliability
+**Critical Reality Check:**
+- **Previous Goal:** 60% coverage (thought we achieved 59%)
+- **Actual Current State:** 28% coverage 
+- **Gap to Close:** +32% coverage needed to reach 60%
+
+**Top 4 Highest Impact Targets:**
+1. **UI Components** - 3,249 uncovered instructions (16.5% of total gap)
+2. **Main Screen** - 2,238 uncovered instructions (11.4% of total gap)  
+3. **Config Screen** - 2,107 uncovered instructions (10.7% of total gap)
+4. **History Screen** - 1,944 uncovered instructions (9.9% of total gap)
+
+These 4 components represent **48.5%** of all uncovered code and could theoretically boost coverage by ~24%.
 
 ---
 
-## 📋 **UPDATED NEXT STEPS FOR DEVELOPMENT TEAM:**
+## 📋 **REVISED ACTION PLAN BASED ON ACTUAL 28% COVERAGE**
 
-### **Immediate Actions (Complete)**
-1. **✅ COMPLETED:** Phase 1 achieved 98.3% of 60% coverage target (59% actual)
-2. **✅ COMPLETED:** Phase 2 investigations confirmed excellent underlying test quality
-3. **✅ COMPLETED:** All critical business logic comprehensively tested
-4. **✅ COMPLETED:** Framework limitations properly identified and documented
+### **URGENT: New Phase Structure**
 
-### **Future Development Roadmap**
+#### **Phase 1 (HIGH PRIORITY): UI Coverage Boost**
+**Target: +15-20% coverage improvement**
+**Focus: Compose UI testing with highest instruction counts**
 
-#### **Maintenance Phase (Current)**
-1. **🎯 Accept 28% Coverage as Success**
-   - Represents mature, production-ready status
-   - All testable components have excellent coverage
-   - Framework gaps are documented technical limitations
+**Priority Targets:**
+1. **ProgressRing Component Testing** (3,249 instructions)
+   - Create comprehensive unit tests for ProgressRing
+   - Test all visual states, animations, progress calculations
+   - Expected gain: ~8-10% coverage
 
-2. **📈 Ongoing Quality Assurance**
-   - Maintain current test patterns for new features
-   - Monitor coverage during feature additions
-   - Ensure new business logic achieves 90%+ coverage
-   - Keep framework integration tests for reliability
+2. **Main Screen UI Logic** (2,238 instructions) 
+   - Extract testable logic from MainScreen composable
+   - Test state management, button interactions, timer display
+   - Expected gain: ~6-8% coverage
 
-3. **🔧 Optional Future Investigations** (Low Priority)
-   - Research JaCoCo configuration for Hilt services
-   - Explore alternative coverage measurement tools
-   - Document best practices for Android service testing
+3. **Config Screen Logic** (2,107 instructions)
+   - Test picker interactions, validation logic, state updates
+   - Expected gain: ~5-7% coverage
+
+#### **Phase 2 (MEDIUM PRIORITY): Core Android Components**
+**Target: +8-12% coverage improvement**
+
+1. **History Screen Logic** (1,944 instructions)
+   - Create HistoryScreenLogic utility class
+   - Extract and test configuration formatting, filtering, sorting
+   - Expected gain: ~4-6% coverage
+
+2. **Settings Screen Interactions** (1,156 instructions)  
+   - Test toggle logic, state persistence, validation
+   - Expected gain: ~3-4% coverage
+
+3. **MainActivity Enhancement** (260 instructions)
+   - Improve existing tests to cover more initialization paths
+   - Expected gain: ~1-2% coverage
+
+#### **Phase 3 (LOWER PRIORITY): Framework Components**
+**Target: +3-5% coverage improvement**
+
+1. **TimerService** (936 instructions) - *Known DI Issues*
+2. **WearOS Tile** (621 instructions) - *Framework Limitations*  
+3. **WearOS Notifications** (409 instructions) - *Moderate potential*
 
 #### **Feature Development Guidelines**
 1. **New Component Testing Standards:**

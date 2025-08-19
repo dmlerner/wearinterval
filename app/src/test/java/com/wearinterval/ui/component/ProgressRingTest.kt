@@ -20,6 +20,16 @@ class ProgressRingTest {
     // Test that the class exists and is accessible
     assertThat(progressRingDefaultsClass).isNotNull()
     assertThat(progressRingDefaultsClass.simpleName).isEqualTo("ProgressRingDefaults")
+
+    // Test constants through reflection
+    val backgroundAlphaField = progressRingDefaultsClass.getDeclaredField("BACKGROUND_ALPHA")
+    val dualRingBackgroundAlphaField =
+      progressRingDefaultsClass.getDeclaredField("DUAL_RING_BACKGROUND_ALPHA")
+    val startAngleTopField = progressRingDefaultsClass.getDeclaredField("START_ANGLE_TOP")
+
+    assertThat(backgroundAlphaField.getFloat(null)).isEqualTo(0.3f)
+    assertThat(dualRingBackgroundAlphaField.getFloat(null)).isEqualTo(0.2f)
+    assertThat(startAngleTopField.getFloat(null)).isEqualTo(-90f)
   }
 
   @Test

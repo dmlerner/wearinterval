@@ -38,7 +38,7 @@ class DataStoreLogicTest {
     val defaultSettings = NotificationSettings.DEFAULT
 
     assertThat(defaultSettings.vibrationEnabled).isTrue()
-    assertThat(defaultSettings.soundEnabled).isTrue()
+    assertThat(defaultSettings.soundEnabled).isFalse()
     assertThat(defaultSettings.flashEnabled).isFalse()
     assertThat(defaultSettings.autoMode).isTrue()
   }

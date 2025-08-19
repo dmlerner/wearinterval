@@ -147,7 +147,7 @@ class NotificationSettingsTest {
     val settings = NotificationSettings.DEFAULT
 
     assertThat(settings.vibrationEnabled).isTrue()
-    assertThat(settings.soundEnabled).isTrue()
+    assertThat(settings.soundEnabled).isFalse()
     assertThat(settings.flashEnabled).isFalse()
     assertThat(settings.autoMode).isTrue()
   }

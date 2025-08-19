@@ -69,7 +69,8 @@ private fun ConfigurationGrid(
 ) {
   val actualItems = configurations.size
   val columns = 2
-  val rows = if (actualItems == 0) 0 else (actualItems + columns - 1) / columns
+  val gridDimensions = GridLayoutUtils.calculateGridDimensions(actualItems, columns)
+  val rows = gridDimensions.rows
 
   Box(
     modifier = Modifier.fillMaxSize(),
@@ -85,8 +86,8 @@ private fun ConfigurationGrid(
           horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
           repeat(columns) { colIndex ->
-            val itemIndex = rowIndex * columns + colIndex
-            if (itemIndex < actualItems) {
+            val itemIndex = GridLayoutUtils.calculateItemIndex(rowIndex, colIndex, columns)
+            if (GridLayoutUtils.shouldDisplayItem(rowIndex, colIndex, columns, actualItems)) {
               GridConfigurationItem(
                 configuration = configurations[itemIndex],
                 onClick = onConfigurationSelect,
