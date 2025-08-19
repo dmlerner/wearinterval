@@ -4,7 +4,7 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.repository.ConfigurationRepository
-import com.wearinterval.domain.repository.TimerRepository
+import com.wearinterval.domain.usecase.SelectConfigurationUseCase
 import com.wearinterval.util.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -25,7 +25,7 @@ class HistoryViewModelTest {
   @get:Rule val mainDispatcherRule = MainDispatcherRule()
 
   private val mockConfigurationRepository = mockk<ConfigurationRepository>()
-  private val mockTimerRepository = mockk<TimerRepository>(relaxed = true)
+  private val mockSelectConfigurationUseCase = mockk<SelectConfigurationUseCase>(relaxed = true)
   private lateinit var viewModel: HistoryViewModel
 
   private val sampleConfigurations =
@@ -54,7 +54,7 @@ class HistoryViewModelTest {
   fun setup() {
     every { mockConfigurationRepository.recentConfigurations } returns MutableStateFlow(emptyList())
 
-    viewModel = HistoryViewModel(mockConfigurationRepository, mockTimerRepository)
+    viewModel = HistoryViewModel(mockConfigurationRepository, mockSelectConfigurationUseCase)
   }
 
   @Test
@@ -64,7 +64,8 @@ class HistoryViewModelTest {
     every { mockConfigurationRepository.recentConfigurations } returns emptyFlow
 
     // Create fresh viewModel
-    val testViewModel = HistoryViewModel(mockConfigurationRepository, mockTimerRepository)
+    val testViewModel =
+      HistoryViewModel(mockConfigurationRepository, mockSelectConfigurationUseCase)
 
     testViewModel.uiState.test {
       val initialState = awaitItem()
@@ -81,7 +82,8 @@ class HistoryViewModelTest {
     every { mockConfigurationRepository.recentConfigurations } returns configurationsFlow
 
     // Create new viewModel with updated mock
-    val testViewModel = HistoryViewModel(mockConfigurationRepository, mockTimerRepository)
+    val testViewModel =
+      HistoryViewModel(mockConfigurationRepository, mockSelectConfigurationUseCase)
 
     // When/Then
     testViewModel.uiState.test {
@@ -99,7 +101,8 @@ class HistoryViewModelTest {
     every { mockConfigurationRepository.recentConfigurations } returns configurationsFlow
 
     // Create new viewModel with updated mock
-    val testViewModel = HistoryViewModel(mockConfigurationRepository, mockTimerRepository)
+    val testViewModel =
+      HistoryViewModel(mockConfigurationRepository, mockSelectConfigurationUseCase)
 
     // When/Then
     testViewModel.uiState.test {
@@ -118,7 +121,8 @@ class HistoryViewModelTest {
     every { mockConfigurationRepository.recentConfigurations } returns errorFlow
 
     // Create new viewModel
-    val testViewModel = HistoryViewModel(mockConfigurationRepository, mockTimerRepository)
+    val testViewModel =
+      HistoryViewModel(mockConfigurationRepository, mockSelectConfigurationUseCase)
 
     // When/Then - Verify the viewModel handles the flow correctly
     testViewModel.uiState.test {
@@ -130,19 +134,17 @@ class HistoryViewModelTest {
   }
 
   @Test
-  fun `select configuration event calls repository`() = runTest {
+  fun `select configuration event calls use case`() = runTest {
     // Given
     val configToSelect = sampleConfigurations[0]
-    coEvery { mockConfigurationRepository.selectRecentConfiguration(any()) } returns
+    coEvery { mockSelectConfigurationUseCase.selectConfigurationAndStopTimer(any()) } returns
       Result.success(Unit)
-    coEvery { mockTimerRepository.stopTimer() } returns Result.success(Unit)
 
     // When
     viewModel.onEvent(HistoryEvent.ConfigurationSelected(configToSelect))
 
     // Then
-    coVerify { mockTimerRepository.stopTimer() }
-    coVerify { mockConfigurationRepository.selectRecentConfiguration(configToSelect) }
+    coVerify { mockSelectConfigurationUseCase.selectConfigurationAndStopTimer(configToSelect) }
   }
 
   @Test
@@ -170,7 +172,8 @@ class HistoryViewModelTest {
     every { mockConfigurationRepository.recentConfigurations } returns configurationsFlow
 
     // Create new viewModel with flow
-    val testViewModel = HistoryViewModel(mockConfigurationRepository, mockTimerRepository)
+    val testViewModel =
+      HistoryViewModel(mockConfigurationRepository, mockSelectConfigurationUseCase)
 
     testViewModel.uiState.test {
       // Initial empty state

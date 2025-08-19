@@ -8,6 +8,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import com.wearinterval.domain.repository.ConfigurationRepository
 import com.wearinterval.domain.repository.TimerRepository
+import com.wearinterval.domain.usecase.SelectConfigurationUseCase
 import com.wearinterval.ui.navigation.WearIntervalNavigation
 import com.wearinterval.ui.theme.WearIntervalTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -19,6 +20,7 @@ class MainActivity : ComponentActivity() {
 
   @Inject lateinit var configurationRepository: ConfigurationRepository
   @Inject lateinit var timerRepository: TimerRepository
+  @Inject lateinit var selectConfigurationUseCase: SelectConfigurationUseCase
 
   override fun onCreate(savedInstanceState: Bundle?) {
     installSplashScreen()
@@ -48,9 +50,7 @@ class MainActivity : ComponentActivity() {
           val configurations = configurationRepository.recentConfigurations.value
           val selectedConfig = configurations.find { it.id == configId }
           if (selectedConfig != null) {
-            // Stop any running timer and select the new configuration
-            timerRepository.stopTimer()
-            configurationRepository.selectRecentConfiguration(selectedConfig)
+            selectConfigurationUseCase.selectConfigurationAndStopTimer(selectedConfig)
           }
         } catch (e: Exception) {
           // Silently handle errors - app will still function normally

@@ -118,6 +118,7 @@ class WearIntervalTileService : TileService() {
             ActionBuilders.AndroidActivity.Builder()
               .setClassName(MainActivity::class.java.name)
               .setPackageName(packageName)
+              .addKeyToExtraMapping("config_id", ActionBuilders.stringExtra(configuration.id))
               .build()
           )
           .build()
