@@ -96,6 +96,7 @@ class TimerService : Service() {
         totalLaps = config.laps,
         isPaused = false,
         configuration = config,
+        intervalStartTime = System.currentTimeMillis(),
       )
 
     // Update notification when timer state changes
@@ -130,6 +131,7 @@ class TimerService : Service() {
         currentState.copy(
           phase = pausedFromPhase,
           isPaused = false,
+          intervalStartTime = System.currentTimeMillis(),
         )
       timerNotificationManager.updateTimerNotification(_timerState.value)
       startCountdown()
@@ -255,6 +257,7 @@ class TimerService : Service() {
         currentState.copy(
           phase = TimerPhase.Resting,
           timeRemaining = config.restDuration,
+          intervalStartTime = System.currentTimeMillis(),
         )
       timerNotificationManager.updateTimerNotification(_timerState.value)
 
@@ -294,6 +297,7 @@ class TimerService : Service() {
           phase = TimerPhase.Running,
           timeRemaining = config.workDuration,
           currentLap = nextLap,
+          intervalStartTime = System.currentTimeMillis(),
         )
       timerNotificationManager.updateTimerNotification(_timerState.value)
 
@@ -360,6 +364,7 @@ class TimerService : Service() {
         currentState.copy(
           phase = pausedFromPhase,
           isPaused = false,
+          intervalStartTime = System.currentTimeMillis(),
         )
       timerNotificationManager.updateTimerNotification(_timerState.value)
       startCountdown()

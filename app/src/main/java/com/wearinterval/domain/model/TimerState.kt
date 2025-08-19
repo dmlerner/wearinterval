@@ -10,6 +10,7 @@ data class TimerState(
   val totalLaps: Int,
   val isPaused: Boolean = false,
   val configuration: TimerConfiguration,
+  val intervalStartTime: Long = System.currentTimeMillis(),
 ) {
   val isRunning: Boolean
     get() = phase == TimerPhase.Running || phase == TimerPhase.Resting

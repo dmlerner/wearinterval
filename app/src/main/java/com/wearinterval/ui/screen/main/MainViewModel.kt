@@ -7,6 +7,7 @@ import com.wearinterval.domain.repository.SettingsRepository
 import com.wearinterval.domain.repository.TimerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -37,8 +38,27 @@ constructor(
         // When stopped, always use configuration values to avoid race conditions
         val displayLaps = if (timerState.isStopped) configuration.laps else timerState.totalLaps
         val displayCurrentLap = if (timerState.isStopped) 1 else timerState.currentLap
+
+        // Calculate accurate time remaining using system time for running states
         val displayTimeRemaining =
-          if (timerState.isStopped) configuration.workDuration else timerState.timeRemaining
+          when {
+            timerState.isStopped -> configuration.workDuration
+            timerState.isPaused -> timerState.timeRemaining
+            timerState.isRunning || timerState.isResting -> {
+              val currentTime = System.currentTimeMillis()
+              val elapsedTime = (currentTime - timerState.intervalStartTime).milliseconds
+              val totalIntervalDuration =
+                if (timerState.isResting) {
+                  timerState.configuration.restDuration
+                } else {
+                  timerState.configuration.workDuration
+                }
+              // Ensure time remaining never goes negative
+              val remaining = totalIntervalDuration - elapsedTime
+              if (remaining < 0.milliseconds) 0.milliseconds else remaining
+            }
+            else -> timerState.timeRemaining
+          }
 
         MainUiState(
           isLoading = false,
