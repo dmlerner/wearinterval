@@ -339,7 +339,15 @@ class TimerService : Service() {
     currentState: TimerState,
     settings: NotificationSettings
   ) {
-    if (currentState.currentLap > currentState.totalLaps && !currentState.isInfinite) {
+    // Check if workout is complete: either currentLap > totalLaps OR currentLap == totalLaps and
+    // we're at the end of the final lap
+    val isWorkoutComplete =
+      !currentState.isInfinite &&
+        (currentState.currentLap > currentState.totalLaps ||
+          (currentState.currentLap == currentState.totalLaps &&
+            pausedFromPhase == TimerPhase.Running))
+
+    if (isWorkoutComplete) {
       // Workout is complete, stop timer
       stopTimer()
     } else {

@@ -1,6 +1,7 @@
 package com.wearinterval
 
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -26,6 +27,9 @@ class MainActivity : ComponentActivity() {
     // Handle tile configuration selection
     handleTileIntent()
 
+    // Observe timer state to manage screen on/off
+    observeTimerStateForScreenManagement()
+
     setContent { WearIntervalTheme { WearIntervalNavigation() } }
   }
 
@@ -50,6 +54,18 @@ class MainActivity : ComponentActivity() {
           }
         } catch (e: Exception) {
           // Silently handle errors - app will still function normally
+        }
+      }
+    }
+  }
+
+  private fun observeTimerStateForScreenManagement() {
+    lifecycleScope.launch {
+      timerRepository.timerState.collect { timerState ->
+        if (timerState.isRunning && !timerState.isPaused) {
+          window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+          window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
       }
     }
