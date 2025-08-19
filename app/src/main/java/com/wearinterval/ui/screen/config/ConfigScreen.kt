@@ -33,6 +33,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.material.MaterialTheme
 import com.wearinterval.ui.component.ScrollablePicker
 import com.wearinterval.util.Constants
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -93,7 +94,7 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
             val selectedLaps = ConfigPickerValues.LAPS_VALUES[index]
             onEvent(ConfigEvent.SetLaps(selectedLaps))
           },
-          onSingleTap = { onEvent(ConfigEvent.ResetLaps) },
+          onSingleTap = { onEvent(ConfigEvent.SetLaps(1)) },
           onLongPress = { onEvent(ConfigEvent.SetLapsToInfinite) },
           modifier =
             Modifier.weight(1f).focusRequester(lapsFocusRequester).clickable { selectedColumn = 0 },
@@ -126,10 +127,7 @@ internal fun ConfigContent(uiState: ConfigUiState, onEvent: (ConfigEvent) -> Uni
             onEvent(ConfigEvent.SetRestDuration(selectedDuration))
           },
           onSingleTap = { onEvent(ConfigEvent.ResetRest) },
-          onLongPress = {
-            // Debug: Long press rest to clear data
-            onEvent(ConfigEvent.ClearAllData)
-          },
+          onLongPress = { onEvent(ConfigEvent.SetRestDuration(5.minutes)) },
           modifier =
             Modifier.weight(1f).focusRequester(restDurationFocusRequester).clickable {
               selectedColumn = 2

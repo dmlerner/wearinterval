@@ -223,8 +223,8 @@ private fun TimerDisplay(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
               } else {
                 when {
                   uiState.isStopped -> {
-                    // Show configured laps when stopped
-                    "${uiState.configuration.laps}"
+                    // Show 1/total format when stopped (ready to start)
+                    "1/${uiState.configuration.laps}"
                   }
                   else -> {
                     // Show current progress when running or paused
