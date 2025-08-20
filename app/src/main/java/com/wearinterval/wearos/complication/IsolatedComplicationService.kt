@@ -1,10 +1,12 @@
 package com.wearinterval.wearos.complication
 
 import android.app.PendingIntent
+import android.content.ComponentName
 import android.content.Intent
 import android.util.Log
 import androidx.wear.watchface.complications.data.*
 import androidx.wear.watchface.complications.datasource.ComplicationDataSourceService
+import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester
 import androidx.wear.watchface.complications.datasource.ComplicationRequest
 import com.wearinterval.MainActivity
 import com.wearinterval.domain.repository.ConfigurationRepository
@@ -16,6 +18,7 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -40,6 +43,7 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
   private lateinit var timerRepository: TimerRepository
   private lateinit var configRepository: ConfigurationRepository
   private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+  private lateinit var updateRequester: ComplicationDataSourceUpdateRequester
 
   override fun onCreate() {
     super.onCreate()
@@ -55,6 +59,14 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
 
       timerRepository = entryPoint.getTimerRepository()
       configRepository = entryPoint.getConfigurationRepository()
+      updateRequester =
+        ComplicationDataSourceUpdateRequester.create(
+          applicationContext,
+          ComponentName(applicationContext, IsolatedComplicationService::class.java)
+        )
+
+      // Observe timer state changes and push updates to complications
+      observeTimerStateChanges()
 
       Log.d(TAG, "Hilt EntryPoint injection successful")
     } catch (e: Exception) {
@@ -70,6 +82,12 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
   override fun onComplicationDeactivated(complicationInstanceId: Int) {
     super.onComplicationDeactivated(complicationInstanceId)
     Log.d(TAG, "=== Complication DEACTIVATED: id=$complicationInstanceId ===")
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+    serviceScope.cancel()
+    Log.d(TAG, "=== IsolatedComplicationService destroyed ===")
   }
 
   override fun onComplicationRequest(
@@ -90,6 +108,15 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
         val timerState = timerRepository.timerState.first()
         val config = configRepository.currentConfiguration.first()
 
+        Log.d(
+          TAG,
+          "Timer state: phase=${timerState.phase}, timeRemaining=${timerState.timeRemaining.inWholeSeconds}s, lap=${timerState.currentLap}/${timerState.totalLaps}"
+        )
+        Log.d(
+          TAG,
+          "Config: work=${config.workDuration.inWholeSeconds}s, rest=${config.restDuration.inWholeSeconds}s"
+        )
+
         val complicationData =
           when (request.complicationType) {
             ComplicationType.SHORT_TEXT -> createShortTextComplication(timerState)
@@ -103,6 +130,23 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
       } catch (e: Exception) {
         Log.e(TAG, "ERROR fetching timer data", e)
         callback.onComplicationData(createFallbackData())
+      }
+    }
+  }
+
+  private fun observeTimerStateChanges() {
+    serviceScope.launch {
+      try {
+        timerRepository.timerState.collect { timerState ->
+          Log.d(
+            TAG,
+            "Timer state changed: phase=${timerState.phase}, remaining=${timerState.timeRemaining.inWholeSeconds}s"
+          )
+          // Request complication updates when timer state changes
+          updateRequester.requestUpdateAll()
+        }
+      } catch (e: Exception) {
+        Log.e(TAG, "Error observing timer state changes", e)
       }
     }
   }

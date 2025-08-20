@@ -9,6 +9,7 @@ import com.wearinterval.data.service.TimerService
 import com.wearinterval.domain.model.TimerState
 import com.wearinterval.domain.repository.ConfigurationRepository
 import com.wearinterval.domain.repository.TimerRepository
+import dagger.Lazy
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.UUID
 import javax.inject.Inject
@@ -34,7 +35,7 @@ class TimerRepositoryImpl
 @Inject
 constructor(
   @ApplicationContext private val context: Context,
-  private val configurationRepository: ConfigurationRepository,
+  private val configurationRepository: Lazy<ConfigurationRepository>,
 ) : TimerRepository {
 
   private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -50,7 +51,7 @@ constructor(
         if (bound && timerService != null) {
           combine(
             timerService!!.timerState,
-            configurationRepository.currentConfiguration,
+            configurationRepository.get().currentConfiguration,
           ) { serviceState, config ->
             // Always ensure stopped state uses current configuration
             if (serviceState.isStopped) {
@@ -60,7 +61,9 @@ constructor(
             }
           }
         } else {
-          configurationRepository.currentConfiguration.map { config -> TimerState.stopped(config) }
+          configurationRepository.get().currentConfiguration.map { config ->
+            TimerState.stopped(config)
+          }
         }
       }
       .stateIn(
@@ -76,7 +79,7 @@ constructor(
         timerService = binder.getService()
         // Force service to sync with current configuration immediately
         repositoryScope.launch {
-          val currentConfig = configurationRepository.currentConfiguration.value
+          val currentConfig = configurationRepository.get().currentConfiguration.value
           timerService?.syncConfiguration(currentConfig)
         }
         _isServiceBound.value = true
@@ -95,15 +98,17 @@ constructor(
   override suspend fun startTimer(): Result<Unit> {
     return try {
       ensureServiceBound()
-      val config = configurationRepository.currentConfiguration.value
+      val config = configurationRepository.get().currentConfiguration.value
 
       // Save configuration to history when timer starts
-      configurationRepository.saveToHistory(
-        config.copy(
-          id = UUID.randomUUID().toString(), // Generate new ID to create unique history entry
-          lastUsed = System.currentTimeMillis(),
-        ),
-      )
+      configurationRepository
+        .get()
+        .saveToHistory(
+          config.copy(
+            id = UUID.randomUUID().toString(), // Generate new ID to create unique history entry
+            lastUsed = System.currentTimeMillis(),
+          ),
+        )
 
       timerService?.startTimer(config)
       Result.success(Unit)
