@@ -58,8 +58,7 @@
 
         <!-- Wear OS Integration Services - Phase 7 -->
         
-        <!-- Tile Service (temporarily disabled for complication testing) -->
-        <!--
+        <!-- Tile Service -->
         <service
             android:name=".wearos.tile.WearIntervalTileService"
             android:exported="true"
@@ -72,7 +71,6 @@
                 android:name="androidx.wear.tiles.PREVIEW"
                 android:resource="@drawable/tile_preview" />
         </service>
-        -->
 
         <!-- Isolated Complication Service (working timer with manual DI) -->
         <service
