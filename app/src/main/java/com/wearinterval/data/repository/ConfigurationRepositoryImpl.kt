@@ -40,7 +40,7 @@ constructor(
       .map { entities -> entities.map { it.toDomain() } }
       .stateIn(
         scope = repositoryScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = SharingStarted.Eagerly,
         initialValue = emptyList(),
       )
 
