@@ -82,7 +82,8 @@ class SelectConfigurationUseCaseTest {
     // Then
     assertThat(result.isFailure).isTrue()
     assertThat(result.exceptionOrNull()).isEqualTo(exception)
-    coVerify { mockTimerRepository.stopTimer() }
+    // Timer should not be stopped if configuration selection fails (fail fast)
+    coVerify(exactly = 0) { mockTimerRepository.stopTimer() }
     coVerify { mockConfigurationRepository.selectRecentConfiguration(testConfig) }
   }
 }

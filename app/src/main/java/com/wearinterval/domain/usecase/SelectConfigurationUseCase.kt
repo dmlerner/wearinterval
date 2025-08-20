@@ -15,10 +15,12 @@ constructor(
 ) {
   suspend fun selectConfigurationAndStopTimer(config: TimerConfiguration): Result<Unit> {
     return try {
-      val stopResult = timerRepository.stopTimer()
-      if (stopResult.isFailure) return stopResult
+      // Set configuration first to minimize UI state changes
+      val configResult = configurationRepository.selectRecentConfiguration(config)
+      if (configResult.isFailure) return configResult
 
-      configurationRepository.selectRecentConfiguration(config)
+      // Then stop timer - this ensures UI sees final state in one update
+      timerRepository.stopTimer()
     } catch (e: Exception) {
       Result.failure(e)
     }
