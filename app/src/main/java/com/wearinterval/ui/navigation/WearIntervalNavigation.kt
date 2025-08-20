@@ -24,10 +24,10 @@ import kotlinx.coroutines.launch
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun WearIntervalNavigation() {
+fun WearIntervalNavigation(initialPage: Int = 1) {
   val pagerState =
     rememberPagerState(
-      initialPage = 1, // Start on Main screen
+      initialPage = initialPage, // Start on specified screen
       pageCount = { 4 }, // History, Main, Config, Settings
     )
 

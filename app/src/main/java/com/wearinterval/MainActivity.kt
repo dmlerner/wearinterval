@@ -32,13 +32,22 @@ class MainActivity : ComponentActivity() {
     // Observe timer state to manage screen on/off
     observeTimerStateForScreenManagement()
 
-    setContent { WearIntervalTheme { WearIntervalNavigation() } }
+    setContent {
+      WearIntervalTheme { WearIntervalNavigation(initialPage = getInitialNavigationPage()) }
+    }
   }
 
   override fun onNewIntent(intent: android.content.Intent) {
     super.onNewIntent(intent)
     setIntent(intent)
     handleTileIntent()
+  }
+
+  private fun getInitialNavigationPage(): Int {
+    return when (intent?.getStringExtra("navigate_to")) {
+      "main" -> 1 // Main screen
+      else -> 1 // Default to main screen for tile navigation
+    }
   }
 
   private fun handleTileIntent() {
