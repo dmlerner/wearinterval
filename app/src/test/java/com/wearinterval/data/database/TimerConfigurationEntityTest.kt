@@ -29,7 +29,7 @@ class TimerConfigurationEntityTest {
     assertThat(domainModel.laps).isEqualTo(10)
     assertThat(domainModel.workDuration).isEqualTo(90.seconds)
     assertThat(domainModel.restDuration).isEqualTo(30.seconds)
-    assertThat(domainModel.lastUsed).isEqualTo(1234567890L)
+    assertThat(domainModel.lastUsed).isEqualTo(Instant.ofEpochMilli(1234567890L))
   }
 
   @Test

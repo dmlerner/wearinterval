@@ -163,8 +163,11 @@ class ConfigurationRepositoryTest {
   fun `updateConfiguration updates timestamp`() = runTest {
     // Given
     val originalTime = customConfig.lastUsed
+    val newTime = Instant.ofEpochMilli(2000L)
+    every { mockTimeProvider.now() } returns newTime
     coEvery { mockDataStoreManager.updateCurrentConfiguration(any()) } returns Unit
     coEvery { mockConfigurationDao.insertConfiguration(any()) } returns Unit
+    coEvery { mockConfigurationDao.findConfigurationByValues(any(), any(), any()) } returns null
 
     // When
     repository.updateConfiguration(customConfig)
@@ -172,7 +175,7 @@ class ConfigurationRepositoryTest {
     // Then
     coVerify {
       mockDataStoreManager.updateCurrentConfiguration(
-        match { config -> config.lastUsed > originalTime },
+        match { config -> config.lastUsed == newTime },
       )
     }
   }
@@ -218,6 +221,8 @@ class ConfigurationRepositoryTest {
   fun `selectRecentConfiguration updates DataStore and DAO timestamp`() = runTest {
     // Given
     val originalTime = customConfig.lastUsed
+    val newTime = Instant.ofEpochMilli(3000L)
+    every { mockTimeProvider.now() } returns newTime
     coEvery { mockDataStoreManager.updateCurrentConfiguration(any()) } returns Unit
     coEvery { mockConfigurationDao.updateLastUsed(any(), any()) } returns Unit
     coEvery { mockConfigurationDao.findConfigurationByValues(any(), any(), any()) } returns null
@@ -230,14 +235,14 @@ class ConfigurationRepositoryTest {
 
     coVerify {
       mockDataStoreManager.updateCurrentConfiguration(
-        match { config -> config.lastUsed.isAfter(originalTime) },
+        match { config -> config.lastUsed == newTime },
       )
     }
 
     coVerify {
       mockConfigurationDao.updateLastUsed(
         customConfig.id,
-        match { timestamp -> timestamp > originalTime.toEpochMilli() },
+        newTime.toEpochMilli(),
       )
     }
   }
@@ -296,7 +301,9 @@ class ConfigurationRepositoryTest {
         restDuration = 15.seconds,
         lastUsed = Instant.ofEpochMilli(2000L),
       )
+    val newTime = Instant.ofEpochMilli(4000L)
 
+    every { mockTimeProvider.now() } returns newTime
     coEvery { mockConfigurationDao.findConfigurationByValues(5, 45, 15) } returns existingConfig
     coEvery { mockConfigurationDao.insertConfiguration(any()) } returns Unit
     coEvery { mockDataStoreManager.updateCurrentConfiguration(any()) } returns Unit
@@ -321,7 +328,7 @@ class ConfigurationRepositoryTest {
           entity.laps == 5 &&
             entity.workDurationSeconds == 45L &&
             entity.restDurationSeconds == 15L &&
-            entity.lastUsed > 2000L // Updated timestamp
+            entity.lastUsed == newTime.toEpochMilli() // Updated timestamp
         },
       )
     }
@@ -381,7 +388,9 @@ class ConfigurationRepositoryTest {
           restDuration = 15.seconds,
           lastUsed = Instant.ofEpochMilli(2000L),
         )
+      val newTime = Instant.ofEpochMilli(5000L)
 
+      every { mockTimeProvider.now() } returns newTime
       coEvery { mockConfigurationDao.findConfigurationByValues(5, 45, 15) } returns existingConfig
       coEvery { mockConfigurationDao.updateLastUsed(any(), any()) } returns Unit
       coEvery { mockDataStoreManager.updateCurrentConfiguration(any()) } returns Unit
@@ -396,7 +405,7 @@ class ConfigurationRepositoryTest {
       coVerify {
         mockConfigurationDao.updateLastUsed(
           "existing-id", // Uses existing ID
-          match { timestamp -> timestamp > 2000L },
+          newTime.toEpochMilli(),
         )
       }
     }
