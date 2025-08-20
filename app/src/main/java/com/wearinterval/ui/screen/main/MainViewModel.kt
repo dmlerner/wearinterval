@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.wearinterval.domain.repository.ConfigurationRepository
 import com.wearinterval.domain.repository.SettingsRepository
 import com.wearinterval.domain.repository.TimerRepository
+import com.wearinterval.util.TimeProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
@@ -21,6 +22,7 @@ constructor(
   private val timerRepository: TimerRepository,
   private val configurationRepository: ConfigurationRepository,
   private val settingsRepository: SettingsRepository,
+  private val timeProvider: TimeProvider,
 ) : ViewModel() {
 
   private val flashScreen = MutableStateFlow(false)
@@ -45,7 +47,7 @@ constructor(
             timerState.isStopped -> configuration.workDuration
             timerState.isPaused -> timerState.timeRemaining
             timerState.isRunning || timerState.isResting -> {
-              val currentTime = System.currentTimeMillis()
+              val currentTime = timeProvider.currentTimeMillis()
               val elapsedTime = (currentTime - timerState.intervalStartTime).milliseconds
               val totalIntervalDuration =
                 if (timerState.isResting) {

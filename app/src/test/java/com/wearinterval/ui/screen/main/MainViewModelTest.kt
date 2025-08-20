@@ -9,6 +9,7 @@ import com.wearinterval.domain.model.TimerState
 import com.wearinterval.domain.repository.ConfigurationRepository
 import com.wearinterval.domain.repository.SettingsRepository
 import com.wearinterval.domain.repository.TimerRepository
+import com.wearinterval.util.FakeTimeProvider
 import com.wearinterval.util.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -32,6 +33,7 @@ class MainViewModelTest {
   private val mockTimerRepository = mockk<TimerRepository>(relaxed = true)
   private val mockConfigurationRepository = mockk<ConfigurationRepository>()
   private val mockSettingsRepository = mockk<SettingsRepository>()
+  private val fakeTimeProvider = FakeTimeProvider()
 
   private val timerStateFlow = MutableStateFlow(TimerState.stopped())
   private val configurationFlow = MutableStateFlow(TimerConfiguration.DEFAULT)
@@ -58,6 +60,7 @@ class MainViewModelTest {
         timerRepository = mockTimerRepository,
         configurationRepository = mockConfigurationRepository,
         settingsRepository = mockSettingsRepository,
+        timeProvider = fakeTimeProvider,
       )
   }
 
@@ -117,15 +120,21 @@ class MainViewModelTest {
       // Skip initial state
       awaitItem()
 
+      // Set up fake time: interval started 15 seconds ago (60s - 15s = 45s remaining)
+      val currentTime = 1000L
+      val intervalStartTime = currentTime - 15_000L // 15 seconds ago
+      fakeTimeProvider.setCurrentTimeMillis(currentTime)
+
       // Update timer state to running
       val runningState =
         TimerState(
           phase = TimerPhase.Running,
-          timeRemaining = 45.seconds,
+          timeRemaining = 45.seconds, // This value will be recalculated based on intervalStartTime
           currentLap = 3,
           totalLaps = 10,
           isPaused = false,
           configuration = TimerConfiguration.DEFAULT,
+          intervalStartTime = intervalStartTime,
         )
       timerStateFlow.value = runningState
 
@@ -323,6 +332,7 @@ class MainViewModelTest {
         timerRepository = mockTimerRepository,
         configurationRepository = mockConfigurationRepository,
         settingsRepository = mockSettingsRepository,
+        timeProvider = FakeTimeProvider(),
       )
 
     // Allow ViewModels and flows to initialize
@@ -403,6 +413,11 @@ class MainViewModelTest {
       // Skip initial states
       awaitItem()
 
+      // Set up fake time: work interval started 15 seconds ago (60s - 15s = 45s remaining)
+      val currentTime = 2000L
+      val intervalStartTime = currentTime - 15_000L // 15 seconds ago
+      fakeTimeProvider.setCurrentTimeMillis(currentTime)
+
       // Test work interval progress
       timerStateFlow.value =
         TimerState(
@@ -412,6 +427,7 @@ class MainViewModelTest {
           totalLaps = 10,
           isPaused = false,
           configuration = config,
+          intervalStartTime = intervalStartTime,
         )
 
       var uiState = awaitItem()
@@ -422,7 +438,11 @@ class MainViewModelTest {
       // remaining
       assertThat(uiState.overallProgressPercentage).isWithin(0.01f).of(0.775f)
 
-      // Test rest interval progress
+      // Test rest interval progress: want 20s remaining out of 30s total (10s elapsed)
+      val restCurrentTime = currentTime + 20_000L // Move to a different time
+      val restStartTime = restCurrentTime - 10_000L // Rest started 10 seconds ago
+      fakeTimeProvider.setCurrentTimeMillis(restCurrentTime)
+
       timerStateFlow.value =
         TimerState(
           phase = TimerPhase.Resting,
@@ -431,6 +451,7 @@ class MainViewModelTest {
           totalLaps = 10,
           isPaused = false,
           configuration = config,
+          intervalStartTime = restStartTime,
         )
 
       uiState = awaitItem()
@@ -654,6 +675,11 @@ class MainViewModelTest {
       // Skip initial state
       awaitItem()
 
+      // Set up fake time: interval started 35 seconds ago (60s - 35s = 25s remaining)
+      val currentTime = 3000L
+      val intervalStartTime = currentTime - 35_000L // 35 seconds ago
+      fakeTimeProvider.setCurrentTimeMillis(currentTime)
+
       // Given - timer is running with specific state
       timerStateFlow.value =
         TimerState(
@@ -663,6 +689,7 @@ class MainViewModelTest {
           totalLaps = 8,
           isPaused = false,
           configuration = TimerConfiguration.DEFAULT,
+          intervalStartTime = intervalStartTime,
         )
 
       var uiState = awaitItem()

@@ -13,6 +13,7 @@ import com.wearinterval.domain.repository.TimerRepository
 import com.wearinterval.ui.screen.config.ConfigEvent
 import com.wearinterval.ui.screen.config.ConfigViewModel
 import com.wearinterval.ui.screen.main.MainViewModel
+import com.wearinterval.util.FakeTimeProvider
 import com.wearinterval.util.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.every
@@ -75,7 +76,13 @@ class ConfigToMainIntegrationTest {
 
     // Create ViewModels
     configViewModel = ConfigViewModel(configurationRepository, timerRepository)
-    mainViewModel = MainViewModel(timerRepository, configurationRepository, settingsRepository)
+    mainViewModel =
+      MainViewModel(
+        timerRepository,
+        configurationRepository,
+        settingsRepository,
+        FakeTimeProvider()
+      )
   }
 
   @Test

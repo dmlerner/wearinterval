@@ -7,6 +7,8 @@ import android.os.Vibrator
 import androidx.room.Room
 import com.wearinterval.data.database.AppDatabase
 import com.wearinterval.data.database.ConfigurationDao
+import com.wearinterval.util.SystemTimeProvider
+import com.wearinterval.util.TimeProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -50,5 +52,11 @@ object DataModule {
   @Singleton
   fun providePowerManager(@ApplicationContext context: Context): PowerManager {
     return context.getSystemService(Context.POWER_SERVICE) as PowerManager
+  }
+
+  @Provides
+  @Singleton
+  fun provideTimeProvider(): TimeProvider {
+    return SystemTimeProvider()
   }
 }
