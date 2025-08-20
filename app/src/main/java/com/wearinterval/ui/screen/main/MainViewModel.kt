@@ -99,7 +99,8 @@ constructor(
       when {
         currentState.isStopped -> timerRepository.startTimer()
         currentState.isPaused -> timerRepository.resumeTimer()
-        currentState.isRunning || currentState.isResting -> timerRepository.pauseTimer()
+        currentState.isResting -> timerRepository.skipRest()
+        currentState.isRunning -> timerRepository.pauseTimer()
       }
     }
   }

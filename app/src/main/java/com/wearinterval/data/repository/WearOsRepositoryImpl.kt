@@ -97,16 +97,16 @@ constructor(
           when (timerState.phase) {
             TimerPhase.Stopped,
             TimerPhase.Paused -> android.R.drawable.ic_media_play
-            TimerPhase.Running,
-            TimerPhase.Resting -> android.R.drawable.ic_media_pause
+            TimerPhase.Running -> android.R.drawable.ic_media_pause
+            TimerPhase.Resting -> android.R.drawable.ic_media_next
             TimerPhase.AlarmActive -> android.R.drawable.ic_delete
           }
         val description =
           when (timerState.phase) {
             TimerPhase.Stopped -> "Start timer"
             TimerPhase.Paused -> "Resume timer"
-            TimerPhase.Running,
-            TimerPhase.Resting -> "Pause timer"
+            TimerPhase.Running -> "Pause timer"
+            TimerPhase.Resting -> "Skip rest"
             TimerPhase.AlarmActive -> "Dismiss alarm"
           }
 

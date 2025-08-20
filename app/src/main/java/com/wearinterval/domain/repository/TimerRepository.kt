@@ -16,4 +16,6 @@ interface TimerRepository {
   suspend fun stopTimer(): Result<Unit>
 
   suspend fun dismissAlarm(): Result<Unit>
+
+  suspend fun skipRest(): Result<Unit>
 }

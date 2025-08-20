@@ -54,6 +54,7 @@ class MainViewModelTest {
     coEvery { mockTimerRepository.resumeTimer() } returns Result.success(Unit)
     coEvery { mockTimerRepository.stopTimer() } returns Result.success(Unit)
     coEvery { mockTimerRepository.dismissAlarm() } returns Result.success(Unit)
+    coEvery { mockTimerRepository.skipRest() } returns Result.success(Unit)
 
     viewModel =
       MainViewModel(
@@ -565,7 +566,7 @@ class MainViewModelTest {
   }
 
   @Test
-  fun `play pause clicked when resting pauses timer`() = runTest {
+  fun `play pause clicked when resting skips rest`() = runTest {
     // Given - service is bound and timer is in rest phase
     isServiceBoundFlow.value = true
     timerStateFlow.value =
@@ -582,7 +583,7 @@ class MainViewModelTest {
     viewModel.onEvent(MainEvent.PlayPauseClicked)
 
     // Then
-    coVerify { mockTimerRepository.pauseTimer() }
+    coVerify { mockTimerRepository.skipRest() }
   }
 
   @Test
@@ -811,6 +812,67 @@ class MainViewModelTest {
       uiState = awaitItem()
       assertThat(uiState.flashScreen).isFalse()
     }
+  }
+
+  @Test
+  fun `skip rest failure is handled gracefully`() = runTest {
+    // Given
+    coEvery { mockTimerRepository.skipRest() } returns
+      Result.failure(RuntimeException("Service error"))
+    isServiceBoundFlow.value = true
+    timerStateFlow.value =
+      TimerState(
+        phase = TimerPhase.Resting,
+        timeRemaining = 15.seconds,
+        currentLap = 1,
+        totalLaps = 5,
+        isPaused = false,
+        configuration = TimerConfiguration.DEFAULT,
+      )
+
+    // When
+    viewModel.onEvent(MainEvent.PlayPauseClicked)
+
+    // Then - should not crash, repository method still called
+    coVerify { mockTimerRepository.skipRest() }
+  }
+
+  @Test
+  fun `skip rest during different phases calls correct methods`() = runTest {
+    isServiceBoundFlow.value = true
+
+    // Test skip rest when in resting phase
+    timerStateFlow.value =
+      TimerState(
+        phase = TimerPhase.Resting,
+        timeRemaining = 10.seconds,
+        currentLap = 2,
+        totalLaps = 5,
+        isPaused = false,
+        configuration = TimerConfiguration.DEFAULT,
+      )
+
+    viewModel.onEvent(MainEvent.PlayPauseClicked)
+    coVerify { mockTimerRepository.skipRest() }
+
+    // Clear previous interactions
+    io.mockk.clearMocks(mockTimerRepository)
+    coEvery { mockTimerRepository.pauseTimer() } returns Result.success(Unit)
+
+    // Test pause when in running phase
+    timerStateFlow.value =
+      TimerState(
+        phase = TimerPhase.Running,
+        timeRemaining = 30.seconds,
+        currentLap = 2,
+        totalLaps = 5,
+        isPaused = false,
+        configuration = TimerConfiguration.DEFAULT,
+      )
+
+    viewModel.onEvent(MainEvent.PlayPauseClicked)
+    coVerify { mockTimerRepository.pauseTimer() }
+    coVerify(exactly = 0) { mockTimerRepository.skipRest() }
   }
 
   @Test

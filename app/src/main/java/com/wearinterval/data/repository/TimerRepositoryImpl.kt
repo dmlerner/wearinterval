@@ -152,6 +152,16 @@ constructor(
     }
   }
 
+  override suspend fun skipRest(): Result<Unit> {
+    return try {
+      ensureServiceBound()
+      timerService?.skipRest()
+      Result.success(Unit)
+    } catch (e: Exception) {
+      Result.failure(e)
+    }
+  }
+
   private fun bindToService() {
     val intent = Intent(context, TimerService::class.java)
     context.startService(intent)

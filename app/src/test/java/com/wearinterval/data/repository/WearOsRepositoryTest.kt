@@ -269,6 +269,29 @@ class WearOsRepositoryTest {
   }
 
   @Test
+  fun `getComplicationData Image returns correct icon for resting state`() = runTest {
+    // Given
+    val restingState =
+      TimerState(
+        phase = TimerPhase.Resting,
+        timeRemaining = 10.seconds,
+        currentLap = 2,
+        totalLaps = 5,
+        configuration = defaultConfig,
+      )
+    every { mockTimerRepository.timerState } returns MutableStateFlow(restingState)
+
+    // When
+    val data = repository.getComplicationData(ComplicationType.SmallImage)
+
+    // Then
+    assertThat(data).isInstanceOf(ComplicationData.Image::class.java)
+    val image = data as ComplicationData.Image
+    assertThat(image.iconRes).isEqualTo(android.R.drawable.ic_media_next)
+    assertThat(image.contentDescription).isEqualTo("Skip rest")
+  }
+
+  @Test
   fun `getComplicationData Image returns correct icon for alarm state`() = runTest {
     // Given
     val alarmState =

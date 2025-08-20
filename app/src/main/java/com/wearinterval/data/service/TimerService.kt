@@ -160,6 +160,17 @@ class TimerService : Service() {
     }
   }
 
+  fun skipRest() {
+    val currentState = _timerState.value
+    if (currentState.phase == TimerPhase.Resting) {
+      serviceScope.launch {
+        val settings = settingsRepository.notificationSettings.first()
+        // Immediately complete the rest period and advance to next lap
+        handleRestComplete(currentState, settings)
+      }
+    }
+  }
+
   // ================================
   // Private Timer Logic Methods
   // ================================

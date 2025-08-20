@@ -114,4 +114,15 @@ class TimerRepositoryTest {
     assertThat(result.isFailure).isTrue()
     assertThat(result.exceptionOrNull()).isInstanceOf(IllegalStateException::class.java)
   }
+
+  @Test
+  fun `skipRest fails when service not bound`() = runTest {
+    // When
+    val result = repository.skipRest()
+
+    // Then
+    assertThat(result.isFailure).isTrue()
+    assertThat(result.exceptionOrNull()).isInstanceOf(IllegalStateException::class.java)
+    assertThat(result.exceptionOrNull()?.message).contains("Timer service is not bound")
+  }
 }

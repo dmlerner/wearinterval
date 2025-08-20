@@ -348,6 +348,7 @@ private fun TimerControlsInside(uiState: MainUiState, onEvent: (MainEvent) -> Un
             when {
               uiState.isStopped -> "Play"
               uiState.isPaused -> "Resume"
+              uiState.isResting -> "Skip Rest"
               else -> "Pause"
             }
         },
@@ -366,16 +367,17 @@ private fun TimerControlsInside(uiState: MainUiState, onEvent: (MainEvent) -> Un
         painter =
           painterResource(
             id =
-              if (uiState.isRunning && !uiState.isPaused) {
-                R.drawable.ic_pause
-              } else {
-                R.drawable.ic_play_arrow
+              when {
+                uiState.isResting -> android.R.drawable.ic_media_next // Skip icon for rest periods
+                uiState.isRunning && !uiState.isPaused -> R.drawable.ic_pause
+                else -> R.drawable.ic_play_arrow
               },
           ),
         contentDescription =
           when {
             uiState.isStopped -> "Play"
             uiState.isPaused -> "Resume"
+            uiState.isResting -> "Skip Rest"
             else -> "Pause"
           },
         tint = Constants.Colors.PLAY_BUTTON_ICON,

@@ -102,6 +102,43 @@ class TimerServiceLogicTest {
   }
 
   @Test
+  fun skipRest_phase_transitions() {
+    // Test skip rest functionality logic
+    fun canSkipRest(currentPhase: TimerPhase): Boolean {
+      return currentPhase == TimerPhase.Resting
+    }
+
+    fun skipRestTransition(currentPhase: TimerPhase, currentLap: Int, totalLaps: Int): TimerPhase {
+      return if (canSkipRest(currentPhase)) {
+        if (currentLap < totalLaps) {
+          TimerPhase.Running // Move to next work interval
+        } else {
+          TimerPhase.AlarmActive // Workout complete
+        }
+      } else {
+        currentPhase // No change if not in rest phase
+      }
+    }
+
+    // Test can skip rest only during rest phase
+    assertThat(canSkipRest(TimerPhase.Resting)).isTrue()
+    assertThat(canSkipRest(TimerPhase.Running)).isFalse()
+    assertThat(canSkipRest(TimerPhase.Stopped)).isFalse()
+    assertThat(canSkipRest(TimerPhase.Paused)).isFalse()
+    assertThat(canSkipRest(TimerPhase.AlarmActive)).isFalse()
+
+    // Test skip rest transitions to next work interval
+    assertThat(skipRestTransition(TimerPhase.Resting, 2, 5)).isEqualTo(TimerPhase.Running)
+
+    // Test skip rest on final lap transitions to completion
+    assertThat(skipRestTransition(TimerPhase.Resting, 5, 5)).isEqualTo(TimerPhase.AlarmActive)
+
+    // Test skip rest has no effect when not in rest phase
+    assertThat(skipRestTransition(TimerPhase.Running, 2, 5)).isEqualTo(TimerPhase.Running)
+    assertThat(skipRestTransition(TimerPhase.Stopped, 1, 5)).isEqualTo(TimerPhase.Stopped)
+  }
+
+  @Test
   fun timeRemaining_calculation() {
     // Test time remaining calculation logic
     fun calculateTimeRemaining(
