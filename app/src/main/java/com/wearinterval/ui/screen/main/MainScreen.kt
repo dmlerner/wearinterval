@@ -67,15 +67,6 @@ private object MainScreenDefaults {
  * Calculates the total remaining time for the entire workout. This includes the current interval
  * time remaining plus all remaining intervals in remaining laps.
  */
-private fun calculateTotalConfiguredDuration(uiState: MainUiState): Duration {
-  return uiState.configuration.workDuration * uiState.configuration.laps +
-    if (uiState.configuration.restDuration > Duration.ZERO) {
-      uiState.configuration.restDuration * uiState.configuration.laps
-    } else {
-      Duration.ZERO
-    }
-}
-
 private fun calculateTotalRemainingTime(uiState: MainUiState): Duration {
   val currentIntervalRemaining = uiState.timeRemaining
 
@@ -279,12 +270,23 @@ private fun TimerDisplay(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
                 ""
               } else {
                 when {
-                  uiState.isStopped || uiState.isPaused -> {
-                    // Show total configured duration when stopped/paused to prevent flicker
-                    TimeUtils.formatDuration(calculateTotalConfiguredDuration(uiState))
+                  uiState.isStopped -> {
+                    // Show total configured duration when stopped
+                    val totalDuration =
+                      uiState.configuration.workDuration * uiState.configuration.laps +
+                        if (uiState.configuration.restDuration > Duration.ZERO) {
+                          uiState.configuration.restDuration * uiState.configuration.laps
+                        } else {
+                          Duration.ZERO
+                        }
+                    TimeUtils.formatDuration(totalDuration)
+                  }
+                  uiState.isPaused -> {
+                    // Show actual remaining duration when paused (accounts for elapsed time)
+                    TimeUtils.formatDuration(calculateTotalRemainingTime(uiState))
                   }
                   else -> {
-                    // Show remaining duration only when actively running
+                    // Show remaining duration when running or resting
                     TimeUtils.formatDuration(calculateTotalRemainingTime(uiState))
                   }
                 }

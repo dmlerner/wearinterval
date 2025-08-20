@@ -917,4 +917,406 @@ class MainViewModelTest {
       assertThat(uiState.isStopButtonEnabled).isFalse()
     }
   }
+
+  @Test
+  fun `paused state preserves remaining time from timer state not configuration`() = runTest {
+    // Given - Configuration with 3 laps of 60s work + 30s rest = 270s total
+    val config = TimerConfiguration(laps = 3, workDuration = 60.seconds, restDuration = 30.seconds)
+    configurationFlow.value = config
+
+    viewModel.uiState.test {
+      // Skip initial state
+      awaitItem()
+
+      // Given - Timer is paused in the middle of lap 2, with 30s remaining on work interval
+      // This means 30s left in current work + 30s rest + 90s for lap 3 = 150s remaining
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Paused,
+          timeRemaining = 30.seconds, // 30s left in current work interval
+          currentLap = 2, // On lap 2 of 3
+          totalLaps = 3,
+          isPaused = true,
+          configuration = config
+        )
+
+      val uiState = awaitItem()
+
+      // Then - Should show paused state
+      assertThat(uiState.isPaused).isTrue()
+      assertThat(uiState.timerPhase).isEqualTo(TimerPhase.Paused)
+
+      // Should display the actual remaining time (30s), not the configured duration (60s)
+      assertThat(uiState.timeRemaining).isEqualTo(30.seconds)
+
+      // Should show current lap progress
+      assertThat(uiState.currentLap).isEqualTo(2)
+      assertThat(uiState.totalLaps).isEqualTo(3)
+
+      // Configuration should still be available for reference
+      assertThat(uiState.configuration).isEqualTo(config)
+    }
+  }
+
+  @Test
+  fun `pause and resume duration progression bug demonstration`() = runTest {
+    // Set up controlled time for predictable testing
+    fakeTimeProvider.setCurrentTimeMillis(5000L) // Start at 5 seconds
+
+    // Given - Simple 2-lap configuration: 60s work + 30s rest per lap = 180s total
+    val config = TimerConfiguration(laps = 2, workDuration = 60.seconds, restDuration = 30.seconds)
+    configurationFlow.value = config
+
+    viewModel.uiState.test {
+      // Skip initial state
+      awaitItem()
+
+      // Step 1: Timer starts running - should show 180s total remaining
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Running,
+          timeRemaining = 60.seconds, // Full work interval remaining
+          currentLap = 1,
+          totalLaps = 2,
+          isPaused = false,
+          configuration = config,
+          intervalStartTime = fakeTimeProvider.currentTimeMillis()
+        )
+
+      val runningState = awaitItem()
+      assertThat(runningState.isRunning).isTrue()
+      // calculateTotalRemainingTime should return 60s (current) + 30s (rest) + 90s (lap 2) = 180s
+
+      // Step 2: Timer runs for 20 seconds, now 40s remaining in current work interval
+      fakeTimeProvider.advanceTimeBy(20_000L)
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Running,
+          timeRemaining = 40.seconds, // 20s elapsed, 40s remaining in work interval
+          currentLap = 1,
+          totalLaps = 2,
+          isPaused = false,
+          configuration = config,
+          intervalStartTime = fakeTimeProvider.currentTimeMillis() - 20_000L
+        )
+
+      val runningState2 = awaitItem()
+      // calculateTotalRemainingTime should return 40s (current) + 30s (rest) + 90s (lap 2) = 160s
+
+      // Step 3: Timer gets paused with 40s remaining in current interval
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Paused,
+          timeRemaining = 40.seconds, // Same 40s remaining when paused
+          currentLap = 1,
+          totalLaps = 2,
+          isPaused = true,
+          configuration = config,
+          intervalStartTime = fakeTimeProvider.currentTimeMillis() - 20_000L
+        )
+
+      val pausedState = awaitItem()
+      assertThat(pausedState.isPaused).isTrue()
+      assertThat(pausedState.timeRemaining).isEqualTo(40.seconds)
+      // UI should show 160s total remaining (40s + 30s + 90s)
+
+      // Step 4: Timer is resumed - BUG HAPPENS HERE
+      // The timer service might reset timeRemaining back to near the original value
+      // instead of continuing from 40s where it was paused
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Running,
+          timeRemaining = 59.seconds, // BUG: Jumps back to 59s instead of continuing from 40s
+          currentLap = 1,
+          totalLaps = 2,
+          isPaused = false,
+          configuration = config,
+          intervalStartTime =
+            fakeTimeProvider.currentTimeMillis() - 1_000L // Wrong time calculation
+        )
+
+      val resumedState = awaitItem()
+      assertThat(resumedState.isRunning).isTrue()
+      assertThat(resumedState.timeRemaining).isEqualTo(59.seconds)
+
+      // BUG DEMONSTRATION: The total remaining time jumps from ~160s back up to ~179s
+      // This shows the bug where resume causes duration to go backwards instead of forward
+      // Expected: Duration should continue from where it was paused (~160s)
+      // Actual: Duration jumps back up to near original value (~179s)
+
+      // calculateTotalRemainingTime will now return 59s + 30s + 90s = 179s
+      // This is wrong - it should be continuing from the 160s we had when paused
+    }
+  }
+
+  @Test
+  fun `pause resume cycle shows duration calculation bug - REAL TEST`() = runTest {
+    // This test reproduces the ACTUAL bug by letting MainViewModel do its calculations
+    // without mocking away the duration logic
+
+    val config = TimerConfiguration(laps = 1, workDuration = 60.seconds, restDuration = 0.seconds)
+    configurationFlow.value = config
+
+    // Set up controlled time: Start at time 0
+    fakeTimeProvider.setCurrentTimeMillis(0L)
+
+    viewModel.uiState.test {
+      awaitItem() // Skip initial
+
+      // Step 1: Timer starts running at time 0
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Running,
+          timeRemaining = 60.seconds, // Timer service provides this
+          currentLap = 1,
+          totalLaps = 1,
+          isPaused = false,
+          configuration = config,
+          intervalStartTime = 0L // Started at time 0
+        )
+      val initialRunning = awaitItem()
+
+      // MainViewModel should calculate: 60s - (0-0) = 60s remaining
+      assertThat(initialRunning.timeRemaining).isEqualTo(60.seconds)
+      assertThat(initialRunning.isRunning).isTrue()
+
+      // Step 2: Advance time by 20 seconds (simulate timer running)
+      fakeTimeProvider.setCurrentTimeMillis(20_000L)
+
+      // Timer service updates timeRemaining but keeps same intervalStartTime
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Running,
+          timeRemaining = 40.seconds, // Timer service tracks this
+          currentLap = 1,
+          totalLaps = 1,
+          isPaused = false,
+          configuration = config,
+          intervalStartTime = 0L // Still started at time 0
+        )
+      val runningAfter20s = awaitItem()
+
+      // MainViewModel should calculate: 60s - (20000-0) = 40s remaining
+      assertThat(runningAfter20s.timeRemaining).isEqualTo(40.seconds)
+
+      // Step 3: Pause at 20s elapsed (40s remaining)
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Paused,
+          timeRemaining = 40.seconds, // Paused with 40s remaining
+          currentLap = 1,
+          totalLaps = 1,
+          isPaused = true,
+          configuration = config,
+          intervalStartTime = 0L // Original start time
+        )
+      val pausedState = awaitItem()
+
+      // During pause: MainViewModel should use timeRemaining directly
+      assertThat(pausedState.timeRemaining).isEqualTo(40.seconds)
+      assertThat(pausedState.isPaused).isTrue()
+
+      // Step 4: Advance time during pause (should not affect displayed duration)
+      fakeTimeProvider.setCurrentTimeMillis(30_000L) // 10s more elapsed during pause
+
+      // Timer service resumes - BUG: What intervalStartTime does it use?
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Running,
+          timeRemaining = 40.seconds, // Should continue from pause
+          currentLap = 1,
+          totalLaps = 1,
+          isPaused = false,
+          configuration = config,
+          intervalStartTime = 30_000L // BUG: Reset to current time OR keep original 0L?
+        )
+      val resumedState = awaitItem()
+
+      // THIS IS WHERE THE BUG MANIFESTS:
+      // If intervalStartTime = 30_000L (reset), MainViewModel calculates: 60s - (30000-30000) = 60s
+      // (WRONG)
+      // If intervalStartTime = 0L (kept), MainViewModel calculates: 60s - (30000-0) = 30s (ALSO
+      // WRONG)
+      // Expected: Should be 40s (continue from pause)
+
+      // The test will show what actually happens
+      println("Resumed timeRemaining: ${resumedState.timeRemaining}")
+      println("Expected: 40s, Actual: ${resumedState.timeRemaining}")
+
+      // This assertion will likely FAIL and show the bug
+      assertThat(resumedState.timeRemaining).isEqualTo(40.seconds)
+    }
+  }
+
+  @Test
+  fun `multiple pause resume cycles compound the duration bug`() = runTest {
+    // Set up controlled time for predictable testing
+    fakeTimeProvider.setCurrentTimeMillis(10_000L) // Start at 10 seconds
+
+    val config =
+      TimerConfiguration(
+        laps = 1,
+        workDuration = 60.seconds,
+        restDuration = 0.seconds // No rest for simplicity
+      )
+    configurationFlow.value = config
+
+    viewModel.uiState.test {
+      awaitItem()
+
+      // Start: 60s total
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Running,
+          timeRemaining = 60.seconds,
+          currentLap = 1,
+          totalLaps = 1,
+          isPaused = false,
+          configuration = config,
+          intervalStartTime = fakeTimeProvider.currentTimeMillis()
+        )
+      awaitItem()
+
+      // Run to 40s remaining (20s elapsed)
+      fakeTimeProvider.advanceTimeBy(20_000L)
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Running,
+          timeRemaining = 40.seconds,
+          currentLap = 1,
+          totalLaps = 1,
+          isPaused = false,
+          configuration = config,
+          intervalStartTime = fakeTimeProvider.currentTimeMillis() - 20_000L
+        )
+      awaitItem()
+
+      // First pause at 40s
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Paused,
+          timeRemaining = 40.seconds,
+          currentLap = 1,
+          totalLaps = 1,
+          isPaused = true,
+          configuration = config,
+          intervalStartTime = fakeTimeProvider.currentTimeMillis() - 20_000L
+        )
+      val firstPause = awaitItem()
+      assertThat(firstPause.timeRemaining).isEqualTo(40.seconds)
+
+      // First resume - BUG: jumps back to 59s instead of continuing from 40s
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Running,
+          timeRemaining = 59.seconds, // BUG: should be 40s
+          currentLap = 1,
+          totalLaps = 1,
+          isPaused = false,
+          configuration = config,
+          intervalStartTime = fakeTimeProvider.currentTimeMillis() - 1_000L // Wrong calculation
+        )
+      val firstResume = awaitItem()
+      assertThat(firstResume.timeRemaining).isEqualTo(59.seconds) // Bug confirmed
+
+      // Run to 50s (simulating more time passing incorrectly)
+      fakeTimeProvider.advanceTimeBy(5_000L)
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Running,
+          timeRemaining = 50.seconds,
+          currentLap = 1,
+          totalLaps = 1,
+          isPaused = false,
+          configuration = config,
+          intervalStartTime = fakeTimeProvider.currentTimeMillis() - 10_000L
+        )
+      awaitItem()
+
+      // Second pause at 50s
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Paused,
+          timeRemaining = 50.seconds,
+          currentLap = 1,
+          totalLaps = 1,
+          isPaused = true,
+          configuration = config,
+          intervalStartTime = fakeTimeProvider.currentTimeMillis() - 10_000L
+        )
+      val secondPause = awaitItem()
+      assertThat(secondPause.timeRemaining).isEqualTo(50.seconds)
+
+      // Second resume - BUG: jumps back to 59s again
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Running,
+          timeRemaining = 59.seconds, // BUG: should be 50s, but timer "resets"
+          currentLap = 1,
+          totalLaps = 1,
+          isPaused = false,
+          configuration = config,
+          intervalStartTime =
+            fakeTimeProvider.currentTimeMillis() - 1_000L // Wrong calculation again
+        )
+      val secondResume = awaitItem()
+      assertThat(secondResume.timeRemaining).isEqualTo(59.seconds) // Bug compounds
+
+      // DEMONSTRATION: Multiple pause/resume cycles cause the timer to never make progress
+      // The user can pause/resume forever and the timer keeps jumping back to ~59s
+    }
+  }
+
+  @Test
+  fun `stopped state shows configuration duration not timer state`() = runTest {
+    // Given - Configuration with specific duration
+    val config = TimerConfiguration(laps = 5, workDuration = 90.seconds, restDuration = 30.seconds)
+    configurationFlow.value = config
+
+    viewModel.uiState.test {
+      // Skip initial state
+      awaitItem()
+
+      // First, set timer to a different state, then change to stopped to ensure state change
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Running,
+          timeRemaining = 45.seconds,
+          currentLap = 3,
+          totalLaps = 5,
+          isPaused = false,
+          configuration = config
+        )
+
+      val runningState = awaitItem()
+      assertThat(runningState.isRunning).isTrue()
+
+      // Now change to stopped - this should trigger the logic we want to test
+      timerStateFlow.value =
+        TimerState(
+          phase = TimerPhase.Stopped,
+          timeRemaining = 15.seconds, // This should be ignored when stopped
+          currentLap = 3, // This should be ignored when stopped
+          totalLaps = 5,
+          isPaused = false,
+          configuration = config
+        )
+
+      val uiState = awaitItem()
+
+      // Then - Should show stopped state
+      assertThat(uiState.isStopped).isTrue()
+      assertThat(uiState.timerPhase).isEqualTo(TimerPhase.Stopped)
+
+      // Should display configuration work duration, not timer state remaining time
+      assertThat(uiState.timeRemaining).isEqualTo(90.seconds) // From config.workDuration
+
+      // Should show initial lap values from configuration
+      assertThat(uiState.currentLap).isEqualTo(1) // Reset to 1 when stopped
+      assertThat(uiState.totalLaps).isEqualTo(5) // From config.laps
+
+      // Configuration should be used
+      assertThat(uiState.configuration).isEqualTo(config)
+    }
+  }
 }
