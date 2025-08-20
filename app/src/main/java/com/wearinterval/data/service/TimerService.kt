@@ -63,8 +63,16 @@ class TimerService : Service() {
   override fun onBind(intent: Intent): IBinder = binder
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-    val notification = timerNotificationManager.createTimerNotification(_timerState.value)
-    startForeground(TimerNotificationManager.TIMER_NOTIFICATION_ID, notification)
+    // Only start foreground when timer is actually running to avoid crashes
+    if (!_timerState.value.isStopped) {
+      try {
+        val notification = timerNotificationManager.createTimerNotification(_timerState.value)
+        startForeground(TimerNotificationManager.TIMER_NOTIFICATION_ID, notification)
+      } catch (e: Exception) {
+        // If we can't start foreground, continue as regular service
+        android.util.Log.w("TimerService", "Could not start foreground service", e)
+      }
+    }
     return START_STICKY
   }
 
