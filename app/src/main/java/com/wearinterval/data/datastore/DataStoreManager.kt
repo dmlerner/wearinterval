@@ -12,6 +12,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.wearinterval.domain.model.NotificationSettings
 import com.wearinterval.domain.model.TimerConfiguration
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.seconds
@@ -79,7 +80,7 @@ constructor(
                 (rawWork ?: TimerConfiguration.DEFAULT.workDuration.inWholeSeconds).seconds,
               restDuration =
                 (rawRest ?: TimerConfiguration.DEFAULT.restDuration.inWholeSeconds).seconds,
-              lastUsed = preferences[CURRENT_CONFIG_LAST_USED]
+              lastUsed = preferences[CURRENT_CONFIG_LAST_USED]?.let { Instant.ofEpochMilli(it) }
                   ?: TimerConfiguration.DEFAULT.lastUsed,
             )
           config
@@ -101,7 +102,7 @@ constructor(
       preferences[CURRENT_CONFIG_LAPS] = config.laps
       preferences[CURRENT_CONFIG_WORK_DURATION] = config.workDuration.inWholeSeconds
       preferences[CURRENT_CONFIG_REST_DURATION] = config.restDuration.inWholeSeconds
-      preferences[CURRENT_CONFIG_LAST_USED] = config.lastUsed
+      preferences[CURRENT_CONFIG_LAST_USED] = config.lastUsed.toEpochMilli()
     }
   }
 

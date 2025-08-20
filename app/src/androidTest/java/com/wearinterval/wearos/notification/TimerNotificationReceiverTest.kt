@@ -11,6 +11,7 @@ import com.wearinterval.domain.model.TimerPhase
 import com.wearinterval.domain.repository.TimerRepository
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
+import java.time.Instant
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -52,7 +53,7 @@ class TimerNotificationReceiverTest {
         laps = 3,
         workDuration = 2.minutes,
         restDuration = 30.seconds,
-        lastUsed = System.currentTimeMillis(),
+        lastUsed = Instant.ofEpochMilli(1000L),
       )
     timerRepository.startTimer()
 
@@ -82,7 +83,7 @@ class TimerNotificationReceiverTest {
         laps = 5,
         workDuration = 1.minutes,
         restDuration = 15.seconds,
-        lastUsed = System.currentTimeMillis(),
+        lastUsed = Instant.ofEpochMilli(1000L),
       )
     timerRepository.startTimer()
 
@@ -111,7 +112,7 @@ class TimerNotificationReceiverTest {
         laps = 1,
         workDuration = 30.seconds,
         restDuration = 0.seconds,
-        lastUsed = System.currentTimeMillis(),
+        lastUsed = Instant.ofEpochMilli(1000L),
       )
 
     // Start timer and manually set to alarm state for testing
@@ -161,7 +162,7 @@ class TimerNotificationReceiverTest {
         laps = 3,
         workDuration = 1.minutes,
         restDuration = 30.seconds,
-        lastUsed = System.currentTimeMillis(),
+        lastUsed = Instant.ofEpochMilli(1000L),
       )
     timerRepository.startTimer()
 

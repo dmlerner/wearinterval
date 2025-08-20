@@ -12,6 +12,7 @@ import androidx.wear.compose.material.MaterialTheme
 import com.google.common.truth.Truth.assertThat
 import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.model.TimerPhase
+import java.time.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -285,7 +286,7 @@ class MainScreenTest {
         laps = 15,
         workDuration = 90.seconds,
         restDuration = 45.seconds,
-        lastUsed = System.currentTimeMillis(),
+        lastUsed = Instant.ofEpochMilli(1000L),
       )
 
     val uiState =
@@ -322,7 +323,7 @@ class MainScreenTest {
         laps = 999,
         workDuration = 2.minutes,
         restDuration = 30.seconds,
-        lastUsed = System.currentTimeMillis(),
+        lastUsed = Instant.ofEpochMilli(1000L),
       )
 
     val uiState =
@@ -356,7 +357,7 @@ class MainScreenTest {
         laps = 5,
         workDuration = 45.seconds,
         restDuration = 0.seconds,
-        lastUsed = System.currentTimeMillis(),
+        lastUsed = Instant.ofEpochMilli(1000L),
       )
 
     val uiState =

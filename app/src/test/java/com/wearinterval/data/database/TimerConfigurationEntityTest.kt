@@ -2,6 +2,7 @@ package com.wearinterval.data.database
 
 import com.google.common.truth.Truth.assertThat
 import com.wearinterval.domain.model.TimerConfiguration
+import java.time.Instant
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import org.junit.Test
@@ -40,7 +41,7 @@ class TimerConfigurationEntityTest {
         laps = 5,
         workDuration = 2.minutes,
         restDuration = 45.seconds,
-        lastUsed = 9876543210L,
+        lastUsed = Instant.ofEpochMilli(9876543210L),
       )
 
     // When
@@ -63,7 +64,7 @@ class TimerConfigurationEntityTest {
         laps = 15,
         workDuration = 3.minutes + 30.seconds,
         restDuration = 1.minutes + 15.seconds,
-        lastUsed = 1111111111L,
+        lastUsed = Instant.ofEpochMilli(1111111111L),
       )
 
     // When
@@ -83,7 +84,7 @@ class TimerConfigurationEntityTest {
         laps = 1,
         workDuration = 60.seconds,
         restDuration = 0.seconds,
-        lastUsed = 1000L,
+        lastUsed = Instant.ofEpochMilli(1000L),
       )
 
     // When
@@ -104,7 +105,7 @@ class TimerConfigurationEntityTest {
         laps = 999,
         workDuration = 10.minutes,
         restDuration = 10.minutes,
-        lastUsed = Long.MAX_VALUE,
+        lastUsed = Instant.ofEpochMilli(Long.MAX_VALUE),
       )
 
     // When

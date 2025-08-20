@@ -1,25 +1,35 @@
 package com.wearinterval.util
 
+import java.time.Instant
+import kotlin.time.Duration
+
 /**
  * Fake implementation of TimeProvider for testing.
  *
  * Allows tests to control time and make time-dependent calculations predictable. Useful for testing
  * timer logic, animations, and other time-sensitive operations.
  */
-class FakeTimeProvider(private var currentTime: Long = 0L) : TimeProvider {
+class FakeTimeProvider(private var currentTime: Instant = Instant.EPOCH) : TimeProvider {
 
-  override fun currentTimeMillis(): Long = currentTime
+  override fun now(): Instant = currentTime
 
-  /**
-   * Sets the current time to the specified value. Subsequent calls to currentTimeMillis() will
-   * return this value.
-   */
+  /** Sets the current time to the specified instant. */
+  fun setCurrentTime(time: Instant) {
+    currentTime = time
+  }
+
+  /** Sets the current time to the specified value in milliseconds since epoch. */
   fun setCurrentTimeMillis(timeMillis: Long) {
-    currentTime = timeMillis
+    currentTime = Instant.ofEpochMilli(timeMillis)
   }
 
   /** Advances the current time by the specified amount. */
+  fun advanceTimeBy(duration: Duration) {
+    currentTime = currentTime.plusMillis(duration.inWholeMilliseconds)
+  }
+
+  /** Advances the current time by the specified amount in milliseconds. */
   fun advanceTimeBy(durationMillis: Long) {
-    currentTime += durationMillis
+    currentTime = currentTime.plusMillis(durationMillis)
   }
 }

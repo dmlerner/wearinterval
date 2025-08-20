@@ -9,6 +9,7 @@ import com.wearinterval.data.service.TimerService
 import com.wearinterval.domain.model.TimerState
 import com.wearinterval.domain.repository.ConfigurationRepository
 import com.wearinterval.domain.repository.TimerRepository
+import com.wearinterval.util.TimeProvider
 import dagger.Lazy
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.UUID
@@ -36,6 +37,7 @@ class TimerRepositoryImpl
 constructor(
   @ApplicationContext private val context: Context,
   private val configurationRepository: Lazy<ConfigurationRepository>,
+  private val timeProvider: TimeProvider,
 ) : TimerRepository {
 
   private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -106,7 +108,7 @@ constructor(
         .saveToHistory(
           config.copy(
             id = UUID.randomUUID().toString(), // Generate new ID to create unique history entry
-            lastUsed = System.currentTimeMillis(),
+            lastUsed = timeProvider.now(),
           ),
         )
 

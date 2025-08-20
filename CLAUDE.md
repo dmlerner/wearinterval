@@ -118,6 +118,9 @@ Before moving to next phase:
 # Lint and quality
 ./gradlew lintDebug
 
+# Presubmit checks
+./scripts/check-time-usage.sh  # Enforce TimeProvider usage
+
 # Sapling workflow
 sl commit -m "feat(scope): description"
 sl amend

@@ -13,6 +13,7 @@ import com.wearinterval.domain.repository.WearOsRepository
 import com.wearinterval.util.MainDispatcherRule
 import io.mockk.coEvery
 import io.mockk.mockk
+import java.time.Instant
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -53,7 +54,7 @@ class WearIntervalTileServiceRobolectricTest {
       laps = 10,
       workDuration = 1.minutes,
       restDuration = 30.seconds,
-      lastUsed = System.currentTimeMillis()
+      lastUsed = Instant.ofEpochMilli(1000L)
     )
 
   private val stoppedTimerState =

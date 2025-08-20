@@ -8,10 +8,12 @@ import com.wearinterval.data.datastore.DataStoreManager
 import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.util.Constants
 import com.wearinterval.util.MainDispatcherRule
+import com.wearinterval.util.TimeProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import java.time.Instant
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -28,6 +30,7 @@ class ConfigurationRepositoryTest {
 
   private val mockDataStoreManager = mockk<DataStoreManager>(relaxed = true)
   private val mockConfigurationDao = mockk<ConfigurationDao>(relaxed = true)
+  private val mockTimeProvider = mockk<TimeProvider>(relaxed = true)
   private lateinit var repository: ConfigurationRepositoryImpl
 
   private val defaultConfig = TimerConfiguration.DEFAULT
@@ -37,7 +40,7 @@ class ConfigurationRepositoryTest {
       laps = 5,
       workDuration = 45.seconds,
       restDuration = 15.seconds,
-      lastUsed = 1000L,
+      lastUsed = Instant.ofEpochMilli(1000L),
     )
 
   private val recentConfigs =
@@ -56,7 +59,8 @@ class ConfigurationRepositoryTest {
     } returns MutableStateFlow(recentConfigs)
     coEvery { mockConfigurationDao.getConfigurationCount() } returns 2
 
-    repository = ConfigurationRepositoryImpl(mockDataStoreManager, mockConfigurationDao)
+    repository =
+      ConfigurationRepositoryImpl(mockDataStoreManager, mockConfigurationDao, mockTimeProvider)
   }
 
   @Test
@@ -64,7 +68,8 @@ class ConfigurationRepositoryTest {
     // Given
     val configFlow = MutableStateFlow(customConfig)
     every { mockDataStoreManager.currentConfiguration } returns configFlow
-    repository = ConfigurationRepositoryImpl(mockDataStoreManager, mockConfigurationDao)
+    repository =
+      ConfigurationRepositoryImpl(mockDataStoreManager, mockConfigurationDao, mockTimeProvider)
 
     // When/Then
     repository.currentConfiguration.test {
@@ -84,7 +89,8 @@ class ConfigurationRepositoryTest {
         Constants.Dimensions.RECENT_CONFIGURATIONS_COUNT
       )
     } returns entitiesFlow
-    repository = ConfigurationRepositoryImpl(mockDataStoreManager, mockConfigurationDao)
+    repository =
+      ConfigurationRepositoryImpl(mockDataStoreManager, mockConfigurationDao, mockTimeProvider)
 
     // When/Then
     repository.recentConfigurations.test {
@@ -224,14 +230,14 @@ class ConfigurationRepositoryTest {
 
     coVerify {
       mockDataStoreManager.updateCurrentConfiguration(
-        match { config -> config.lastUsed > originalTime },
+        match { config -> config.lastUsed.isAfter(originalTime) },
       )
     }
 
     coVerify {
       mockConfigurationDao.updateLastUsed(
         customConfig.id,
-        match { timestamp -> timestamp > originalTime },
+        match { timestamp -> timestamp > originalTime.toEpochMilli() },
       )
     }
   }
@@ -288,7 +294,7 @@ class ConfigurationRepositoryTest {
         laps = 5,
         workDuration = 45.seconds,
         restDuration = 15.seconds,
-        lastUsed = 2000L,
+        lastUsed = Instant.ofEpochMilli(2000L),
       )
 
     coEvery { mockConfigurationDao.findConfigurationByValues(5, 45, 15) } returns existingConfig
@@ -330,7 +336,7 @@ class ConfigurationRepositoryTest {
         laps = 10,
         workDuration = 2.minutes,
         restDuration = 30.seconds,
-        lastUsed = 2000L,
+        lastUsed = Instant.ofEpochMilli(2000L),
       )
 
     coEvery { mockConfigurationDao.findConfigurationByValues(10, 120, 30) } returns null
@@ -373,7 +379,7 @@ class ConfigurationRepositoryTest {
           laps = 5,
           workDuration = 45.seconds,
           restDuration = 15.seconds,
-          lastUsed = 2000L,
+          lastUsed = Instant.ofEpochMilli(2000L),
         )
 
       coEvery { mockConfigurationDao.findConfigurationByValues(5, 45, 15) } returns existingConfig
@@ -429,7 +435,7 @@ class ConfigurationRepositoryTest {
         laps = 5,
         workDuration = 45.seconds,
         restDuration = 15.seconds,
-        lastUsed = 1000L
+        lastUsed = Instant.ofEpochMilli(1000L)
       )
 
     // Second config with same functional values but different ID
@@ -439,7 +445,7 @@ class ConfigurationRepositoryTest {
         laps = 5,
         workDuration = 45.seconds,
         restDuration = 15.seconds,
-        lastUsed = 2000L
+        lastUsed = Instant.ofEpochMilli(2000L)
       )
 
     // Mock that first save finds no existing config
@@ -489,7 +495,7 @@ class ConfigurationRepositoryTest {
           laps = 5,
           workDuration = 0.seconds, // Invalid - will be validated to MIN_WORK_DURATION (1 second)
           restDuration = 15.seconds,
-          lastUsed = 2000L
+          lastUsed = Instant.ofEpochMilli(2000L)
         )
 
       // Mock: Search with validated values (0s becomes 1s) finds existing config

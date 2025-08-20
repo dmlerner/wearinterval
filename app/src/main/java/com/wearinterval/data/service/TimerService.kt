@@ -12,9 +12,12 @@ import com.wearinterval.domain.model.TimerState
 import com.wearinterval.domain.repository.ConfigurationRepository
 import com.wearinterval.domain.repository.SettingsRepository
 import com.wearinterval.util.Constants
+import com.wearinterval.util.TimeProvider
 import com.wearinterval.wearos.notification.TimerNotificationManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -37,6 +40,8 @@ class TimerService : Service() {
   @Inject lateinit var configurationRepository: ConfigurationRepository
 
   @Inject lateinit var powerManager: PowerManager
+
+  @Inject lateinit var timeProvider: TimeProvider
 
   private val binder = TimerBinder()
   private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -104,7 +109,7 @@ class TimerService : Service() {
         totalLaps = config.laps,
         isPaused = false,
         configuration = config,
-        intervalStartTime = System.currentTimeMillis(),
+        intervalStartTime = timeProvider.currentTimeMillis(),
       )
 
     // Update notification when timer state changes
@@ -123,10 +128,15 @@ class TimerService : Service() {
     if (currentState.phase == TimerPhase.Running || currentState.phase == TimerPhase.Resting) {
       pausedFromPhase = currentState.phase
       stopCountdown()
+
+      // Accumulate running time since last resume
+      val runningSinceResume =
+        (timeProvider.currentTimeMillis() - currentState.intervalStartTime).milliseconds
       _timerState.value =
         currentState.copy(
           phase = TimerPhase.Paused,
           isPaused = true,
+          totalRunningDuration = currentState.totalRunningDuration + runningSinceResume,
         )
       timerNotificationManager.updateTimerNotification(_timerState.value)
     }
@@ -139,7 +149,8 @@ class TimerService : Service() {
         currentState.copy(
           phase = pausedFromPhase,
           isPaused = false,
-          intervalStartTime = System.currentTimeMillis(),
+          intervalStartTime =
+            timeProvider.currentTimeMillis(), // Reset to current time for next running segment
         )
       timerNotificationManager.updateTimerNotification(_timerState.value)
       startCountdown()
@@ -276,7 +287,8 @@ class TimerService : Service() {
         currentState.copy(
           phase = TimerPhase.Resting,
           timeRemaining = config.restDuration,
-          intervalStartTime = System.currentTimeMillis(),
+          intervalStartTime = timeProvider.currentTimeMillis(),
+          totalRunningDuration = Duration.ZERO, // Reset for new interval
         )
       timerNotificationManager.updateTimerNotification(_timerState.value)
 
@@ -316,7 +328,8 @@ class TimerService : Service() {
           phase = TimerPhase.Running,
           timeRemaining = config.workDuration,
           currentLap = nextLap,
-          intervalStartTime = System.currentTimeMillis(),
+          intervalStartTime = timeProvider.currentTimeMillis(),
+          totalRunningDuration = Duration.ZERO, // Reset for new interval
         )
       timerNotificationManager.updateTimerNotification(_timerState.value)
 
@@ -383,7 +396,8 @@ class TimerService : Service() {
         currentState.copy(
           phase = pausedFromPhase,
           isPaused = false,
-          intervalStartTime = System.currentTimeMillis(),
+          intervalStartTime = timeProvider.currentTimeMillis(),
+          totalRunningDuration = Duration.ZERO, // Reset for new interval
         )
       timerNotificationManager.updateTimerNotification(_timerState.value)
       startCountdown()

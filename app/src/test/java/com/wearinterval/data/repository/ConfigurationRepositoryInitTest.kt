@@ -3,6 +3,7 @@ package com.wearinterval.data.repository
 import com.wearinterval.data.database.ConfigurationDao
 import com.wearinterval.data.datastore.DataStoreManager
 import com.wearinterval.domain.model.TimerConfiguration
+import com.wearinterval.util.TimeProvider
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -28,7 +29,8 @@ class ConfigurationRepositoryInitTest {
     every { configurationDao.getRecentConfigurationsFlow(any()) } returns flowOf(emptyList())
 
     // When repository is created and currentConfiguration is accessed
-    val repository = ConfigurationRepositoryImpl(dataStoreManager, configurationDao)
+    val timeProvider = mockk<TimeProvider>(relaxed = true)
+    val repository = ConfigurationRepositoryImpl(dataStoreManager, configurationDao, timeProvider)
     val config = repository.currentConfiguration.first()
 
     // Then repository should simply return the DataStore configuration (no persistence)
@@ -52,7 +54,8 @@ class ConfigurationRepositoryInitTest {
     every { configurationDao.getRecentConfigurationsFlow(any()) } returns flowOf(emptyList())
 
     // When repository is created and currentConfiguration is accessed
-    val repository = ConfigurationRepositoryImpl(dataStoreManager, configurationDao)
+    val timeProvider = mockk<TimeProvider>(relaxed = true)
+    val repository = ConfigurationRepositoryImpl(dataStoreManager, configurationDao, timeProvider)
     val config = repository.currentConfiguration.first()
 
     // Give any async operations time to run
@@ -73,7 +76,8 @@ class ConfigurationRepositoryInitTest {
       every { configurationDao.getRecentConfigurationsFlow(any()) } returns flowOf(emptyList())
 
       // When repository is created and currentConfiguration is accessed
-      val repository = ConfigurationRepositoryImpl(dataStoreManager, configurationDao)
+      val timeProvider = mockk<TimeProvider>(relaxed = true)
+      val repository = ConfigurationRepositoryImpl(dataStoreManager, configurationDao, timeProvider)
       val config = repository.currentConfiguration.first()
 
       // Then DEFAULT configuration should be returned

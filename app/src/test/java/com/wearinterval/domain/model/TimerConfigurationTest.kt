@@ -2,6 +2,7 @@ package com.wearinterval.domain.model
 
 import com.google.common.truth.Truth.assertThat
 import com.wearinterval.util.Constants
+import java.time.Instant
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import org.junit.Test
@@ -183,7 +184,7 @@ class TimerConfigurationTest {
 
   @Test
   fun `withUpdatedTimestamp updates timestamp`() {
-    val originalTime = 1000L
+    val originalTime = Instant.ofEpochMilli(1000L)
     val config =
       TimerConfiguration(
         laps = 1,
@@ -192,9 +193,10 @@ class TimerConfigurationTest {
         lastUsed = originalTime,
       )
 
-    val updated = config.withUpdatedTimestamp()
+    val newTime = Instant.ofEpochMilli(5000L) // Fixed test time
+    val updated = config.withUpdatedTimestamp(newTime)
 
-    assertThat(updated.lastUsed).isGreaterThan(originalTime)
+    assertThat(updated.lastUsed).isEqualTo(newTime)
     assertThat(updated.id).isEqualTo(config.id)
     assertThat(updated.laps).isEqualTo(config.laps)
     assertThat(updated.workDuration).isEqualTo(config.workDuration)
@@ -294,7 +296,7 @@ class TimerConfigurationTest {
         laps = 5,
         workDuration = 45.seconds,
         restDuration = 15.seconds,
-        lastUsed = 1000L,
+        lastUsed = Instant.ofEpochMilli(1000L),
       )
 
     val config2 =
@@ -303,7 +305,7 @@ class TimerConfigurationTest {
         laps = 5,
         workDuration = 45.seconds,
         restDuration = 15.seconds,
-        lastUsed = 1000L,
+        lastUsed = Instant.ofEpochMilli(1000L),
       )
 
     val config3 = config1.copy(laps = 10)

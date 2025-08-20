@@ -6,6 +6,7 @@ import com.wearinterval.data.datastore.DataStoreManager
 import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.repository.ConfigurationRepository
 import com.wearinterval.util.Constants
+import com.wearinterval.util.TimeProvider
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
@@ -22,6 +23,7 @@ class ConfigurationRepositoryImpl
 constructor(
   private val dataStoreManager: DataStoreManager,
   private val configurationDao: ConfigurationDao,
+  private val timeProvider: TimeProvider,
 ) : ConfigurationRepository {
 
   private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -67,13 +69,13 @@ constructor(
           // Use existing ID but update timestamp (LRU: move to front)
           validatedConfig.copy(
             id = existingConfig.id,
-            lastUsed = System.currentTimeMillis(),
+            lastUsed = timeProvider.now(),
           )
         } else {
           // New configuration
           validatedConfig.copy(
             id = config.id,
-            lastUsed = System.currentTimeMillis(),
+            lastUsed = timeProvider.now(),
           )
         }
 
@@ -113,13 +115,13 @@ constructor(
           // Reuse existing ID and update timestamp (move to front of LRU)
           validatedConfig.copy(
             id = existingConfig.id,
-            lastUsed = System.currentTimeMillis(),
+            lastUsed = timeProvider.now(),
           )
         } else {
           // New configuration - create new entry with provided ID
           validatedConfig.copy(
             id = config.id,
-            lastUsed = System.currentTimeMillis(),
+            lastUsed = timeProvider.now(),
           )
         }
 
@@ -141,7 +143,7 @@ constructor(
     return try {
       // Just update the current configuration - don't modify history
       // History entries should only be created when timers actually run
-      val finalConfig = config.withUpdatedTimestamp()
+      val finalConfig = config.withUpdatedTimestamp(timeProvider.now())
 
       // Update DataStore with selected configuration
       dataStoreManager.updateCurrentConfiguration(finalConfig)
@@ -156,7 +158,7 @@ constructor(
 
       // Update the timestamp using the existing ID if found, otherwise the config's ID
       val idToUpdate = existingConfig?.id ?: config.id
-      configurationDao.updateLastUsed(idToUpdate, finalConfig.lastUsed)
+      configurationDao.updateLastUsed(idToUpdate, finalConfig.lastUsed.toEpochMilli())
 
       Result.success(Unit)
     } catch (e: Exception) {

@@ -2,6 +2,7 @@ package com.wearinterval.domain.model
 
 import com.wearinterval.util.Constants
 import com.wearinterval.util.TimeUtils
+import java.time.Instant
 import java.util.UUID
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -12,7 +13,7 @@ data class TimerConfiguration(
   val laps: Int,
   val workDuration: Duration,
   val restDuration: Duration,
-  val lastUsed: Long = System.currentTimeMillis(),
+  val lastUsed: Instant = Instant.EPOCH,
 ) {
   fun isValid(): Boolean {
     return laps in Constants.TimerLimits.MIN_LAPS..Constants.TimerLimits.MAX_LAPS &&
@@ -42,8 +43,8 @@ data class TimerConfiguration(
     }
   }
 
-  fun withUpdatedTimestamp(): TimerConfiguration {
-    return copy(lastUsed = System.currentTimeMillis())
+  fun withUpdatedTimestamp(currentTime: Instant): TimerConfiguration {
+    return copy(lastUsed = currentTime)
   }
 
   companion object {

@@ -12,6 +12,7 @@ import com.wearinterval.domain.model.TimerPhase
 import com.wearinterval.domain.model.TimerState
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
+import java.time.Instant
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -99,7 +100,7 @@ class TimerNotificationManagerTest {
         laps = 5,
         workDuration = 2.minutes,
         restDuration = 30.seconds,
-        lastUsed = System.currentTimeMillis(),
+        lastUsed = Instant.ofEpochMilli(1000L),
       )
     val timerState =
       TimerState(
@@ -141,7 +142,7 @@ class TimerNotificationManagerTest {
         laps = 5,
         workDuration = 2.minutes,
         restDuration = 30.seconds,
-        lastUsed = System.currentTimeMillis(),
+        lastUsed = Instant.ofEpochMilli(1000L),
       )
     val timerState =
       TimerState(
@@ -175,7 +176,7 @@ class TimerNotificationManagerTest {
         laps = 3,
         workDuration = 1.minutes,
         restDuration = 20.seconds,
-        lastUsed = System.currentTimeMillis(),
+        lastUsed = Instant.ofEpochMilli(1000L),
       )
     val timerState =
       TimerState(
@@ -208,7 +209,7 @@ class TimerNotificationManagerTest {
         laps = 999, // Infinite
         workDuration = 5.minutes,
         restDuration = 1.minutes,
-        lastUsed = System.currentTimeMillis(),
+        lastUsed = Instant.ofEpochMilli(1000L),
       )
     val timerState =
       TimerState(

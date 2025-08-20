@@ -96,7 +96,7 @@ class MainViewModelTest {
           laps = 10,
           workDuration = 90.seconds,
           restDuration = 30.seconds,
-          lastUsed = System.currentTimeMillis(),
+          lastUsed = fakeTimeProvider.now(),
         )
       configurationFlow.value = customConfig
 
@@ -1100,6 +1100,7 @@ class MainViewModelTest {
       assertThat(runningAfter20s.timeRemaining).isEqualTo(40.seconds)
 
       // Step 3: Pause at 20s elapsed (40s remaining)
+      // Our service logic accumulates 20s of running time when pausing
       timerStateFlow.value =
         TimerState(
           phase = TimerPhase.Paused,
@@ -1108,7 +1109,8 @@ class MainViewModelTest {
           totalLaps = 1,
           isPaused = true,
           configuration = config,
-          intervalStartTime = 0L // Original start time
+          intervalStartTime = 0L, // Original start time
+          totalRunningDuration = 20.seconds // Accumulated by service during pause
         )
       val pausedState = awaitItem()
 
@@ -1119,25 +1121,24 @@ class MainViewModelTest {
       // Step 4: Advance time during pause (should not affect displayed duration)
       fakeTimeProvider.setCurrentTimeMillis(30_000L) // 10s more elapsed during pause
 
-      // Timer service resumes - BUG: What intervalStartTime does it use?
+      // Timer service resumes - with our fix, totalRunningDuration should be accumulated
       timerStateFlow.value =
         TimerState(
           phase = TimerPhase.Running,
-          timeRemaining = 40.seconds, // Should continue from pause
+          timeRemaining = 40.seconds, // Service timeRemaining (not used when running)
           currentLap = 1,
           totalLaps = 1,
           isPaused = false,
           configuration = config,
-          intervalStartTime = 30_000L // BUG: Reset to current time OR keep original 0L?
+          intervalStartTime = 30_000L, // Reset to current time for next running segment
+          totalRunningDuration = 20.seconds // Accumulated running time before pause
         )
       val resumedState = awaitItem()
 
-      // THIS IS WHERE THE BUG MANIFESTS:
-      // If intervalStartTime = 30_000L (reset), MainViewModel calculates: 60s - (30000-30000) = 60s
-      // (WRONG)
-      // If intervalStartTime = 0L (kept), MainViewModel calculates: 60s - (30000-0) = 30s (ALSO
-      // WRONG)
-      // Expected: Should be 40s (continue from pause)
+      // With our fix, MainViewModel should calculate:
+      // currentRunningTime = (30000 - 30000) = 0s (just resumed)
+      // totalRunningTime = 20s (accumulated) + 0s (current) = 20s
+      // remaining = 60s - 20s = 40s ✅ Correct!
 
       // The test will show what actually happens
       println("Resumed timeRemaining: ${resumedState.timeRemaining}")

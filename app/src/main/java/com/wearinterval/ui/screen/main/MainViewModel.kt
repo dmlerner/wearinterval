@@ -41,14 +41,15 @@ constructor(
         val displayLaps = if (timerState.isStopped) configuration.laps else timerState.totalLaps
         val displayCurrentLap = if (timerState.isStopped) 1 else timerState.currentLap
 
-        // Calculate accurate time remaining using system time for running states
+        // Calculate accurate time remaining using total running duration
         val displayTimeRemaining =
           when {
             timerState.isStopped -> configuration.workDuration
             timerState.isPaused -> timerState.timeRemaining
             timerState.isRunning || timerState.isResting -> {
               val currentTime = timeProvider.currentTimeMillis()
-              val elapsedTime = (currentTime - timerState.intervalStartTime).milliseconds
+              val currentRunningTime = (currentTime - timerState.intervalStartTime).milliseconds
+              val totalRunningTime = timerState.totalRunningDuration + currentRunningTime
               val totalIntervalDuration =
                 if (timerState.isResting) {
                   timerState.configuration.restDuration
@@ -56,7 +57,7 @@ constructor(
                   timerState.configuration.workDuration
                 }
               // Ensure time remaining never goes negative
-              val remaining = totalIntervalDuration - elapsedTime
+              val remaining = totalIntervalDuration - totalRunningTime
               if (remaining < 0.milliseconds) 0.milliseconds else remaining
             }
             else -> timerState.timeRemaining

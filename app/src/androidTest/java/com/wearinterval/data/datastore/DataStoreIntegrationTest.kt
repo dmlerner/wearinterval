@@ -16,6 +16,7 @@ import com.google.common.truth.Truth.assertThat
 import com.wearinterval.domain.model.NotificationSettings
 import com.wearinterval.domain.model.TimerConfiguration
 import java.io.File
+import java.time.Instant
 import java.util.UUID
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -132,7 +133,7 @@ class DataStoreIntegrationTest {
                 (preferences[CURRENT_CONFIG_REST_DURATION]
                     ?: TimerConfiguration.DEFAULT.restDuration.inWholeSeconds)
                   .seconds,
-              lastUsed = preferences[CURRENT_CONFIG_LAST_USED]
+              lastUsed = preferences[CURRENT_CONFIG_LAST_USED]?.let { Instant.ofEpochMilli(it) }
                   ?: TimerConfiguration.DEFAULT.lastUsed,
             )
           }
@@ -153,7 +154,7 @@ class DataStoreIntegrationTest {
         preferences[CURRENT_CONFIG_LAPS] = config.laps
         preferences[CURRENT_CONFIG_WORK_DURATION] = config.workDuration.inWholeSeconds
         preferences[CURRENT_CONFIG_REST_DURATION] = config.restDuration.inWholeSeconds
-        preferences[CURRENT_CONFIG_LAST_USED] = config.lastUsed
+        preferences[CURRENT_CONFIG_LAST_USED] = config.lastUsed.toEpochMilli()
       }
     }
   }
@@ -235,7 +236,7 @@ class DataStoreIntegrationTest {
         laps = 8,
         workDuration = 2.minutes,
         restDuration = 45.seconds,
-        lastUsed = System.currentTimeMillis(),
+        lastUsed = Instant.ofEpochMilli(1000L),
       )
 
     // When
@@ -272,7 +273,7 @@ class DataStoreIntegrationTest {
         laps = 5,
         workDuration = 1.minutes,
         restDuration = 30.seconds,
-        lastUsed = 1000L,
+        lastUsed = Instant.ofEpochMilli(1000L),
       )
     dataStoreManager.updateCurrentConfiguration(config1)
 
@@ -283,7 +284,7 @@ class DataStoreIntegrationTest {
         laps = 10,
         workDuration = 90.seconds,
         restDuration = 15.seconds,
-        lastUsed = 2000L,
+        lastUsed = Instant.ofEpochMilli(2000L),
       )
     dataStoreManager.updateCurrentConfiguration(config2)
 
@@ -313,7 +314,7 @@ class DataStoreIntegrationTest {
         laps = 3,
         workDuration = 45.seconds,
         restDuration = 10.seconds,
-        lastUsed = System.currentTimeMillis(),
+        lastUsed = Instant.ofEpochMilli(1000L),
       )
 
     // When - Save both
@@ -376,7 +377,7 @@ class DataStoreIntegrationTest {
         laps = 999, // Maximum (infinite)
         workDuration = 600.seconds, // 10 minutes
         restDuration = 0.seconds, // No rest
-        lastUsed = 0L, // Minimum timestamp
+        lastUsed = Instant.ofEpochMilli(0L), // Minimum timestamp
       )
 
     // When
@@ -402,7 +403,7 @@ class DataStoreIntegrationTest {
         laps = 1,
         workDuration = 60.seconds,
         restDuration = 0.seconds,
-        lastUsed = System.currentTimeMillis(),
+        lastUsed = Instant.ofEpochMilli(1000L),
       )
 
     // When
@@ -425,7 +426,7 @@ class DataStoreIntegrationTest {
         laps = 500,
         workDuration = 30.minutes,
         restDuration = 10.minutes,
-        lastUsed = Long.MAX_VALUE,
+        lastUsed = Instant.ofEpochMilli(Long.MAX_VALUE),
       )
 
     // When
@@ -438,7 +439,7 @@ class DataStoreIntegrationTest {
       assertThat(retrieved!!.id).hasLength(100)
       assertThat(retrieved.laps).isEqualTo(500)
       assertThat(retrieved.workDuration).isEqualTo(30.minutes)
-      assertThat(retrieved.lastUsed).isEqualTo(Long.MAX_VALUE)
+      assertThat(retrieved.lastUsed).isEqualTo(Instant.ofEpochMilli(Long.MAX_VALUE))
     }
   }
 }

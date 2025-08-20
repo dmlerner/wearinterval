@@ -44,7 +44,7 @@ class ConfigurationDaoTest {
         laps = 10,
         workDurationSeconds = 60,
         restDurationSeconds = 30,
-        lastUsed = System.currentTimeMillis(),
+        lastUsed = 1000L, // Fixed test time
       )
 
     // When

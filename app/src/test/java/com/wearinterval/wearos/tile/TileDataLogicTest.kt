@@ -6,6 +6,7 @@ import com.wearinterval.domain.model.TimerPhase
 import com.wearinterval.domain.model.TimerState
 import com.wearinterval.domain.repository.TileData
 import com.wearinterval.util.MainDispatcherRule
+import java.time.Instant
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,7 +28,7 @@ class TileDataLogicTest {
       laps = 10,
       workDuration = 1.minutes,
       restDuration = 30.seconds,
-      lastUsed = System.currentTimeMillis()
+      lastUsed = Instant.ofEpochMilli(1000L)
     )
 
   @Test

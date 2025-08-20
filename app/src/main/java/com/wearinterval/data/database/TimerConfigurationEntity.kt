@@ -3,6 +3,7 @@ package com.wearinterval.data.database
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.wearinterval.domain.model.TimerConfiguration
+import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 
 @Entity(tableName = "timer_configurations")
@@ -11,6 +12,7 @@ data class TimerConfigurationEntity(
   val laps: Int,
   val workDurationSeconds: Long,
   val restDurationSeconds: Long,
+  /** Timestamp stored as milliseconds since epoch for SQLite compatibility */
   val lastUsed: Long,
 ) {
   fun toDomain(): TimerConfiguration {
@@ -19,7 +21,7 @@ data class TimerConfigurationEntity(
       laps = laps,
       workDuration = workDurationSeconds.seconds,
       restDuration = restDurationSeconds.seconds,
-      lastUsed = lastUsed,
+      lastUsed = Instant.ofEpochMilli(lastUsed),
     )
   }
 
@@ -30,7 +32,7 @@ data class TimerConfigurationEntity(
         laps = config.laps,
         workDurationSeconds = config.workDuration.inWholeSeconds,
         restDurationSeconds = config.restDuration.inWholeSeconds,
-        lastUsed = config.lastUsed,
+        lastUsed = config.lastUsed.toEpochMilli(),
       )
     }
   }
