@@ -248,13 +248,26 @@ class TimerService : Service() {
     val currentState = _timerState.value
     if (!currentState.isRunning || currentState.isPaused) return
 
-    val newTimeRemaining = currentState.timeRemaining - Constants.TimerService.COUNTDOWN_DECREMENT
+    // Calculate elapsed time since interval started
+    val currentTime = timeProvider.currentTimeMillis()
+    val elapsedSinceStart = (currentTime - currentState.intervalStartTime).milliseconds
+    val totalElapsed = currentState.totalRunningDuration + elapsedSinceStart
+
+    // Calculate remaining time based on current interval duration
+    val intervalDuration =
+      if (currentState.isResting) {
+        currentState.configuration.restDuration
+      } else {
+        currentState.configuration.workDuration
+      }
+
+    val newTimeRemaining = intervalDuration - totalElapsed
 
     if (newTimeRemaining <= Constants.TimerLimits.MIN_REST_DURATION) {
       // Current interval completed
       handleIntervalComplete(currentState)
     } else {
-      // Continue countdown
+      // Continue countdown with calculated time remaining
       _timerState.value = currentState.copy(timeRemaining = newTimeRemaining)
       timerNotificationManager.updateTimerNotification(_timerState.value)
     }

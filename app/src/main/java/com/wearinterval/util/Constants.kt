@@ -26,7 +26,6 @@ object Constants {
   // Timer Service Configuration
   object TimerService {
     val UPDATE_INTERVAL = 100.milliseconds
-    val COUNTDOWN_DECREMENT = 100.milliseconds
     val INTERVAL_TRANSITION_DELAY = 500.milliseconds
     val WORKOUT_COMPLETION_DELAY = 2.seconds
   }

@@ -11,6 +11,8 @@ import com.wearinterval.domain.model.TimerPhase
 import com.wearinterval.domain.model.TimerState
 import com.wearinterval.domain.repository.ConfigurationRepository
 import com.wearinterval.util.MainDispatcherRule
+import com.wearinterval.util.TimeProvider
+import dagger.Lazy
 import io.mockk.every
 import io.mockk.mockk
 import kotlin.time.Duration.Companion.seconds
@@ -28,6 +30,7 @@ class TimerRepositoryTest {
 
   private val mockContext = mockk<Context>(relaxed = true)
   private val mockConfigurationRepository = mockk<ConfigurationRepository>(relaxed = true)
+  private val mockTimeProvider = mockk<TimeProvider>(relaxed = true)
   private lateinit var repository: TimerRepositoryImpl
 
   private val defaultConfig = TimerConfiguration.DEFAULT
@@ -48,7 +51,14 @@ class TimerRepositoryTest {
     every { mockConfigurationRepository.currentConfiguration } returns
       MutableStateFlow(defaultConfig)
 
-    repository = TimerRepositoryImpl(mockContext, mockConfigurationRepository)
+    repository =
+      TimerRepositoryImpl(
+        mockContext,
+        mockk<Lazy<ConfigurationRepository>>() {
+          every { get() } returns mockConfigurationRepository
+        },
+        mockTimeProvider
+      )
   }
 
   @Test
