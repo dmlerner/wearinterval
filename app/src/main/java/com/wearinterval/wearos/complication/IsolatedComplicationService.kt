@@ -235,13 +235,14 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
   ): ComplicationData {
     return when (timerState.phase) {
       is com.wearinterval.domain.model.TimerPhase.Stopped -> {
-        // When stopped, show just empty progress ring
+        // When stopped, show empty text but keep tap action
         RangedValueComplicationData.Builder(
             value = 0f,
             min = 0f,
             max = 100f,
             contentDescription = PlainComplicationText.Builder("Timer ready").build()
           )
+          .setText(PlainComplicationText.Builder("").build()) // Empty string for invisible text
           .setTapAction(createTapAction())
           .build()
       }
@@ -334,13 +335,14 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
           .setTapAction(createTapAction())
           .build()
       ComplicationType.RANGED_VALUE ->
+        // When stopped/fallback, show empty text but keep tap action
         RangedValueComplicationData.Builder(
             value = 0f,
             min = 0f,
             max = 100f,
             contentDescription = PlainComplicationText.Builder("WearInterval Timer").build()
           )
-          .setText(PlainComplicationText.Builder("Ready").build())
+          .setText(PlainComplicationText.Builder("").build()) // Empty string for invisible text
           .setTapAction(createTapAction())
           .build()
       ComplicationType.SMALL_IMAGE ->
