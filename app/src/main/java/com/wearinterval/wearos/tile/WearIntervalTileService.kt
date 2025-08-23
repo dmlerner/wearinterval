@@ -18,6 +18,7 @@ import com.wearinterval.domain.model.TimerPhase
 import com.wearinterval.domain.repository.TileData
 import com.wearinterval.domain.repository.WearOsRepository
 import com.wearinterval.util.Constants
+import com.wearinterval.util.TimeUtils
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -137,7 +138,7 @@ class WearIntervalTileService : TileService() {
 
   private fun createRunningTile(tileData: TileData): LayoutElementBuilders.LayoutElement {
     val timerState = tileData.timerState
-    val progressText = "${timerState.timeRemaining.inWholeSeconds}s"
+    val progressText = TimeUtils.formatDurationFixedWidth(timerState.timeRemaining)
     val lapText =
       if (timerState.totalLaps == 999) "${timerState.currentLap}"
       else "${timerState.currentLap}/${timerState.totalLaps}"

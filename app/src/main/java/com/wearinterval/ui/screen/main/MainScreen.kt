@@ -42,6 +42,7 @@ import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.model.TimerPhase
 import com.wearinterval.ui.component.DualProgressRings
 import com.wearinterval.util.Constants
+import com.wearinterval.util.Logger
 import com.wearinterval.util.TimeUtils
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -62,8 +63,27 @@ private object MainScreenDefaults {
   val STOP_BUTTON_SIZE =
     Constants.Dimensions.MAIN_STOP_BUTTON_SIZE.dp // Match wearinterval button size
   val ALARM_SPACING = Constants.Dimensions.CONTROL_BUTTON_SPACING.dp
-  val HEART_RATE_SPACING = 6.dp
-  val HEART_RATE_TOP_SPACING = 8.dp
+  val HEART_RATE_SPACING = 4.dp
+  val HEART_RATE_TOP_SPACING = 4.dp
+}
+
+/**
+ * Determines heart rate zone color based on BPM and estimated max heart rate. Uses age-based max HR
+ * formula: 220 - age (default age 35).
+ */
+private fun getHeartRateZoneColor(bpm: Int): Color {
+  val maxHeartRate = Constants.HeartRate.DEFAULT_MAX_HEART_RATE - Constants.HeartRate.DEFAULT_AGE
+  val percentage = (bpm.toDouble() / maxHeartRate) * 100
+
+  return when {
+    percentage < Constants.HeartRate.ZONE_1_MIN -> Constants.Colors.HEART_RATE_DEFAULT
+    percentage <= Constants.HeartRate.ZONE_1_MAX -> Constants.Colors.HEART_RATE_ZONE_1
+    percentage <= Constants.HeartRate.ZONE_2_MAX -> Constants.Colors.HEART_RATE_ZONE_2
+    percentage <= Constants.HeartRate.ZONE_3_MAX -> Constants.Colors.HEART_RATE_ZONE_3
+    percentage <= Constants.HeartRate.ZONE_4_MAX -> Constants.Colors.HEART_RATE_ZONE_4
+    percentage <= Constants.HeartRate.ZONE_5_MAX -> Constants.Colors.HEART_RATE_ZONE_5
+    else -> Constants.Colors.HEART_RATE_ZONE_5 // Above zone 5 still shows zone 5 color
+  }
 }
 
 /**
@@ -406,6 +426,23 @@ private fun HeartRateDisplay(
   onHeartRateClick: () -> Unit,
   modifier: Modifier = Modifier
 ) {
+  // Log current heart rate state for debugging
+  Logger.ui("HeartRateDisplay rendered with state: $heartRateState")
+  // Determine color based on heart rate zone
+  val heartRateColor =
+    when (heartRateState) {
+      is HeartRateState.Connected -> getHeartRateZoneColor(heartRateState.bpm)
+      is HeartRateState.Connecting -> {
+        heartRateState.lastKnownBpm?.let { getHeartRateZoneColor(it) }
+          ?: MaterialTheme.colors.onSurfaceVariant
+      }
+      is HeartRateState.Error -> {
+        heartRateState.lastKnownBpm?.let { getHeartRateZoneColor(it) }
+          ?: MaterialTheme.colors.onSurfaceVariant
+      }
+      else -> MaterialTheme.colors.onSurfaceVariant
+    }
+
   // Heart rate value text only (no icon)
   Text(
     text =
@@ -424,7 +461,7 @@ private fun HeartRateDisplay(
         else -> "--"
       },
     style = MaterialTheme.typography.caption1,
-    color = MaterialTheme.colors.onSurfaceVariant,
+    color = heartRateColor,
     textAlign = TextAlign.Center,
     modifier = modifier.clickable { onHeartRateClick() }
   )

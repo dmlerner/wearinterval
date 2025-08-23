@@ -7,6 +7,7 @@ import com.wearinterval.domain.repository.ConfigurationRepository
 import com.wearinterval.domain.repository.HeartRateRepository
 import com.wearinterval.domain.repository.SettingsRepository
 import com.wearinterval.domain.repository.TimerRepository
+import com.wearinterval.util.Logger
 import com.wearinterval.util.PermissionManager
 import com.wearinterval.util.TimeProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,12 +34,19 @@ constructor(
   private val flashScreen = MutableStateFlow(false)
 
   init {
+    Logger.main("MainViewModel initialized")
     // Start heart rate monitoring immediately and keep it running
-    viewModelScope.launch { heartRateRepository.startMonitoring() }
+    Logger.main("Starting initial heart rate monitoring...")
+    viewModelScope.launch {
+      val result = heartRateRepository.startMonitoring()
+      Logger.main("Initial heart rate monitoring result: $result")
+    }
 
     // Observe permission results
+    Logger.main("Setting up permission results observer...")
     viewModelScope.launch {
       permissionManager.heartRatePermissionResults.collect { granted ->
+        Logger.main("Received heart rate permission result: $granted")
         handleHeartRatePermissionResult(granted)
       }
     }
@@ -135,17 +143,29 @@ constructor(
   }
 
   private fun handleHeartRateClick() {
+    Logger.main("Heart rate clicked")
     viewModelScope.launch {
       val hasPermission = heartRateRepository.checkPermission()
+      Logger.main("Permission check result: $hasPermission")
       if (!hasPermission) {
+        Logger.main("Requesting heart rate permission...")
         permissionManager.requestHeartRatePermission()
+      } else {
+        Logger.main("Permission already granted, no action needed")
       }
     }
   }
 
   private fun handleHeartRatePermissionResult(granted: Boolean) {
+    Logger.main("Processing heart rate permission result: $granted")
     if (granted) {
-      viewModelScope.launch { heartRateRepository.startMonitoring() }
+      Logger.main("Permission granted, starting heart rate monitoring...")
+      viewModelScope.launch {
+        val result = heartRateRepository.startMonitoring()
+        Logger.main("Heart rate monitoring after permission result: $result")
+      }
+    } else {
+      Logger.main("Permission denied, heart rate monitoring not started")
     }
   }
 

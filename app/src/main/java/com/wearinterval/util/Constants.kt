@@ -104,6 +104,14 @@ object Constants {
     val HISTORY_ITEM_TEXT = Color(0xFFBBBBBB) // Light gray text
     val DIVIDER_COLOR = Color.Gray
 
+    // Heart Rate Zone Colors
+    val HEART_RATE_ZONE_1 = Color(0xFF808080) // Zone 1 (50-60%): Gray
+    val HEART_RATE_ZONE_2 = Color(0xFF2196F3) // Zone 2 (60-70%): Blue
+    val HEART_RATE_ZONE_3 = Color(0xFF4CAF50) // Zone 3 (70-80%): Green
+    val HEART_RATE_ZONE_4 = Color(0xFFFFC107) // Zone 4 (80-90%): Yellow
+    val HEART_RATE_ZONE_5 = Color(0xFFFF5722) // Zone 5 (90-100%): Red/Orange
+    val HEART_RATE_DEFAULT = Color(0xFFBBBBBB) // Default: Light gray
+
     // Tile-specific ARGB values for Wear Tiles API compatibility
     object Tile {
       const val HISTORY_ITEM_BACKGROUND_ARGB = 0xFF222222.toInt()
@@ -138,5 +146,23 @@ object Constants {
     const val MAX_LAPS_FOR_VALIDATION = 999
     const val MIN_INT_VALUE = 1
     const val MAX_INT_VALUE = 999
+  }
+
+  // Heart Rate Zone Configuration
+  object HeartRate {
+    const val DEFAULT_MAX_HEART_RATE = 220
+    const val DEFAULT_AGE = 35 // Default age for max HR calculation
+
+    // Zone thresholds as percentages of max heart rate
+    const val ZONE_1_MIN = 50
+    const val ZONE_1_MAX = 60
+    const val ZONE_2_MIN = 60
+    const val ZONE_2_MAX = 70
+    const val ZONE_3_MIN = 70
+    const val ZONE_3_MAX = 80
+    const val ZONE_4_MIN = 80
+    const val ZONE_4_MAX = 90
+    const val ZONE_5_MIN = 90
+    const val ZONE_5_MAX = 100
   }
 }
