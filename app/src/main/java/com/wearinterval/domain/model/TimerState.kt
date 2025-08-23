@@ -29,17 +29,16 @@ data class TimerState(
     get() = if (isResting) configuration.restDuration else configuration.workDuration
 
   /**
-   * Progress percentage for the current interval (work or rest). Returns 1.0 (100%) for
-   * zero-duration intervals to indicate immediate completion.
+   * Progress percentage for the current interval (work or rest). Returns 0.0 (0%) for zero-duration
+   * intervals and represents the remaining time as a percentage.
    *
-   * @return Float between 0.0 and 1.0 representing completion percentage
+   * @return Float between 0.0 and 1.0 representing remaining time percentage
    */
   val progressPercentage: Float
     get() {
-      if (currentInterval == Duration.ZERO) return 1f
-      return 1f -
-        (timeRemaining.inWholeMilliseconds.toFloat() /
-          currentInterval.inWholeMilliseconds.toFloat())
+      if (currentInterval == Duration.ZERO) return 0f
+      return timeRemaining.inWholeMilliseconds.toFloat() /
+        currentInterval.inWholeMilliseconds.toFloat()
     }
 
   val lapProgressPercentage: Float

@@ -204,12 +204,12 @@ class WearOsRepositoryTest {
 
   @Test
   fun `getComplicationData RangedValue returns correct progress`() = runTest {
-    // Given - Timer at 25% progress
+    // Given - Timer at 75% remaining
     val config = TimerConfiguration(laps = 1, workDuration = 60.seconds, restDuration = 0.seconds)
     val runningState =
       TimerState(
         phase = TimerPhase.Running,
-        timeRemaining = 45.seconds, // 15 seconds elapsed out of 60
+        timeRemaining = 45.seconds, // 45 seconds remaining out of 60
         currentLap = 1,
         totalLaps = 1,
         configuration = config,
@@ -222,7 +222,7 @@ class WearOsRepositoryTest {
     // Then
     assertThat(data).isInstanceOf(ComplicationData.RangedValue::class.java)
     val rangedValue = data as ComplicationData.RangedValue
-    assertThat(rangedValue.value).isWithin(0.01f).of(0.25f)
+    assertThat(rangedValue.value).isWithin(0.01f).of(0.75f)
     assertThat(rangedValue.min).isEqualTo(0f)
     assertThat(rangedValue.max).isEqualTo(1f)
     assertThat(rangedValue.text).isEqualTo("45s")

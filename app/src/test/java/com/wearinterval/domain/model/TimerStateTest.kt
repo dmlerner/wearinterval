@@ -69,7 +69,7 @@ class TimerStateTest {
         configuration = testConfig,
       )
 
-    // 30 seconds remaining of 60 second work interval = 50% progress
+    // 30 seconds remaining of 60 second work interval = 50% remaining
     assertThat(state.progressPercentage).isWithin(0.01f).of(0.5f)
   }
 
@@ -84,8 +84,8 @@ class TimerStateTest {
         configuration = testConfig,
       )
 
-    // 10 seconds remaining of 30 second rest interval = 66.67% progress
-    assertThat(state.progressPercentage).isWithin(0.01f).of(0.667f)
+    // 10 seconds remaining of 30 second rest interval = 33.33% remaining
+    assertThat(state.progressPercentage).isWithin(0.01f).of(0.333f)
   }
 
   @Test
@@ -100,7 +100,7 @@ class TimerStateTest {
         configuration = configWithNoRest,
       )
 
-    assertThat(state.progressPercentage).isEqualTo(1f)
+    assertThat(state.progressPercentage).isEqualTo(0f)
   }
 
   @Test
