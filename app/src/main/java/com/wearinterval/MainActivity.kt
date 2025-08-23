@@ -1,9 +1,11 @@
 package com.wearinterval
 
+import android.Manifest
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import com.wearinterval.domain.repository.ConfigurationRepository
@@ -11,6 +13,7 @@ import com.wearinterval.domain.repository.TimerRepository
 import com.wearinterval.domain.usecase.SelectConfigurationUseCase
 import com.wearinterval.ui.navigation.WearIntervalNavigation
 import com.wearinterval.ui.theme.WearIntervalTheme
+import com.wearinterval.util.PermissionManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.launch
@@ -21,6 +24,12 @@ class MainActivity : ComponentActivity() {
   @Inject lateinit var configurationRepository: ConfigurationRepository
   @Inject lateinit var timerRepository: TimerRepository
   @Inject lateinit var selectConfigurationUseCase: SelectConfigurationUseCase
+  @Inject lateinit var permissionManager: PermissionManager
+
+  private val heartRatePermissionLauncher =
+    registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+      permissionManager.onHeartRatePermissionResult(isGranted)
+    }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     installSplashScreen()
@@ -31,6 +40,9 @@ class MainActivity : ComponentActivity() {
 
     // Observe timer state to manage screen on/off
     observeTimerStateForScreenManagement()
+
+    // Observe heart rate permission requests
+    observeHeartRatePermissionRequests()
 
     setContent {
       WearIntervalTheme { WearIntervalNavigation(initialPage = getInitialNavigationPage()) }
@@ -76,6 +88,14 @@ class MainActivity : ComponentActivity() {
         } else {
           window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
+      }
+    }
+  }
+
+  private fun observeHeartRatePermissionRequests() {
+    lifecycleScope.launch {
+      permissionManager.heartRatePermissionRequests.collect {
+        heartRatePermissionLauncher.launch(Manifest.permission.BODY_SENSORS)
       }
     }
   }

@@ -29,7 +29,7 @@ class FakeHeartRateRepository : HeartRateRepository {
 
   override suspend fun startMonitoring(): Result<Unit> {
     return if (shouldFailMonitoring) {
-      _heartRateState.value = HeartRateState.Error("Fake monitoring failure")
+      _heartRateState.value = HeartRateState.Error("Fake monitoring failure", null)
       Result.failure(RuntimeException("Fake monitoring failure"))
     } else if (!hasPermission) {
       _heartRateState.value = HeartRateState.PermissionRequired
@@ -38,7 +38,7 @@ class FakeHeartRateRepository : HeartRateRepository {
       _heartRateState.value = HeartRateState.Unavailable
       Result.failure(UnsupportedOperationException("Heart rate not available"))
     } else {
-      _heartRateState.value = HeartRateState.Connecting
+      _heartRateState.value = HeartRateState.Connecting(null)
       Result.success(Unit)
     }
   }
@@ -55,12 +55,12 @@ class FakeHeartRateRepository : HeartRateRepository {
     _heartRateState.value = HeartRateState.Connected(bpm)
   }
 
-  fun setConnecting() {
-    _heartRateState.value = HeartRateState.Connecting
+  fun setConnecting(lastKnownBpm: Int? = null) {
+    _heartRateState.value = HeartRateState.Connecting(lastKnownBpm)
   }
 
-  fun setError(message: String) {
-    _heartRateState.value = HeartRateState.Error(message)
+  fun setError(message: String, lastKnownBpm: Int? = null) {
+    _heartRateState.value = HeartRateState.Error(message, lastKnownBpm)
   }
 
   fun setUnavailable() {

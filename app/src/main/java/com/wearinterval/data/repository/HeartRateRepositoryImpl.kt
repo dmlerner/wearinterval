@@ -37,6 +37,7 @@ constructor(
   private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
   private val _heartRateState = MutableStateFlow<HeartRateState>(HeartRateState.Unavailable)
+  private var lastKnownBpm: Int? = null
   override val heartRateState: StateFlow<HeartRateState> = _heartRateState.asStateFlow()
 
   override val isAvailable: StateFlow<Boolean> =
@@ -60,7 +61,7 @@ constructor(
     }
 
     Log.d("HeartRate", "Starting heart rate monitoring, setting state to Connecting")
-    _heartRateState.value = HeartRateState.Connecting
+    _heartRateState.value = HeartRateState.Connecting(lastKnownBpm)
 
     healthServicesManager
       .heartRateMeasureFlow()
@@ -69,13 +70,18 @@ constructor(
         when (message) {
           is MeasureMessage.MeasureData -> {
             Log.d("HeartRate", "Heart rate data received: ${message.bpm} BPM")
+            lastKnownBpm = message.bpm
             _heartRateState.value = HeartRateState.Connected(message.bpm)
           }
           is MeasureMessage.Available -> {
             Log.d("HeartRate", "Heart rate sensor available")
             if (_heartRateState.value !is HeartRateState.Connected) {
-              _heartRateState.value = HeartRateState.Connecting
+              _heartRateState.value = HeartRateState.Connecting(lastKnownBpm)
             }
+          }
+          is MeasureMessage.AcquiringFix -> {
+            Log.d("HeartRate", "Heart rate sensor acquiring fix")
+            _heartRateState.value = HeartRateState.Connecting(lastKnownBpm)
           }
           is MeasureMessage.Unavailable -> {
             Log.w("HeartRate", "Heart rate sensor unavailable")
@@ -88,7 +94,8 @@ constructor(
       }
       .catch { throwable ->
         Log.e("HeartRate", "Error in heart rate flow", throwable)
-        _heartRateState.value = HeartRateState.Error(throwable.message ?: "Unknown error")
+        _heartRateState.value =
+          HeartRateState.Error(throwable.message ?: "Unknown error", lastKnownBpm)
       }
       .launchIn(repositoryScope)
 

@@ -93,5 +93,7 @@ sealed class MainEvent {
 
   object FlashScreenDismissed : MainEvent()
 
+  object HeartRateClicked : MainEvent()
+
   data class HeartRatePermissionResult(val granted: Boolean) : MainEvent()
 }

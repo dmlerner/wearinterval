@@ -7,6 +7,7 @@ import com.wearinterval.domain.repository.ConfigurationRepository
 import com.wearinterval.domain.repository.HeartRateRepository
 import com.wearinterval.domain.repository.SettingsRepository
 import com.wearinterval.domain.repository.TimerRepository
+import com.wearinterval.util.PermissionManager
 import com.wearinterval.util.TimeProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -25,27 +26,20 @@ constructor(
   private val configurationRepository: ConfigurationRepository,
   private val settingsRepository: SettingsRepository,
   private val heartRateRepository: HeartRateRepository,
+  private val permissionManager: PermissionManager,
   private val timeProvider: TimeProvider,
 ) : ViewModel() {
 
   private val flashScreen = MutableStateFlow(false)
 
   init {
-    // Start heart rate monitoring when timer starts
+    // Start heart rate monitoring immediately and keep it running
+    viewModelScope.launch { heartRateRepository.startMonitoring() }
+
+    // Observe permission results
     viewModelScope.launch {
-      timerRepository.timerState.collect { timerState ->
-        when (timerState.phase) {
-          TimerPhase.Running,
-          TimerPhase.Resting -> {
-            heartRateRepository.startMonitoring()
-          }
-          TimerPhase.Stopped -> {
-            heartRateRepository.stopMonitoring()
-          }
-          else -> {
-            /* No change needed */
-          }
-        }
+      permissionManager.heartRatePermissionResults.collect { granted ->
+        handleHeartRatePermissionResult(granted)
       }
     }
   }
@@ -115,6 +109,7 @@ constructor(
       MainEvent.StopClicked -> handleStopClick()
       MainEvent.DismissAlarm -> handleDismissAlarm()
       MainEvent.FlashScreenDismissed -> flashScreen.value = false
+      MainEvent.HeartRateClicked -> handleHeartRateClick()
       is MainEvent.HeartRatePermissionResult -> handleHeartRatePermissionResult(event.granted)
     }
   }
@@ -137,6 +132,15 @@ constructor(
 
   private fun handleDismissAlarm() {
     viewModelScope.launch { timerRepository.dismissAlarm() }
+  }
+
+  private fun handleHeartRateClick() {
+    viewModelScope.launch {
+      val hasPermission = heartRateRepository.checkPermission()
+      if (!hasPermission) {
+        permissionManager.requestHeartRatePermission()
+      }
+    }
   }
 
   private fun handleHeartRatePermissionResult(granted: Boolean) {

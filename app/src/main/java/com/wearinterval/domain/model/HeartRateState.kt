@@ -5,9 +5,9 @@ sealed class HeartRateState {
 
   object PermissionRequired : HeartRateState()
 
-  object Connecting : HeartRateState()
+  data class Connecting(val lastKnownBpm: Int? = null) : HeartRateState()
 
   data class Connected(val bpm: Int) : HeartRateState()
 
-  data class Error(val message: String) : HeartRateState()
+  data class Error(val message: String, val lastKnownBpm: Int? = null) : HeartRateState()
 }

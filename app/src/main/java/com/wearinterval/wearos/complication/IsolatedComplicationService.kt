@@ -11,7 +11,9 @@ import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUp
 import androidx.wear.watchface.complications.datasource.ComplicationRequest
 import com.wearinterval.MainActivity
 import com.wearinterval.R
+import com.wearinterval.domain.model.HeartRateState
 import com.wearinterval.domain.repository.ConfigurationRepository
+import com.wearinterval.domain.repository.HeartRateRepository
 import com.wearinterval.domain.repository.TimerRepository
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -40,10 +42,13 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
     fun getTimerRepository(): TimerRepository
 
     fun getConfigurationRepository(): ConfigurationRepository
+
+    fun getHeartRateRepository(): HeartRateRepository
   }
 
   private lateinit var timerRepository: TimerRepository
   private lateinit var configRepository: ConfigurationRepository
+  private lateinit var heartRateRepository: HeartRateRepository
   private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
   private lateinit var updateRequester: ComplicationDataSourceUpdateRequester
 
@@ -61,6 +66,7 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
 
       timerRepository = entryPoint.getTimerRepository()
       configRepository = entryPoint.getConfigurationRepository()
+      heartRateRepository = entryPoint.getHeartRateRepository()
       updateRequester =
         ComplicationDataSourceUpdateRequester.create(
           applicationContext,
@@ -109,6 +115,7 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
       try {
         val timerState = timerRepository.timerState.first()
         val config = configRepository.currentConfiguration.first()
+        val heartRateState = heartRateRepository.heartRateState.first()
 
         android.util.Log.e(
           TAG,
@@ -121,12 +128,13 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
 
         val complicationData =
           when (request.complicationType) {
-            ComplicationType.SHORT_TEXT -> createShortTextComplication(timerState)
+            ComplicationType.SHORT_TEXT -> createShortTextComplication(timerState, heartRateState)
             ComplicationType.LONG_TEXT -> createLongTextComplication(timerState, config)
-            ComplicationType.RANGED_VALUE -> createRangedValueComplication(timerState)
+            ComplicationType.RANGED_VALUE ->
+              createRangedValueComplication(timerState, heartRateState)
             ComplicationType.SMALL_IMAGE -> createSmallImageComplication()
             ComplicationType.MONOCHROMATIC_IMAGE -> createMonochromaticImageComplication()
-            else -> createShortTextComplication(timerState)
+            else -> createShortTextComplication(timerState, heartRateState)
           }
 
         android.util.Log.e(TAG, "SUCCESS: Returning ${complicationData.javaClass.simpleName}")
@@ -156,13 +164,25 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
   }
 
   private fun createShortTextComplication(
-    timerState: com.wearinterval.domain.model.TimerState
+    timerState: com.wearinterval.domain.model.TimerState,
+    heartRateState: HeartRateState
   ): ComplicationData {
     return when (timerState.phase) {
       is com.wearinterval.domain.model.TimerPhase.Stopped -> {
-        // When stopped, show just tiny timer icon
+        // When stopped, show heart rate if available, otherwise timer icon
+        val text =
+          when (heartRateState) {
+            is HeartRateState.Connected -> {
+              val bpm = heartRateState.bpm
+              if (bpm < 100) " $bpm" else "$bpm"
+            }
+            is HeartRateState.Connecting -> {
+              heartRateState.lastKnownBpm?.let { bpm -> if (bpm < 100) " $bpm" else "$bpm" } ?: "⏱"
+            }
+            else -> "⏱" // Fallback to timer icon
+          }
         ShortTextComplicationData.Builder(
-            text = PlainComplicationText.Builder("⏱").build(),
+            text = PlainComplicationText.Builder(text).build(),
             contentDescription = PlainComplicationText.Builder("Timer ready").build()
           )
           .setTapAction(createTapAction())
@@ -231,18 +251,30 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
   }
 
   private fun createRangedValueComplication(
-    timerState: com.wearinterval.domain.model.TimerState
+    timerState: com.wearinterval.domain.model.TimerState,
+    heartRateState: HeartRateState
   ): ComplicationData {
     return when (timerState.phase) {
       is com.wearinterval.domain.model.TimerPhase.Stopped -> {
-        // When stopped, show empty text but keep tap action
+        // When stopped, show heart rate if available, otherwise timer icon
+        val text =
+          when (heartRateState) {
+            is HeartRateState.Connected -> {
+              val bpm = heartRateState.bpm
+              if (bpm < 100) " $bpm" else "$bpm"
+            }
+            is HeartRateState.Connecting -> {
+              heartRateState.lastKnownBpm?.let { bpm -> if (bpm < 100) " $bpm" else "$bpm" } ?: "⏱"
+            }
+            else -> "⏱" // Fallback to timer icon
+          }
         RangedValueComplicationData.Builder(
             value = 0f,
             min = 0f,
             max = 100f,
             contentDescription = PlainComplicationText.Builder("Timer ready").build()
           )
-          .setText(PlainComplicationText.Builder("").build()) // Empty string for invisible text
+          .setText(PlainComplicationText.Builder(text).build())
           .setTapAction(createTapAction())
           .build()
       }
@@ -335,14 +367,14 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
           .setTapAction(createTapAction())
           .build()
       ComplicationType.RANGED_VALUE ->
-        // When stopped/fallback, show empty text but keep tap action
+        // When stopped/fallback, show timer text but keep tap action
         RangedValueComplicationData.Builder(
             value = 0f,
             min = 0f,
             max = 100f,
             contentDescription = PlainComplicationText.Builder("WearInterval Timer").build()
           )
-          .setText(PlainComplicationText.Builder("").build()) // Empty string for invisible text
+          .setText(PlainComplicationText.Builder("⏱").build())
           .setTapAction(createTapAction())
           .build()
       ComplicationType.SMALL_IMAGE ->

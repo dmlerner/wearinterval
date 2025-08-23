@@ -62,8 +62,8 @@ private object MainScreenDefaults {
   val STOP_BUTTON_SIZE =
     Constants.Dimensions.MAIN_STOP_BUTTON_SIZE.dp // Match wearinterval button size
   val ALARM_SPACING = Constants.Dimensions.CONTROL_BUTTON_SPACING.dp
-  val HEART_RATE_SPACING = 8.dp
-  val HEART_RATE_TOP_SPACING = 12.dp
+  val HEART_RATE_SPACING = 6.dp
+  val HEART_RATE_TOP_SPACING = 8.dp
 }
 
 /**
@@ -249,8 +249,9 @@ private fun TimerDisplay(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
           Text(
             text =
               when {
-                uiState.isStopped -> TimeUtils.formatDuration(uiState.configuration.workDuration)
-                else -> TimeUtils.formatDuration(uiState.timeRemaining)
+                uiState.isStopped ->
+                  TimeUtils.formatDurationFixedWidth(uiState.configuration.workDuration)
+                else -> TimeUtils.formatDurationFixedWidth(uiState.timeRemaining)
               },
             style = MaterialTheme.typography.title1,
             color =
@@ -306,14 +307,13 @@ private fun TimerDisplay(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
           onEvent = onEvent,
         )
 
-        // Heart rate display below controls
-        if (uiState.showHeartRate) {
-          Spacer(modifier = Modifier.height(MainScreenDefaults.HEART_RATE_TOP_SPACING))
-          HeartRateDisplay(
-            heartRateState = uiState.heartRateState,
-            modifier = Modifier.fillMaxWidth()
-          )
-        }
+        // Heart rate display below controls (always present to prevent UI shift)
+        Spacer(modifier = Modifier.height(MainScreenDefaults.HEART_RATE_TOP_SPACING))
+        HeartRateDisplay(
+          heartRateState = uiState.heartRateState,
+          onHeartRateClick = { onEvent(MainEvent.HeartRateClicked) },
+          modifier = Modifier.fillMaxWidth()
+        )
       }
     }
   }
@@ -401,42 +401,33 @@ private fun TimerControlsInside(uiState: MainUiState, onEvent: (MainEvent) -> Un
 }
 
 @Composable
-private fun HeartRateDisplay(heartRateState: HeartRateState, modifier: Modifier = Modifier) {
-  Row(
-    modifier = modifier,
-    horizontalArrangement = Arrangement.Center,
-    verticalAlignment = Alignment.CenterVertically
-  ) {
-    // Heart icon
-    Icon(
-      painter = painterResource(id = R.drawable.ic_heart),
-      contentDescription = "Heart rate",
-      tint = MaterialTheme.colors.error,
-      modifier = Modifier.size(16.dp)
-    )
-
-    Spacer(modifier = Modifier.width(MainScreenDefaults.HEART_RATE_SPACING))
-
-    // Heart rate value text
-    Text(
-      text =
-        when (heartRateState) {
-          is HeartRateState.Connected -> "${heartRateState.bpm} BPM"
-          is HeartRateState.Connecting -> "..."
-          is HeartRateState.PermissionRequired -> "Permission needed"
-          is HeartRateState.Error -> "Error"
-          else -> "--"
-        },
-      style = MaterialTheme.typography.caption1,
-      color =
-        when (heartRateState) {
-          is HeartRateState.Connected -> MaterialTheme.colors.onSurface
-          is HeartRateState.Error -> MaterialTheme.colors.error
-          else -> MaterialTheme.colors.onSurfaceVariant
-        },
-      textAlign = TextAlign.Center
-    )
-  }
+private fun HeartRateDisplay(
+  heartRateState: HeartRateState,
+  onHeartRateClick: () -> Unit,
+  modifier: Modifier = Modifier
+) {
+  // Heart rate value text only (no icon)
+  Text(
+    text =
+      when (heartRateState) {
+        is HeartRateState.Connected -> {
+          val bpm = heartRateState.bpm
+          if (bpm < 100) " $bpm" else "$bpm"
+        }
+        is HeartRateState.Connecting -> {
+          heartRateState.lastKnownBpm?.let { bpm -> if (bpm < 100) " $bpm" else "$bpm" } ?: "..."
+        }
+        is HeartRateState.PermissionRequired -> "--"
+        is HeartRateState.Error -> {
+          heartRateState.lastKnownBpm?.let { bpm -> if (bpm < 100) " $bpm" else "$bpm" } ?: "Error"
+        }
+        else -> "--"
+      },
+    style = MaterialTheme.typography.caption1,
+    color = MaterialTheme.colors.onSurfaceVariant,
+    textAlign = TextAlign.Center,
+    modifier = modifier.clickable { onHeartRateClick() }
+  )
 }
 
 @Composable
