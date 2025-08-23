@@ -227,6 +227,9 @@ dependencies {
     implementation("androidx.wear.tiles:tiles:1.5.0") // TileService and deprecated API interop
     implementation("androidx.wear.watchface:watchface-complications-data-source:1.2.1")
 
+    // Health Services API
+    implementation("androidx.health:health-services-client:1.0.0-beta03")
+
     // Testing - Unit Tests
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")

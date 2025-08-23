@@ -7,6 +7,7 @@ import android.os.Vibrator
 import androidx.room.Room
 import com.wearinterval.data.database.AppDatabase
 import com.wearinterval.data.database.ConfigurationDao
+import com.wearinterval.data.health.HealthServicesManager
 import com.wearinterval.util.SystemTimeProvider
 import com.wearinterval.util.TimeProvider
 import dagger.Module
@@ -59,4 +60,9 @@ object DataModule {
   fun provideTimeProvider(): TimeProvider {
     return SystemTimeProvider()
   }
+
+  @Provides
+  @Singleton
+  fun provideHealthServicesManager(@ApplicationContext context: Context): HealthServicesManager =
+    HealthServicesManager(context)
 }

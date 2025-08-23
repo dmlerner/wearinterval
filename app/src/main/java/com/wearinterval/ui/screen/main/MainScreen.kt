@@ -37,6 +37,7 @@ import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import com.wearinterval.R
+import com.wearinterval.domain.model.HeartRateState
 import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.model.TimerPhase
 import com.wearinterval.ui.component.DualProgressRings
@@ -61,6 +62,8 @@ private object MainScreenDefaults {
   val STOP_BUTTON_SIZE =
     Constants.Dimensions.MAIN_STOP_BUTTON_SIZE.dp // Match wearinterval button size
   val ALARM_SPACING = Constants.Dimensions.CONTROL_BUTTON_SPACING.dp
+  val HEART_RATE_SPACING = 8.dp
+  val HEART_RATE_TOP_SPACING = 12.dp
 }
 
 /**
@@ -302,6 +305,15 @@ private fun TimerDisplay(uiState: MainUiState, onEvent: (MainEvent) -> Unit) {
           uiState = uiState,
           onEvent = onEvent,
         )
+
+        // Heart rate display below controls
+        if (uiState.showHeartRate) {
+          Spacer(modifier = Modifier.height(MainScreenDefaults.HEART_RATE_TOP_SPACING))
+          HeartRateDisplay(
+            heartRateState = uiState.heartRateState,
+            modifier = Modifier.fillMaxWidth()
+          )
+        }
       }
     }
   }
@@ -385,6 +397,45 @@ private fun TimerControlsInside(uiState: MainUiState, onEvent: (MainEvent) -> Un
         tint = Constants.Colors.PLAY_BUTTON_ICON,
       )
     }
+  }
+}
+
+@Composable
+private fun HeartRateDisplay(heartRateState: HeartRateState, modifier: Modifier = Modifier) {
+  Row(
+    modifier = modifier,
+    horizontalArrangement = Arrangement.Center,
+    verticalAlignment = Alignment.CenterVertically
+  ) {
+    // Heart icon
+    Icon(
+      painter = painterResource(id = R.drawable.ic_heart),
+      contentDescription = "Heart rate",
+      tint = MaterialTheme.colors.error,
+      modifier = Modifier.size(16.dp)
+    )
+
+    Spacer(modifier = Modifier.width(MainScreenDefaults.HEART_RATE_SPACING))
+
+    // BPM text
+    Text(
+      text =
+        when (heartRateState) {
+          is HeartRateState.Connected -> "${heartRateState.bpm} BPM"
+          is HeartRateState.Connecting -> "..."
+          is HeartRateState.PermissionRequired -> "Permission needed"
+          is HeartRateState.Error -> "Error"
+          else -> "--"
+        },
+      style = MaterialTheme.typography.caption1,
+      color =
+        when (heartRateState) {
+          is HeartRateState.Connected -> MaterialTheme.colors.onSurface
+          is HeartRateState.Error -> MaterialTheme.colors.error
+          else -> MaterialTheme.colors.onSurfaceVariant
+        },
+      textAlign = TextAlign.Center
+    )
   }
 }
 

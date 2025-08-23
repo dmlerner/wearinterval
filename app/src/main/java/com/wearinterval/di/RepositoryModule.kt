@@ -1,10 +1,12 @@
 package com.wearinterval.di
 
 import com.wearinterval.data.repository.ConfigurationRepositoryImpl
+import com.wearinterval.data.repository.HeartRateRepositoryImpl
 import com.wearinterval.data.repository.SettingsRepositoryImpl
 import com.wearinterval.data.repository.TimerRepositoryImpl
 import com.wearinterval.data.repository.WearOsRepositoryImpl
 import com.wearinterval.domain.repository.ConfigurationRepository
+import com.wearinterval.domain.repository.HeartRateRepository
 import com.wearinterval.domain.repository.SettingsRepository
 import com.wearinterval.domain.repository.TimerRepository
 import com.wearinterval.domain.repository.WearOsRepository
@@ -31,4 +33,9 @@ abstract class RepositoryModule {
 
   @Binds
   abstract fun bindWearOsRepository(wearOsRepositoryImpl: WearOsRepositoryImpl): WearOsRepository
+
+  @Binds
+  abstract fun bindHeartRateRepository(
+    heartRateRepositoryImpl: HeartRateRepositoryImpl
+  ): HeartRateRepository
 }

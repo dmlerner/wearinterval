@@ -1,5 +1,6 @@
 package com.wearinterval.ui.screen.main
 
+import com.wearinterval.domain.model.HeartRateState
 import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.model.TimerPhase
 import kotlin.time.Duration
@@ -19,6 +20,7 @@ data class MainUiState(
   val isStopButtonEnabled: Boolean = false,
   val isServiceBound: Boolean = false,
   val flashScreen: Boolean = false,
+  val heartRateState: HeartRateState = HeartRateState.Unavailable,
 ) {
   val isRunning: Boolean
     get() = timerPhase == TimerPhase.Running
@@ -73,6 +75,12 @@ data class MainUiState(
         }
         else -> 0f
       }
+
+  val heartRateBpm: Int?
+    get() = (heartRateState as? HeartRateState.Connected)?.bpm
+
+  val showHeartRate: Boolean
+    get() = heartRateState !is HeartRateState.Unavailable
 }
 
 /** Events that can be triggered from the main screen UI. */
@@ -84,4 +92,6 @@ sealed class MainEvent {
   object DismissAlarm : MainEvent()
 
   object FlashScreenDismissed : MainEvent()
+
+  data class HeartRatePermissionResult(val granted: Boolean) : MainEvent()
 }

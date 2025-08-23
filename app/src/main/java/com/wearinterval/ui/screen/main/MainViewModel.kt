@@ -2,7 +2,9 @@ package com.wearinterval.ui.screen.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wearinterval.domain.model.TimerPhase
 import com.wearinterval.domain.repository.ConfigurationRepository
+import com.wearinterval.domain.repository.HeartRateRepository
 import com.wearinterval.domain.repository.SettingsRepository
 import com.wearinterval.domain.repository.TimerRepository
 import com.wearinterval.util.TimeProvider
@@ -22,10 +24,31 @@ constructor(
   private val timerRepository: TimerRepository,
   private val configurationRepository: ConfigurationRepository,
   private val settingsRepository: SettingsRepository,
+  private val heartRateRepository: HeartRateRepository,
   private val timeProvider: TimeProvider,
 ) : ViewModel() {
 
   private val flashScreen = MutableStateFlow(false)
+
+  init {
+    // Start heart rate monitoring when timer starts
+    viewModelScope.launch {
+      timerRepository.timerState.collect { timerState ->
+        when (timerState.phase) {
+          TimerPhase.Running,
+          TimerPhase.Resting -> {
+            heartRateRepository.startMonitoring()
+          }
+          TimerPhase.Stopped -> {
+            heartRateRepository.stopMonitoring()
+          }
+          else -> {
+            /* No change needed */
+          }
+        }
+      }
+    }
+  }
 
   // MainViewModel initialized - all state managed via StateFlow combine
 
@@ -34,8 +57,9 @@ constructor(
         timerRepository.timerState,
         configurationRepository.currentConfiguration,
         timerRepository.isServiceBound,
+        heartRateRepository.heartRateState,
         flashScreen,
-      ) { timerState, configuration, isServiceBound, flash ->
+      ) { timerState, configuration, isServiceBound, heartRateState, flash ->
 
         // When stopped, always use configuration values to avoid race conditions
         val displayLaps = if (timerState.isStopped) configuration.laps else timerState.totalLaps
@@ -72,10 +96,10 @@ constructor(
           isPaused = timerState.isPaused,
           configuration = configuration,
           isPlayButtonEnabled = isServiceBound,
-          isStopButtonEnabled =
-            timerState.phase != com.wearinterval.domain.model.TimerPhase.Stopped,
+          isStopButtonEnabled = timerState.phase != TimerPhase.Stopped,
           isServiceBound = isServiceBound,
           flashScreen = flash,
+          heartRateState = heartRateState,
         )
       }
       .stateIn(
@@ -91,6 +115,7 @@ constructor(
       MainEvent.StopClicked -> handleStopClick()
       MainEvent.DismissAlarm -> handleDismissAlarm()
       MainEvent.FlashScreenDismissed -> flashScreen.value = false
+      is MainEvent.HeartRatePermissionResult -> handleHeartRatePermissionResult(event.granted)
     }
   }
 
@@ -112,6 +137,12 @@ constructor(
 
   private fun handleDismissAlarm() {
     viewModelScope.launch { timerRepository.dismissAlarm() }
+  }
+
+  private fun handleHeartRatePermissionResult(granted: Boolean) {
+    if (granted) {
+      viewModelScope.launch { heartRateRepository.startMonitoring() }
+    }
   }
 
   fun triggerFlash() {
