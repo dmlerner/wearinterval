@@ -68,15 +68,13 @@ class TimerService : Service() {
   override fun onBind(intent: Intent): IBinder = binder
 
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-    // Only start foreground when timer is actually running to avoid crashes
-    if (!_timerState.value.isStopped) {
-      try {
-        val notification = timerNotificationManager.createTimerNotification(_timerState.value)
-        startForeground(TimerNotificationManager.TIMER_NOTIFICATION_ID, notification)
-      } catch (e: Exception) {
-        // If we can't start foreground, continue as regular service
-        android.util.Log.w("TimerService", "Could not start foreground service", e)
-      }
+    // Always start foreground to ensure service survives when app is minimized
+    try {
+      val notification = timerNotificationManager.createTimerNotification(_timerState.value)
+      startForeground(TimerNotificationManager.TIMER_NOTIFICATION_ID, notification)
+    } catch (e: Exception) {
+      // If we can't start foreground, continue as regular service
+      android.util.Log.w("TimerService", "Could not start foreground service", e)
     }
     return START_STICKY
   }
@@ -89,9 +87,19 @@ class TimerService : Service() {
   }
 
   fun syncConfiguration(config: TimerConfiguration) {
-    _timerState.value = _timerState.value.copy(configuration = config)
-    if (_timerState.value.isStopped) {
+    val currentState = _timerState.value
+
+    if (currentState.isStopped) {
       _timerState.value = TimerState.stopped(config)
+    } else {
+      // Timer is running - need to rescale duration if it changed
+      val rescaledTime = rescaleRemainingDuration(currentState, config)
+      _timerState.value =
+        currentState.copy(
+          configuration = config,
+          timeRemaining = rescaledTime,
+          totalLaps = config.laps
+        )
     }
     timerNotificationManager.updateTimerNotification(_timerState.value)
   }
@@ -194,6 +202,44 @@ class TimerService : Service() {
   // Private Timer Logic Methods
   // ================================
 
+  /**
+   * Rescales the remaining duration when configuration changes during active timer. Maintains the
+   * same progress percentage so the rings stay consistent.
+   *
+   * @param currentState The current timer state
+   * @param newConfig The new configuration to apply
+   * @return The rescaled remaining duration
+   */
+  private fun rescaleRemainingDuration(
+    currentState: TimerState,
+    newConfig: TimerConfiguration
+  ): Duration {
+    val currentInterval = currentState.currentInterval
+    val newInterval =
+      if (currentState.isResting) {
+        newConfig.restDuration
+      } else {
+        newConfig.workDuration
+      }
+
+    // If the interval duration is zero, return zero
+    if (currentInterval == Duration.ZERO || newInterval == Duration.ZERO) {
+      return Duration.ZERO
+    }
+
+    // Calculate the current progress percentage (how much is complete)
+    val progressPercentage =
+      1f -
+        (currentState.timeRemaining.inWholeMilliseconds.toFloat() /
+          currentInterval.inWholeMilliseconds.toFloat())
+
+    // Apply the same progress percentage to the new interval duration
+    val rescaledRemaining = newInterval - (newInterval * progressPercentage.toDouble())
+
+    // Ensure we don't go below zero or above the new interval duration
+    return rescaledRemaining.coerceAtLeast(Duration.ZERO).coerceAtMost(newInterval)
+  }
+
   private fun initializeWakeLock() {
     wakeLock =
       powerManager.newWakeLock(
@@ -211,11 +257,21 @@ class TimerService : Service() {
   private fun observeConfigurationChanges() {
     serviceScope.launch {
       configurationRepository.currentConfiguration.collect { config ->
-        // Only update if timer is stopped to maintain single source of truth
-        if (_timerState.value.isStopped) {
+        val currentState = _timerState.value
+
+        if (currentState.isStopped) {
           _timerState.value = TimerState.stopped(config)
-          timerNotificationManager.updateTimerNotification(_timerState.value)
-        } else {}
+        } else {
+          // Timer is running - rescale duration to maintain progress ring consistency
+          val rescaledTime = rescaleRemainingDuration(currentState, config)
+          _timerState.value =
+            currentState.copy(
+              configuration = config,
+              timeRemaining = rescaledTime,
+              totalLaps = config.laps
+            )
+        }
+        timerNotificationManager.updateTimerNotification(_timerState.value)
       }
     }
   }

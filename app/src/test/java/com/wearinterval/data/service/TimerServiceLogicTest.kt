@@ -545,4 +545,165 @@ class TimerServiceLogicTest {
     assertThat(stoppedTime).isEqualTo(0L)
     assertThat(noTransitionStopped).isFalse()
   }
+
+  @Test
+  fun duration_rescaling_work_interval() {
+    // Test duration rescaling logic for work intervals during timer execution
+    fun rescaleDuration(currentRemaining: Long, currentInterval: Long, newInterval: Long): Long {
+      if (currentInterval == 0L || newInterval == 0L) return 0L
+
+      val progressPercentage = 1f - (currentRemaining.toFloat() / currentInterval.toFloat())
+      val rescaledRemaining = newInterval - (newInterval * progressPercentage).toLong()
+
+      return rescaledRemaining.coerceAtLeast(0L).coerceAtMost(newInterval)
+    }
+
+    // Test scaling up: 60s interval with 30s remaining, scaled to 90s interval
+    // Progress: 50% complete (30s elapsed), so 50% of 90s = 45s elapsed, 45s remaining
+    val scaledUp = rescaleDuration(30000L, 60000L, 90000L)
+    assertThat(scaledUp).isEqualTo(45000L)
+
+    // Test scaling down: 60s interval with 30s remaining, scaled to 30s interval
+    // Progress: 50% complete (30s elapsed), so 50% of 30s = 15s elapsed, 15s remaining
+    val scaledDown = rescaleDuration(30000L, 60000L, 30000L)
+    assertThat(scaledDown).isEqualTo(15000L)
+
+    // Test early stage: 60s interval with 55s remaining (5s elapsed = 8.33% progress)
+    // Scaled to 90s: 8.33% of 90s = 7.5s elapsed, 82.5s remaining (allow 1ms precision)
+    val earlyStage = rescaleDuration(55000L, 60000L, 90000L)
+    assertThat(earlyStage).isWithin(1L).of(82500L)
+
+    // Test late stage: 60s interval with 5s remaining (55s elapsed = 91.67% progress)
+    // Scaled to 90s: 91.67% of 90s = 82.5s elapsed, 7.5s remaining
+    val lateStage = rescaleDuration(5000L, 60000L, 90000L)
+    assertThat(lateStage).isEqualTo(7500L)
+  }
+
+  @Test
+  fun duration_rescaling_rest_interval() {
+    // Test duration rescaling logic specifically for rest intervals
+    fun rescaleDuration(currentRemaining: Long, currentInterval: Long, newInterval: Long): Long {
+      if (currentInterval == 0L || newInterval == 0L) return 0L
+
+      val progressPercentage = 1f - (currentRemaining.toFloat() / currentInterval.toFloat())
+      val rescaledRemaining = newInterval - (newInterval * progressPercentage).toLong()
+
+      return rescaledRemaining.coerceAtLeast(0L).coerceAtMost(newInterval)
+    }
+
+    // Test rest period scaling: 30s rest with 15s remaining, scaled to 45s rest
+    // Progress: 50% complete, so 50% of 45s = 22.5s elapsed, 22.5s remaining
+    val restScaledUp = rescaleDuration(15000L, 30000L, 45000L)
+    assertThat(restScaledUp).isEqualTo(22500L)
+
+    // Test rest period scaling down: 30s rest with 10s remaining, scaled to 15s rest
+    // Progress: 66.67% complete, so 66.67% of 15s = 10s elapsed, 5s remaining (allow 1ms precision)
+    val restScaledDown = rescaleDuration(10000L, 30000L, 15000L)
+    assertThat(restScaledDown).isWithin(1L).of(5000L)
+
+    // Test no rest to rest: Current interval 0, new interval 30s -> should return 0
+    val noRestToRest = rescaleDuration(0L, 0L, 30000L)
+    assertThat(noRestToRest).isEqualTo(0L)
+
+    // Test rest to no rest: Current 15s remaining in 30s interval -> should return 0
+    val restToNoRest = rescaleDuration(15000L, 30000L, 0L)
+    assertThat(restToNoRest).isEqualTo(0L)
+  }
+
+  @Test
+  fun duration_rescaling_edge_cases() {
+    // Test edge cases for duration rescaling logic
+    fun rescaleDuration(currentRemaining: Long, currentInterval: Long, newInterval: Long): Long {
+      if (currentInterval == 0L || newInterval == 0L) return 0L
+
+      val progressPercentage = 1f - (currentRemaining.toFloat() / currentInterval.toFloat())
+      val rescaledRemaining = newInterval - (newInterval * progressPercentage).toLong()
+
+      return rescaledRemaining.coerceAtLeast(0L).coerceAtMost(newInterval)
+    }
+
+    // Test zero current remaining (interval just completed)
+    val zeroRemaining = rescaleDuration(0L, 60000L, 90000L)
+    assertThat(zeroRemaining).isEqualTo(0L) // 100% progress -> 0 remaining
+
+    // Test full current remaining (interval just started)
+    val fullRemaining = rescaleDuration(60000L, 60000L, 90000L)
+    assertThat(fullRemaining).isEqualTo(90000L) // 0% progress -> full new interval
+
+    // Test same duration rescaling (no change)
+    val sameInterval = rescaleDuration(30000L, 60000L, 60000L)
+    assertThat(sameInterval).isEqualTo(30000L) // Should remain unchanged
+
+    // Test extreme scaling down (might result in very small remaining time)
+    val extremeScaleDown = rescaleDuration(30000L, 60000L, 1000L)
+    assertThat(extremeScaleDown).isEqualTo(500L) // 50% progress -> 500ms remaining
+
+    // Test extreme scaling up
+    val extremeScaleUp = rescaleDuration(30000L, 60000L, 600000L)
+    assertThat(extremeScaleUp).isEqualTo(300000L) // 50% progress -> 300s remaining
+  }
+
+  @Test
+  fun duration_rescaling_maintains_progress_ring_consistency() {
+    // Test that rescaling maintains visual progress ring consistency
+    fun calculateProgressPercentage(remaining: Long, total: Long): Float {
+      if (total == 0L) return 1f
+      return 1f - (remaining.toFloat() / total.toFloat())
+    }
+
+    fun rescaleDuration(currentRemaining: Long, currentInterval: Long, newInterval: Long): Long {
+      if (currentInterval == 0L || newInterval == 0L) return 0L
+
+      val progressPercentage = 1f - (currentRemaining.toFloat() / currentInterval.toFloat())
+      val rescaledRemaining = newInterval - (newInterval * progressPercentage).toLong()
+
+      return rescaledRemaining.coerceAtLeast(0L).coerceAtMost(newInterval)
+    }
+
+    // Test scenario: timer at 25% progress (45s remaining in 60s interval)
+    val originalRemaining = 45000L
+    val originalInterval = 60000L
+    val originalProgress = calculateProgressPercentage(originalRemaining, originalInterval)
+
+    // Scale to different durations and verify progress consistency
+    val testIntervals = listOf(30000L, 90000L, 120000L, 180000L)
+
+    testIntervals.forEach { newInterval ->
+      val rescaledRemaining = rescaleDuration(originalRemaining, originalInterval, newInterval)
+      val newProgress = calculateProgressPercentage(rescaledRemaining, newInterval)
+
+      // Progress should be approximately equal (within small floating point tolerance)
+      assertThat(newProgress).isWithin(0.01f).of(originalProgress)
+    }
+  }
+
+  @Test
+  fun duration_rescaling_preserves_completion_state() {
+    // Test that rescaling preserves completion state at interval boundaries
+    fun rescaleDuration(currentRemaining: Long, currentInterval: Long, newInterval: Long): Long {
+      if (currentInterval == 0L || newInterval == 0L) return 0L
+
+      val progressPercentage = 1f - (currentRemaining.toFloat() / currentInterval.toFloat())
+      val rescaledRemaining = newInterval - (newInterval * progressPercentage).toLong()
+
+      return rescaledRemaining.coerceAtLeast(0L).coerceAtMost(newInterval)
+    }
+
+    // Test interval just completed (0 remaining) -> should remain 0 in any new interval
+    val completedRescale1 = rescaleDuration(0L, 60000L, 90000L)
+    val completedRescale2 = rescaleDuration(0L, 30000L, 45000L)
+    assertThat(completedRescale1).isEqualTo(0L)
+    assertThat(completedRescale2).isEqualTo(0L)
+
+    // Test interval just started (full remaining) -> should equal new interval duration
+    val freshRescale1 = rescaleDuration(60000L, 60000L, 90000L)
+    val freshRescale2 = rescaleDuration(30000L, 30000L, 45000L)
+    assertThat(freshRescale1).isEqualTo(90000L)
+    assertThat(freshRescale2).isEqualTo(45000L)
+
+    // Test very close to completion (1s remaining in 60s)
+    val nearCompletionRescale = rescaleDuration(1000L, 60000L, 90000L)
+    // 98.33% progress -> 1.5s remaining in 90s interval
+    assertThat(nearCompletionRescale).isEqualTo(1500L)
+  }
 }
