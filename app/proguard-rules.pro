@@ -33,3 +33,20 @@
 
 # Keep data classes used in StateFlow
 -keep class com.wearinterval.domain.model.** { *; }
+
+# Keep Health Services classes for heart rate functionality
+-keep class androidx.health.services.client.** { *; }
+-keep interface androidx.health.services.client.** { *; }
+-keep class com.google.android.gms.wearable.** { *; }
+-keep class com.wearinterval.data.health.** { *; }
+
+# Keep heart rate related enums and data classes
+-keep class androidx.health.services.client.data.DataType { *; }
+-keep class androidx.health.services.client.data.DataPointContainer { *; }
+-keep class androidx.health.services.client.data.DataPoint { *; }
+-keep class androidx.health.services.client.data.Value { *; }
+
+# Keep measure callback interfaces
+-keepclassmembers class * implements androidx.health.services.client.MeasureCallback {
+   *;
+}
