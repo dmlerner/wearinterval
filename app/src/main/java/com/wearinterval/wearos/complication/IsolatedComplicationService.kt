@@ -100,7 +100,7 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
 
     if (!::timerRepository.isInitialized) {
       android.util.Log.e(TAG, "Timer repository not initialized - using fallback")
-      callback.onComplicationData(createFallbackData())
+      callback.onComplicationData(createFallbackData(request.complicationType))
       return
     }
 
@@ -133,7 +133,7 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
         callback.onComplicationData(complicationData)
       } catch (e: Exception) {
         android.util.Log.e(TAG, "ERROR fetching timer data", e)
-        callback.onComplicationData(createFallbackData())
+        callback.onComplicationData(createFallbackData(request.complicationType))
       }
     }
   }
@@ -317,13 +317,63 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
       .build()
   }
 
-  private fun createFallbackData(): ComplicationData {
-    return ShortTextComplicationData.Builder(
-        text = PlainComplicationText.Builder("WI").build(),
-        contentDescription = PlainComplicationText.Builder("WearInterval Timer").build()
-      )
-      .setTapAction(createTapAction())
-      .build()
+  private fun createFallbackData(type: ComplicationType): ComplicationData {
+    return when (type) {
+      ComplicationType.SHORT_TEXT ->
+        ShortTextComplicationData.Builder(
+            text = PlainComplicationText.Builder("WI").build(),
+            contentDescription = PlainComplicationText.Builder("WearInterval Timer").build()
+          )
+          .setTapAction(createTapAction())
+          .build()
+      ComplicationType.LONG_TEXT ->
+        LongTextComplicationData.Builder(
+            text = PlainComplicationText.Builder("WearInterval Timer").build(),
+            contentDescription = PlainComplicationText.Builder("WearInterval Timer").build()
+          )
+          .setTapAction(createTapAction())
+          .build()
+      ComplicationType.RANGED_VALUE ->
+        RangedValueComplicationData.Builder(
+            value = 0f,
+            min = 0f,
+            max = 100f,
+            contentDescription = PlainComplicationText.Builder("WearInterval Timer").build()
+          )
+          .setText(PlainComplicationText.Builder("Ready").build())
+          .setTapAction(createTapAction())
+          .build()
+      ComplicationType.SMALL_IMAGE ->
+        SmallImageComplicationData.Builder(
+            smallImage =
+              SmallImage.Builder(
+                  image = Icon.createWithResource(this, R.drawable.ic_timer),
+                  type = SmallImageType.ICON
+                )
+                .build(),
+            contentDescription = PlainComplicationText.Builder("WearInterval Timer").build()
+          )
+          .setTapAction(createTapAction())
+          .build()
+      ComplicationType.MONOCHROMATIC_IMAGE ->
+        MonochromaticImageComplicationData.Builder(
+            monochromaticImage =
+              MonochromaticImage.Builder(image = Icon.createWithResource(this, R.drawable.ic_timer))
+                .build(),
+            contentDescription = PlainComplicationText.Builder("WearInterval Timer").build()
+          )
+          .setTapAction(createTapAction())
+          .build()
+
+      // Exhaustive when - compiler ensures all types are handled
+      else ->
+        ShortTextComplicationData.Builder(
+            text = PlainComplicationText.Builder("WI").build(),
+            contentDescription = PlainComplicationText.Builder("WearInterval Timer").build()
+          )
+          .setTapAction(createTapAction())
+          .build()
+    }
   }
 
   override fun getPreviewData(type: ComplicationType): ComplicationData {
