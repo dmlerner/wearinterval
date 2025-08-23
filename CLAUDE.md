@@ -1,38 +1,36 @@
-# WearInterval - Claude Development Guide
+# WearInterval - Claude Maintenance Guide
+
+## ⚠️ IMPORTANT: This is a SAPLING repository - NEVER use git commands!
+**Always use `sl` (Sapling) commands instead of `git`. Using git will break the repository.**
 
 ## Quick Start for Claude
-When working on this project, **immediately read these files in order** to understand the current state and requirements:
+When working on this **completed MVP**, read these files to understand the implemented features and architecture:
 
 ### 1. Read Project Foundation (Required)
 ```
-@WEARINTERVAL_DESIGN_SPEC.md - Complete feature specification and UI requirements
-@architecture.md - Technical architecture and patterns
-@DEVELOPMENT_PRACTICES.md - Code quality standards, testing, and Sapling workflow
-@IMPLEMENTATION_PLAN.md - Detailed phase-by-phase development plan
-@PROJECT_STATUS.md - Current progress and next steps
+@FEATURE_SPECIFICATION.md - Complete feature specification (implemented)
+@ARCHITECTURE_AND_PRACTICES.md - Technical architecture and patterns (as-built)
 ```
 
 ### 2. Understand Current State
-- **Always check `PROJECT_STATUS.md`** first to see:
-  - Current implementation phase
-  - Recently completed tasks  
-  - What's currently being worked on
-  - Next priority tasks
-  - Any blockers or issues
+- **MVP is complete** with all core features implemented
+- **Production-ready** Wear OS interval timer application
+- **Comprehensive test coverage** (90%+) across all layers
+- **All planned features** from specification are functional
 
-### 3. Follow Development Standards
-- **90% test coverage minimum** for all code
-- **Test-driven development** - write tests first
+### 3. Maintenance Standards
+- **90% test coverage minimum** for all code changes
+- **Test existing functionality** before making changes
 - **Maximum 20 lines per function**
-- **Atomic commits** with descriptive messages using Sapling
-- **Update PROJECT_STATUS.md** after significant progress
+- **Write tests for any new behaviors**
 
 ## Project Overview
-**WearInterval** is a Wear OS interval timer application with:
-- Multiple timer configuration interfaces
-- Comprehensive Wear OS integration (tiles, complications)
-- Robust state management and persistence
-- Production-quality architecture with full test coverage
+**WearInterval** is a **completed** Wear OS interval timer application with:
+- Multiple timer configuration interfaces (manual, presets, history)
+- Full Wear OS integration (tiles, complications, notifications)
+- Robust state management and persistence (Room + DataStore)
+- Production-quality architecture with comprehensive test coverage
+- All core features from specification implemented and tested
 
 ## Architecture Summary
 - **MVVM + Repository Pattern** with strict separation of concerns
@@ -41,35 +39,27 @@ When working on this project, **immediately read these files in order** to under
 - **Dependency Injection** with Hilt
 - **Comprehensive Testing** at all layers
 
-## Key Technical Decisions
-- **Wear OS 3.0+** (minSdk 30) with Jetpack Compose
-- **TimerService** as foreground service for reliability
-- **Room database** for configuration history
-- **DataStore** for settings and current configuration
-- **Sapling** for version control with conventional commits
+## Implemented Features
+- **Interval Timer Engine** - Precise timing with foreground service
+- **Configuration Management** - Manual setup, presets, history persistence
+- **Wear OS Integration** - Tiles, complications, notifications
+- **Progress Visualization** - Dual-ring progress display
+- **State Management** - Comprehensive pause/resume/stop functionality
+- **Background Operation** - Timers continue when app minimized
 
-## Implementation Phases
-1. **Foundation** - Project setup, dependencies, core models
-2. **Data Layer** - Room, DataStore, TimerService foundation  
-3. **Domain Layer** - Repository implementations with full testing
-4. **UI Layer** - All screens, ViewModels, navigation
-5. **Wear OS Integration** - Tiles, complications, notifications
-6. **Timer Logic & Polish** - Complete functionality and optimization
+## Maintenance Workflow
+1. **Run existing tests** to ensure stability: `./gradlew test`
+2. **Check current coverage**: `./gradlew jacocoTestReport`
+3. **Write tests for changes** before implementing
+4. **Follow established patterns** from architecture document
+5. **Maintain 90%+ coverage** for any new code
+6. **Test on device/emulator** for Wear OS specific features
 
-## Development Workflow
-1. **Check current phase** in PROJECT_STATUS.md
-2. **Update TodoWrite** with current tasks from implementation plan
-3. **Write tests first** (TDD approach)
-4. **Implement features** following architecture patterns
-5. **Verify 90%+ coverage** with JaCoCo
-6. **Commit frequently** with descriptive messages
-7. **Update PROJECT_STATUS.md** with progress
-
-## Testing Requirements
-- **Unit Tests**: ViewModels, Repositories, Data Models (100% coverage)
-- **Integration Tests**: DAOs, DataStore, Service interactions
-- **UI Tests**: Critical user flows and screen interactions
-- **Tools**: JUnit5, MockK, Turbine, Compose Testing, Room Testing
+## Existing Test Coverage
+- **Unit Tests**: ViewModels, Repositories, Data Models (90%+ coverage achieved)
+- **Integration Tests**: DAOs, DataStore, Service interactions (implemented)
+- **UI Tests**: Critical user flows and screen interactions (implemented)
+- **Tools Used**: JUnit5, MockK, Turbine, Compose Testing, Room Testing
 
 ## Critical Patterns to Follow
 - **Single Source of Truth**: Repositories own their domain data
@@ -89,25 +79,24 @@ com.wearinterval/
 └── util/ - Utility functions and extensions
 ```
 
-## Getting Started Checklist
-When resuming development:
+## Maintenance Checklist
+When making changes to the completed MVP:
 
-- [ ] Read PROJECT_STATUS.md to understand current state
-- [ ] Check which phase you're in from IMPLEMENTATION_PLAN.md
-- [ ] Update TodoWrite with current phase tasks
-- [ ] Run existing tests: `./gradlew test`
-- [ ] Check coverage: `./gradlew jacocoTestReport`  
-- [ ] Continue with next task in current phase
-- [ ] Write tests first for any new functionality
-- [ ] Update PROJECT_STATUS.md when completing milestones
+- [ ] Read FEATURE_SPECIFICATION.md and ARCHITECTURE_AND_PRACTICES.md
+- [ ] Run existing tests to ensure current functionality: `./gradlew test`
+- [ ] Check existing coverage: `./gradlew jacocoTestReport`
+- [ ] Write tests for any new functionality before implementing
+- [ ] Follow established architectural patterns
+- [ ] Maintain or improve test coverage (≥ 90%)
+- [ ] Test changes on device/emulator
 
-## Quality Gates
-Before moving to next phase:
-- [ ] All planned features implemented and working
-- [ ] Test coverage ≥ 90% for new code
-- [ ] All tests passing (unit + integration + UI)
-- [ ] No critical code quality issues
-- [ ] Manual testing completed on device/emulator
+## Quality Standards for Changes
+Before committing any modifications:
+- [ ] All existing tests still passing
+- [ ] New functionality has comprehensive test coverage
+- [ ] No regression in existing features
+- [ ] Code follows established patterns and conventions
+- [ ] Manual testing completed for affected areas
 
 ## Important Commands
 ```bash
@@ -118,20 +107,20 @@ Before moving to next phase:
 # Lint and quality
 ./gradlew lintDebug
 
-# Presubmit checks
-./scripts/check-time-usage.sh  # Enforce TimeProvider usage
+# Build and run
+./gradlew assembleRelease
+./gradlew installRelease  # Use release builds unless specifically debugging
 
-# Sapling workflow
-sl commit -m "feat(scope): description"
-sl amend
-sl pr submit
+# SAPLING VERSION CONTROL (NEVER use git!)
+sl status                 # Check repository status
+sl commit -m "message"    # Commit changes
+sl amend                  # Amend last commit
 ```
 
-## Contact & Issues
-- Follow the patterns established in the architecture document
-- Maintain the established testing standards
-- Use the TodoWrite tool to track progress
-- Keep PROJECT_STATUS.md updated as the single source of truth
+## Maintenance Guidelines
+- Follow the patterns established in ARCHITECTURE_AND_PRACTICES.md
+- Maintain the established testing standards (90%+ coverage)
+- Test all changes thoroughly before committing
+- Use release builds for normal testing unless specifically debugging
 
-**Remember**: This is a production-quality codebase. Prioritize maintainability, testability, and adherence to established patterns over speed of implementation.
-- remember: all new behaviors should have at least one test.
+**Remember**: This is a completed, production-quality MVP. Any changes should maintain the high quality standards and comprehensive test coverage that has been achieved.
