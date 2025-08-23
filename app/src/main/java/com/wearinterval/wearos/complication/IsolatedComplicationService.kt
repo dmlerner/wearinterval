@@ -3,12 +3,14 @@ package com.wearinterval.wearos.complication
 import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Intent
+import android.graphics.drawable.Icon
 import android.util.Log
 import androidx.wear.watchface.complications.data.*
 import androidx.wear.watchface.complications.datasource.ComplicationDataSourceService
 import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester
 import androidx.wear.watchface.complications.datasource.ComplicationRequest
 import com.wearinterval.MainActivity
+import com.wearinterval.R
 import com.wearinterval.domain.repository.ConfigurationRepository
 import com.wearinterval.domain.repository.TimerRepository
 import dagger.hilt.EntryPoint
@@ -47,7 +49,7 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
 
   override fun onCreate() {
     super.onCreate()
-    Log.d(TAG, "=== IsolatedComplicationService onCreate() ===")
+    android.util.Log.e(TAG, "=== IsolatedComplicationService onCreate() ===")
 
     try {
       // Use Hilt EntryPoint to get dependencies
@@ -68,9 +70,9 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
       // Observe timer state changes and push updates to complications
       observeTimerStateChanges()
 
-      Log.d(TAG, "Hilt EntryPoint injection successful")
+      android.util.Log.e(TAG, "Hilt EntryPoint injection successful")
     } catch (e: Exception) {
-      Log.e(TAG, "Failed to initialize Hilt dependencies", e)
+      android.util.Log.e(TAG, "Failed to initialize Hilt dependencies", e)
     }
   }
 
@@ -94,10 +96,10 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
     request: ComplicationRequest,
     callback: ComplicationRequestListener
   ) {
-    Log.d(TAG, "=== Complication REQUEST: ${request.complicationType} ===")
+    android.util.Log.e(TAG, "=== Complication REQUEST: ${request.complicationType} ===")
 
     if (!::timerRepository.isInitialized) {
-      Log.w(TAG, "Timer repository not initialized - using fallback")
+      android.util.Log.e(TAG, "Timer repository not initialized - using fallback")
       callback.onComplicationData(createFallbackData())
       return
     }
@@ -108,11 +110,11 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
         val timerState = timerRepository.timerState.first()
         val config = configRepository.currentConfiguration.first()
 
-        Log.d(
+        android.util.Log.e(
           TAG,
           "Timer state: phase=${timerState.phase}, timeRemaining=${timerState.timeRemaining.inWholeSeconds}s, lap=${timerState.currentLap}/${timerState.totalLaps}"
         )
-        Log.d(
+        android.util.Log.e(
           TAG,
           "Config: work=${config.workDuration.inWholeSeconds}s, rest=${config.restDuration.inWholeSeconds}s"
         )
@@ -122,13 +124,15 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
             ComplicationType.SHORT_TEXT -> createShortTextComplication(timerState)
             ComplicationType.LONG_TEXT -> createLongTextComplication(timerState, config)
             ComplicationType.RANGED_VALUE -> createRangedValueComplication(timerState)
+            ComplicationType.SMALL_IMAGE -> createSmallImageComplication()
+            ComplicationType.MONOCHROMATIC_IMAGE -> createMonochromaticImageComplication()
             else -> createShortTextComplication(timerState)
           }
 
-        Log.d(TAG, "SUCCESS: Returning real timer complication data via Hilt")
+        android.util.Log.e(TAG, "SUCCESS: Returning ${complicationData.javaClass.simpleName}")
         callback.onComplicationData(complicationData)
       } catch (e: Exception) {
-        Log.e(TAG, "ERROR fetching timer data", e)
+        android.util.Log.e(TAG, "ERROR fetching timer data", e)
         callback.onComplicationData(createFallbackData())
       }
     }
@@ -154,72 +158,117 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
   private fun createShortTextComplication(
     timerState: com.wearinterval.domain.model.TimerState
   ): ComplicationData {
-    val timeText = formatTimeRemaining(timerState.timeRemaining.inWholeSeconds)
-    val statusText =
-      when (timerState.phase) {
-        is com.wearinterval.domain.model.TimerPhase.Running -> "Work"
-        is com.wearinterval.domain.model.TimerPhase.Resting -> "Rest"
-        is com.wearinterval.domain.model.TimerPhase.Paused -> "Paused"
-        is com.wearinterval.domain.model.TimerPhase.AlarmActive -> "Done"
-        else -> "Ready"
+    return when (timerState.phase) {
+      is com.wearinterval.domain.model.TimerPhase.Stopped -> {
+        // When stopped, show just tiny timer icon
+        ShortTextComplicationData.Builder(
+            text = PlainComplicationText.Builder("⏱").build(),
+            contentDescription = PlainComplicationText.Builder("Timer ready").build()
+          )
+          .setTapAction(createTapAction())
+          .build()
       }
+      else -> {
+        // When running, show time and status
+        val timeText = formatTimeRemaining(timerState.timeRemaining.inWholeSeconds)
+        val statusText =
+          when (timerState.phase) {
+            is com.wearinterval.domain.model.TimerPhase.Running -> "Work"
+            is com.wearinterval.domain.model.TimerPhase.Resting -> "Rest"
+            is com.wearinterval.domain.model.TimerPhase.Paused -> "Paused"
+            is com.wearinterval.domain.model.TimerPhase.AlarmActive -> "Done"
+            else -> "Ready"
+          }
 
-    return ShortTextComplicationData.Builder(
-        text = PlainComplicationText.Builder(timeText).build(),
-        contentDescription = PlainComplicationText.Builder("Timer: $timeText $statusText").build()
-      )
-      .setTitle(PlainComplicationText.Builder(statusText).build())
-      .setTapAction(createTapAction())
-      .build()
+        ShortTextComplicationData.Builder(
+            text = PlainComplicationText.Builder(timeText).build(),
+            contentDescription =
+              PlainComplicationText.Builder("Timer: $timeText $statusText").build()
+          )
+          .setTitle(PlainComplicationText.Builder(statusText).build())
+          .setTapAction(createTapAction())
+          .build()
+      }
+    }
   }
 
   private fun createLongTextComplication(
     timerState: com.wearinterval.domain.model.TimerState,
     config: com.wearinterval.domain.model.TimerConfiguration
   ): ComplicationData {
-    val timeText = formatTimeRemaining(timerState.timeRemaining.inWholeSeconds)
-    val lapText = timerState.displayCurrentLap
-    val statusText =
-      when (timerState.phase) {
-        is com.wearinterval.domain.model.TimerPhase.Running -> "Work"
-        is com.wearinterval.domain.model.TimerPhase.Resting -> "Rest"
-        else -> "Ready"
+    return when (timerState.phase) {
+      is com.wearinterval.domain.model.TimerPhase.Stopped -> {
+        // When stopped, show minimal content
+        LongTextComplicationData.Builder(
+            text = PlainComplicationText.Builder("WearInterval Timer").build(),
+            contentDescription = PlainComplicationText.Builder("Timer ready").build()
+          )
+          .setTapAction(createTapAction())
+          .build()
       }
+      else -> {
+        // When running, show full details
+        val timeText = formatTimeRemaining(timerState.timeRemaining.inWholeSeconds)
+        val lapText = timerState.displayCurrentLap
+        val statusText =
+          when (timerState.phase) {
+            is com.wearinterval.domain.model.TimerPhase.Running -> "Work"
+            is com.wearinterval.domain.model.TimerPhase.Resting -> "Rest"
+            else -> "Ready"
+          }
 
-    val fullText = "$timeText • $statusText • $lapText"
+        val fullText = "$timeText • $statusText • $lapText"
 
-    return LongTextComplicationData.Builder(
-        text = PlainComplicationText.Builder(fullText).build(),
-        contentDescription = PlainComplicationText.Builder("WearInterval: $fullText").build()
-      )
-      .setTitle(PlainComplicationText.Builder("Timer").build())
-      .setTapAction(createTapAction())
-      .build()
+        LongTextComplicationData.Builder(
+            text = PlainComplicationText.Builder(fullText).build(),
+            contentDescription = PlainComplicationText.Builder("WearInterval: $fullText").build()
+          )
+          .setTitle(PlainComplicationText.Builder("Timer").build())
+          .setTapAction(createTapAction())
+          .build()
+      }
+    }
   }
 
   private fun createRangedValueComplication(
     timerState: com.wearinterval.domain.model.TimerState
   ): ComplicationData {
-    val progressPercent = (timerState.progressPercentage * 100).toInt().coerceIn(0, 100)
-    val timeText = formatTimeRemaining(timerState.timeRemaining.inWholeSeconds)
-    val statusText =
-      when (timerState.phase) {
-        is com.wearinterval.domain.model.TimerPhase.Running -> "Work"
-        is com.wearinterval.domain.model.TimerPhase.Resting -> "Rest"
-        else -> "Ready"
+    return when (timerState.phase) {
+      is com.wearinterval.domain.model.TimerPhase.Stopped -> {
+        // When stopped, show just empty progress ring
+        RangedValueComplicationData.Builder(
+            value = 0f,
+            min = 0f,
+            max = 100f,
+            contentDescription = PlainComplicationText.Builder("Timer ready").build()
+          )
+          .setTapAction(createTapAction())
+          .build()
       }
+      else -> {
+        // When running, show progress and time
+        val progressPercent = (timerState.progressPercentage * 100).toInt().coerceIn(0, 100)
+        val timeText = formatTimeRemaining(timerState.timeRemaining.inWholeSeconds)
+        val statusText =
+          when (timerState.phase) {
+            is com.wearinterval.domain.model.TimerPhase.Running -> "Work"
+            is com.wearinterval.domain.model.TimerPhase.Resting -> "Rest"
+            else -> "Ready"
+          }
 
-    return RangedValueComplicationData.Builder(
-        value = progressPercent.toFloat(),
-        min = 0f,
-        max = 100f,
-        contentDescription =
-          PlainComplicationText.Builder("Timer progress: $progressPercent%").build()
-      )
-      .setText(PlainComplicationText.Builder(timeText).build())
-      .setTitle(PlainComplicationText.Builder(statusText).build())
-      .setTapAction(createTapAction())
-      .build()
+        RangedValueComplicationData.Builder(
+            value = progressPercent.toFloat(),
+            min = 0f,
+            max = 100f,
+            contentDescription =
+              PlainComplicationText.Builder("Timer progress: $progressPercent%").build()
+          )
+          .setText(PlainComplicationText.Builder(timeText).build())
+          .setTitle(PlainComplicationText.Builder(statusText).build())
+          .setTapAction(createTapAction())
+          .build()
+      }
+    }
   }
 
   private fun formatTimeRemaining(totalSeconds: Long): String {
@@ -241,6 +290,31 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
       intent,
       PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
+  }
+
+  private fun createSmallImageComplication(): ComplicationData {
+    return SmallImageComplicationData.Builder(
+        smallImage =
+          SmallImage.Builder(
+              image = Icon.createWithResource(this, R.drawable.ic_timer),
+              type = SmallImageType.ICON
+            )
+            .build(),
+        contentDescription = PlainComplicationText.Builder("WearInterval Timer - Ready").build()
+      )
+      .setTapAction(createTapAction())
+      .build()
+  }
+
+  private fun createMonochromaticImageComplication(): ComplicationData {
+    return MonochromaticImageComplicationData.Builder(
+        monochromaticImage =
+          MonochromaticImage.Builder(image = Icon.createWithResource(this, R.drawable.ic_timer))
+            .build(),
+        contentDescription = PlainComplicationText.Builder("WearInterval Timer - Ready").build()
+      )
+      .setTapAction(createTapAction())
+      .build()
   }
 
   private fun createFallbackData(): ComplicationData {
@@ -281,11 +355,38 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
           .setTitle(PlainComplicationText.Builder("Work").build())
           .setTapAction(createTapAction())
           .build()
+      ComplicationType.SMALL_IMAGE ->
+        SmallImageComplicationData.Builder(
+            smallImage =
+              SmallImage.Builder(
+                  image = Icon.createWithResource(this, R.drawable.ic_timer),
+                  type = SmallImageType.ICON
+                )
+                .build(),
+            contentDescription = PlainComplicationText.Builder("WearInterval Timer Preview").build()
+          )
+          .setTapAction(createTapAction())
+          .build()
+      ComplicationType.MONOCHROMATIC_IMAGE ->
+        MonochromaticImageComplicationData.Builder(
+            monochromaticImage =
+              MonochromaticImage.Builder(image = Icon.createWithResource(this, R.drawable.ic_timer))
+                .build(),
+            contentDescription = PlainComplicationText.Builder("WearInterval Timer Preview").build()
+          )
+          .setTapAction(createTapAction())
+          .build()
       else ->
-        ShortTextComplicationData.Builder(
-            text = PlainComplicationText.Builder("Timer").build(),
+        SmallImageComplicationData.Builder(
+            smallImage =
+              SmallImage.Builder(
+                  image = Icon.createWithResource(this, R.drawable.ic_timer),
+                  type = SmallImageType.ICON
+                )
+                .build(),
             contentDescription = PlainComplicationText.Builder("WearInterval Timer").build()
           )
+          .setTapAction(createTapAction())
           .build()
     }
   }

@@ -72,47 +72,11 @@
                 android:resource="@drawable/tile_preview" />
         </service>
 
-        <!-- Isolated Complication Service (working timer with manual DI) -->
+        <!-- WearInterval Timer Complication -->
         <service
             android:name=".wearos.complication.IsolatedComplicationService"
             android:exported="true"
-            android:label="aaa Working Timer"
-            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
-            <intent-filter>
-                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
-                <action android:name="androidx.wear.watchface.complications.datasource.ComplicationDataSourceService" />
-            </intent-filter>
-            <meta-data
-                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
-                android:value="SHORT_TEXT,LONG_TEXT,RANGED_VALUE" />
-            <meta-data
-                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
-                android:value="30" />
-        </service>
-
-        <!-- Simple Complication Service (for testing) -->
-        <service
-            android:name=".wearos.complication.SimpleComplicationService"
-            android:exported="true"
-            android:label="aaa Simple Timer"
-            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
-            <intent-filter>
-                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
-                <action android:name="androidx.wear.watchface.complications.datasource.ComplicationDataSourceService" />
-            </intent-filter>
-            <meta-data
-                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
-                android:value="SHORT_TEXT" />
-            <meta-data
-                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
-                android:value="60" />
-        </service>
-
-        <!-- Complication Service -->
-        <service
-            android:name=".wearos.complication.WearIntervalComplicationService"
-            android:exported="true"
-            android:label="aaa Full Timer"
+            android:label="WearInterval Timer"
             android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
             <intent-filter>
                 <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
@@ -125,6 +89,7 @@
                 android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
                 android:value="30" />
         </service>
+
 
     </application>
 
