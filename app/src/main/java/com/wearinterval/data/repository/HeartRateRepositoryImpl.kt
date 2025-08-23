@@ -3,6 +3,7 @@ package com.wearinterval.data.repository
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.core.content.ContextCompat
 import com.wearinterval.data.health.HealthServicesManager
 import com.wearinterval.data.health.MeasureMessage
@@ -44,42 +45,55 @@ constructor(
       .stateIn(scope = repositoryScope, started = SharingStarted.Eagerly, initialValue = false)
 
   override suspend fun startMonitoring(): Result<Unit> = runCatching {
+    Log.d("HeartRate", "HeartRateRepository.startMonitoring() called")
+
     if (!healthServicesManager.hasHeartRateCapability()) {
+      Log.w("HeartRate", "Heart rate capability not available")
       _heartRateState.value = HeartRateState.Unavailable
       return Result.failure(IllegalStateException("Heart rate not available"))
     }
 
     if (!checkPermission()) {
+      Log.w("HeartRate", "BODY_SENSORS permission not granted")
       _heartRateState.value = HeartRateState.PermissionRequired
       return Result.failure(SecurityException("BODY_SENSORS permission required"))
     }
 
+    Log.d("HeartRate", "Starting heart rate monitoring, setting state to Connecting")
     _heartRateState.value = HeartRateState.Connecting
 
     healthServicesManager
       .heartRateMeasureFlow()
       .onEach { message ->
+        Log.d("HeartRate", "Received message: $message")
         when (message) {
           is MeasureMessage.MeasureData -> {
+            Log.d("HeartRate", "Heart rate data received: ${message.bpm} BPM")
             _heartRateState.value = HeartRateState.Connected(message.bpm)
           }
           is MeasureMessage.Available -> {
+            Log.d("HeartRate", "Heart rate sensor available")
             if (_heartRateState.value !is HeartRateState.Connected) {
               _heartRateState.value = HeartRateState.Connecting
             }
           }
           is MeasureMessage.Unavailable -> {
+            Log.w("HeartRate", "Heart rate sensor unavailable")
             _heartRateState.value = HeartRateState.Unavailable
           }
           else -> {
-            /* Handle other states */
+            Log.d("HeartRate", "Other message type: $message")
           }
         }
       }
       .catch { throwable ->
+        Log.e("HeartRate", "Error in heart rate flow", throwable)
         _heartRateState.value = HeartRateState.Error(throwable.message ?: "Unknown error")
       }
       .launchIn(repositoryScope)
+
+    Log.d("HeartRate", "Heart rate monitoring started successfully")
+    Result.success(Unit)
   }
 
   override suspend fun stopMonitoring(): Result<Unit> = runCatching {

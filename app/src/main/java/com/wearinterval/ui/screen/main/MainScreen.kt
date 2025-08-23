@@ -417,7 +417,7 @@ private fun HeartRateDisplay(heartRateState: HeartRateState, modifier: Modifier 
 
     Spacer(modifier = Modifier.width(MainScreenDefaults.HEART_RATE_SPACING))
 
-    // BPM text
+    // Heart rate value text
     Text(
       text =
         when (heartRateState) {

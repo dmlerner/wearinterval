@@ -4,10 +4,12 @@ import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import com.wearinterval.data.database.ConfigurationDao
 import com.wearinterval.data.datastore.DataStoreManager
+import com.wearinterval.domain.model.HeartRateState
 import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.model.TimerPhase
 import com.wearinterval.domain.model.TimerState
 import com.wearinterval.domain.repository.ConfigurationRepository
+import com.wearinterval.domain.repository.HeartRateRepository
 import com.wearinterval.domain.repository.SettingsRepository
 import com.wearinterval.domain.repository.TimerRepository
 import com.wearinterval.ui.screen.config.ConfigEvent
@@ -36,6 +38,7 @@ class ConfigToMainIntegrationTest {
   private lateinit var configurationRepository: ConfigurationRepository
   private lateinit var timerRepository: TimerRepository
   private lateinit var settingsRepository: SettingsRepository
+  private lateinit var heartRateRepository: HeartRateRepository
   private lateinit var configViewModel: ConfigViewModel
   private lateinit var mainViewModel: MainViewModel
 
@@ -45,6 +48,7 @@ class ConfigToMainIntegrationTest {
   private val recentConfigsFlow = MutableStateFlow(emptyList<TimerConfiguration>())
   private val timerStateFlow = MutableStateFlow(TimerState.stopped())
   private val isServiceBoundFlow = MutableStateFlow(true)
+  private val heartRateStateFlow = MutableStateFlow<HeartRateState>(HeartRateState.Unavailable)
 
   @Before
   fun setup() {
@@ -74,6 +78,15 @@ class ConfigToMainIntegrationTest {
     // Setup settings repository mock
     settingsRepository = mockk()
 
+    // Setup heart rate repository mock (consistent with other mocks)
+    heartRateRepository =
+      mockk(relaxed = true) {
+        every { heartRateState } returns heartRateStateFlow
+        coEvery { startMonitoring() } returns Result.success(Unit)
+        coEvery { stopMonitoring() } returns Result.success(Unit)
+        coEvery { checkPermission() } returns true
+      }
+
     // Create ViewModels
     configViewModel = ConfigViewModel(configurationRepository, timerRepository)
     mainViewModel =
@@ -81,6 +94,7 @@ class ConfigToMainIntegrationTest {
         timerRepository,
         configurationRepository,
         settingsRepository,
+        heartRateRepository,
         FakeTimeProvider()
       )
   }

@@ -2,11 +2,13 @@ package com.wearinterval.ui.screen.main
 
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
+import com.wearinterval.domain.model.HeartRateState
 import com.wearinterval.domain.model.NotificationSettings
 import com.wearinterval.domain.model.TimerConfiguration
 import com.wearinterval.domain.model.TimerPhase
 import com.wearinterval.domain.model.TimerState
 import com.wearinterval.domain.repository.ConfigurationRepository
+import com.wearinterval.domain.repository.HeartRateRepository
 import com.wearinterval.domain.repository.SettingsRepository
 import com.wearinterval.domain.repository.TimerRepository
 import com.wearinterval.util.FakeTimeProvider
@@ -33,12 +35,14 @@ class MainViewModelTest {
   private val mockTimerRepository = mockk<TimerRepository>(relaxed = true)
   private val mockConfigurationRepository = mockk<ConfigurationRepository>()
   private val mockSettingsRepository = mockk<SettingsRepository>()
+  private val mockHeartRateRepository = mockk<HeartRateRepository>(relaxed = true)
   private val fakeTimeProvider = FakeTimeProvider()
 
   private val timerStateFlow = MutableStateFlow(TimerState.stopped())
   private val configurationFlow = MutableStateFlow(TimerConfiguration.DEFAULT)
   private val isServiceBoundFlow = MutableStateFlow(false)
   private val notificationSettingsFlow = MutableStateFlow(NotificationSettings.DEFAULT)
+  private val heartRateStateFlow = MutableStateFlow<HeartRateState>(HeartRateState.Unavailable)
 
   private lateinit var viewModel: MainViewModel
 
@@ -48,6 +52,7 @@ class MainViewModelTest {
     every { mockConfigurationRepository.currentConfiguration } returns configurationFlow
     every { mockTimerRepository.isServiceBound } returns isServiceBoundFlow
     every { mockSettingsRepository.notificationSettings } returns notificationSettingsFlow
+    every { mockHeartRateRepository.heartRateState } returns heartRateStateFlow
 
     coEvery { mockTimerRepository.startTimer() } returns Result.success(Unit)
     coEvery { mockTimerRepository.pauseTimer() } returns Result.success(Unit)
@@ -61,6 +66,7 @@ class MainViewModelTest {
         timerRepository = mockTimerRepository,
         configurationRepository = mockConfigurationRepository,
         settingsRepository = mockSettingsRepository,
+        heartRateRepository = mockHeartRateRepository,
         timeProvider = fakeTimeProvider,
       )
   }
@@ -333,6 +339,7 @@ class MainViewModelTest {
         timerRepository = mockTimerRepository,
         configurationRepository = mockConfigurationRepository,
         settingsRepository = mockSettingsRepository,
+        heartRateRepository = mockHeartRateRepository,
         timeProvider = FakeTimeProvider(),
       )
 
