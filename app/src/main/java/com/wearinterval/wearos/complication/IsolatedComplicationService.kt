@@ -170,15 +170,12 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
     serviceScope.launch {
       try {
         Log.d(TAG, "Starting heart rate monitoring for complications")
-        val result = heartRateRepository.startMonitoring()
-        Log.d(TAG, "Heart rate monitoring result: $result")
 
-        // Also observe heart rate changes to trigger complication updates
-        heartRateRepository.heartRateState.collect { heartRateState ->
-          Log.d(TAG, "Heart rate state changed: $heartRateState")
-          // Request complication updates when heart rate changes
-          updateRequester.requestUpdateAll()
-        }
+        // Attempt to start monitoring first
+        val result = heartRateRepository.startMonitoring()
+        Log.d(TAG, "Heart rate monitoring start result: $result")
+
+        // Don't push updates for heart rate changes - let complication system pull when needed
       } catch (e: Exception) {
         Log.e(TAG, "Error starting heart rate monitoring", e)
       }
