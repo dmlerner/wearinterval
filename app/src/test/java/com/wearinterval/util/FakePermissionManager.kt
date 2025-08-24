@@ -1,22 +1,10 @@
 package com.wearinterval.util
 
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
-interface PermissionManager {
-  val heartRatePermissionRequests: SharedFlow<Unit>
-  val heartRatePermissionResults: SharedFlow<Boolean>
-
-  fun requestHeartRatePermission()
-
-  fun onHeartRatePermissionResult(granted: Boolean)
-}
-
-@Singleton
-class PermissionManagerImpl @Inject constructor() : PermissionManager {
+class FakePermissionManager : PermissionManager {
 
   private val _heartRatePermissionRequests = MutableSharedFlow<Unit>(replay = 1)
   override val heartRatePermissionRequests: SharedFlow<Unit> =
@@ -32,5 +20,9 @@ class PermissionManagerImpl @Inject constructor() : PermissionManager {
 
   override fun onHeartRatePermissionResult(granted: Boolean) {
     _heartRatePermissionResults.tryEmit(granted)
+  }
+
+  fun simulatePermissionResult(granted: Boolean) {
+    onHeartRatePermissionResult(granted)
   }
 }

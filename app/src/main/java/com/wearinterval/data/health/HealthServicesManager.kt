@@ -37,10 +37,18 @@ class HealthServicesManager @Inject constructor(@ApplicationContext private val 
 
   fun heartRateMeasureFlow(): Flow<MeasureMessage> = callbackFlow {
     Log.d("HeartRate", "Starting heart rate measure flow")
-    val hasCapability = hasHeartRateCapability()
 
-    if (!hasCapability) {
-      Log.w("HeartRate", "No heart rate capability, emitting Unavailable")
+    try {
+      val hasCapability = hasHeartRateCapability()
+
+      if (!hasCapability) {
+        Log.w("HeartRate", "No heart rate capability, emitting Unavailable")
+        trySend(MeasureMessage.Unavailable)
+        close()
+        return@callbackFlow
+      }
+    } catch (e: Exception) {
+      Log.e("HeartRate", "Error checking heart rate capability", e)
       trySend(MeasureMessage.Unavailable)
       close()
       return@callbackFlow

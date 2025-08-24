@@ -11,6 +11,7 @@ import com.wearinterval.domain.repository.ConfigurationRepository
 import com.wearinterval.domain.repository.HeartRateRepository
 import com.wearinterval.domain.repository.SettingsRepository
 import com.wearinterval.domain.repository.TimerRepository
+import com.wearinterval.util.FakePermissionManager
 import com.wearinterval.util.FakeTimeProvider
 import com.wearinterval.util.MainDispatcherRule
 import io.mockk.coEvery
@@ -36,6 +37,7 @@ class MainViewModelTest {
   private val mockConfigurationRepository = mockk<ConfigurationRepository>()
   private val mockSettingsRepository = mockk<SettingsRepository>()
   private val mockHeartRateRepository = mockk<HeartRateRepository>(relaxed = true)
+  private val fakePermissionManager = FakePermissionManager()
   private val fakeTimeProvider = FakeTimeProvider()
 
   private val timerStateFlow = MutableStateFlow(TimerState.stopped())
@@ -67,6 +69,7 @@ class MainViewModelTest {
         configurationRepository = mockConfigurationRepository,
         settingsRepository = mockSettingsRepository,
         heartRateRepository = mockHeartRateRepository,
+        permissionManager = fakePermissionManager,
         timeProvider = fakeTimeProvider,
       )
   }
@@ -340,6 +343,7 @@ class MainViewModelTest {
         configurationRepository = mockConfigurationRepository,
         settingsRepository = mockSettingsRepository,
         heartRateRepository = mockHeartRateRepository,
+        permissionManager = fakePermissionManager,
         timeProvider = FakeTimeProvider(),
       )
 

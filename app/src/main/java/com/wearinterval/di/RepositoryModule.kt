@@ -10,6 +10,8 @@ import com.wearinterval.domain.repository.HeartRateRepository
 import com.wearinterval.domain.repository.SettingsRepository
 import com.wearinterval.domain.repository.TimerRepository
 import com.wearinterval.domain.repository.WearOsRepository
+import com.wearinterval.util.PermissionManager
+import com.wearinterval.util.PermissionManagerImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -38,4 +40,9 @@ abstract class RepositoryModule {
   abstract fun bindHeartRateRepository(
     heartRateRepositoryImpl: HeartRateRepositoryImpl
   ): HeartRateRepository
+
+  @Binds
+  abstract fun bindPermissionManager(
+    permissionManagerImpl: PermissionManagerImpl
+  ): PermissionManager
 }

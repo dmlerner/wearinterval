@@ -76,6 +76,9 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
       // Observe timer state changes and push updates to complications
       observeTimerStateChanges()
 
+      // Start heart rate monitoring for complications
+      startHeartRateMonitoring()
+
       android.util.Log.e(TAG, "Hilt EntryPoint injection successful")
     } catch (e: Exception) {
       android.util.Log.e(TAG, "Failed to initialize Hilt dependencies", e)
@@ -159,6 +162,25 @@ class IsolatedComplicationService : ComplicationDataSourceService() {
         }
       } catch (e: Exception) {
         Log.e(TAG, "Error observing timer state changes", e)
+      }
+    }
+  }
+
+  private fun startHeartRateMonitoring() {
+    serviceScope.launch {
+      try {
+        Log.d(TAG, "Starting heart rate monitoring for complications")
+        val result = heartRateRepository.startMonitoring()
+        Log.d(TAG, "Heart rate monitoring result: $result")
+
+        // Also observe heart rate changes to trigger complication updates
+        heartRateRepository.heartRateState.collect { heartRateState ->
+          Log.d(TAG, "Heart rate state changed: $heartRateState")
+          // Request complication updates when heart rate changes
+          updateRequester.requestUpdateAll()
+        }
+      } catch (e: Exception) {
+        Log.e(TAG, "Error starting heart rate monitoring", e)
       }
     }
   }

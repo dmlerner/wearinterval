@@ -45,9 +45,17 @@ constructor(
       .map { it is HeartRateState.Connected }
       .stateIn(scope = repositoryScope, started = SharingStarted.Eagerly, initialValue = false)
 
+  private var isMonitoring = false
+
   override suspend fun startMonitoring(): Result<Unit> = runCatching {
     Logger.heartRate("HeartRateRepository.startMonitoring() called")
-    Logger.heartRate("Current state: ${_heartRateState.value}")
+    Logger.heartRate("Current state: ${_heartRateState.value}, isMonitoring: $isMonitoring")
+
+    // If already monitoring, just return success
+    if (isMonitoring) {
+      Logger.heartRate("Heart rate monitoring already active")
+      return Result.success(Unit)
+    }
 
     if (!healthServicesManager.hasHeartRateCapability()) {
       Logger.heartRate("Heart rate capability not available")
@@ -103,12 +111,14 @@ constructor(
       }
       .catch { throwable ->
         Logger.heartRateError("Error in heart rate flow", throwable)
+        isMonitoring = false
         _heartRateState.value =
           HeartRateState.Error(throwable.message ?: "Unknown error", lastKnownBpm)
         Logger.heartRate("State updated to Error(${throwable.message}, $lastKnownBpm)")
       }
       .launchIn(repositoryScope)
 
+    isMonitoring = true
     Logger.heartRate("Heart rate monitoring started successfully")
     Result.success(Unit)
   }
@@ -116,6 +126,7 @@ constructor(
   override suspend fun stopMonitoring(): Result<Unit> = runCatching {
     Logger.heartRate("stopMonitoring() called")
     repositoryScope.coroutineContext.cancelChildren()
+    isMonitoring = false
     _heartRateState.value = HeartRateState.Unavailable
     Logger.heartRate("Monitoring stopped, state set to Unavailable")
   }
