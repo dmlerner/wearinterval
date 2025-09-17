@@ -50,3 +50,7 @@
 -keepclassmembers class * implements androidx.health.services.client.MeasureCallback {
    *;
 }
+
+# Keep complication service classes
+-keep class androidx.wear.watchface.complications.** { *; }
+-keep class com.wearinterval.wearos.complication.** { *; }
