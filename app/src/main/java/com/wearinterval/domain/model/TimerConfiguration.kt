@@ -16,11 +16,7 @@ data class TimerConfiguration(
   val lastUsed: Instant = Instant.EPOCH,
 ) {
   fun isValid(): Boolean {
-    return laps in Constants.TimerLimits.MIN_LAPS..Constants.TimerLimits.MAX_LAPS &&
-      workDuration >= Constants.TimerLimits.MIN_WORK_DURATION &&
-      workDuration <= Constants.TimerLimits.MAX_WORK_DURATION &&
-      restDuration >= Constants.TimerLimits.MIN_REST_DURATION &&
-      restDuration <= Constants.TimerLimits.MAX_REST_DURATION
+    return true
   }
 
   fun displayString(): String {
@@ -54,26 +50,6 @@ data class TimerConfiguration(
         workDuration = 1.minutes,
         restDuration = 0.seconds, // no rest
       )
-
-    fun validate(laps: Int, workDuration: Duration, restDuration: Duration): TimerConfiguration {
-      val validLaps = laps.coerceIn(Constants.TimerLimits.MIN_LAPS, Constants.TimerLimits.MAX_LAPS)
-      val validWorkDuration =
-        workDuration.coerceIn(
-          Constants.TimerLimits.MIN_WORK_DURATION,
-          Constants.TimerLimits.MAX_WORK_DURATION
-        )
-      val validRestDuration =
-        restDuration.coerceIn(
-          Constants.TimerLimits.MIN_REST_DURATION,
-          Constants.TimerLimits.MAX_REST_DURATION
-        )
-
-      return TimerConfiguration(
-        laps = validLaps,
-        workDuration = validWorkDuration,
-        restDuration = validRestDuration,
-      )
-    }
 
     val COMMON_PRESETS =
       listOf(

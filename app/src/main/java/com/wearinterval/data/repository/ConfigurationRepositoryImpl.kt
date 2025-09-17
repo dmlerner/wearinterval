@@ -48,32 +48,24 @@ constructor(
 
   override suspend fun updateConfiguration(config: TimerConfiguration): Result<Unit> {
     return try {
-      val validatedConfig =
-        TimerConfiguration.validate(
-          config.laps,
-          config.workDuration,
-          config.restDuration,
-        )
-
-      // Check if a configuration with the same VALIDATED values already exists (LRU behavior)
-      // Use VALIDATED values for search to find actual duplicates after validation
+      // Check if a configuration with the same values already exists (LRU behavior)
       val existingConfig =
         configurationDao.findConfigurationByValues(
-          laps = validatedConfig.laps,
-          workDurationSeconds = validatedConfig.workDuration.inWholeSeconds,
-          restDurationSeconds = validatedConfig.restDuration.inWholeSeconds,
+          laps = config.laps,
+          workDurationSeconds = config.workDuration.inWholeSeconds,
+          restDurationSeconds = config.restDuration.inWholeSeconds,
         )
 
       val finalConfig =
         if (existingConfig != null) {
           // Use existing ID but update timestamp (LRU: move to front)
-          validatedConfig.copy(
+          config.copy(
             id = existingConfig.id,
             lastUsed = timeProvider.now(),
           )
         } else {
           // New configuration
-          validatedConfig.copy(
+          config.copy(
             id = config.id,
             lastUsed = timeProvider.now(),
           )
@@ -94,32 +86,24 @@ constructor(
 
   override suspend fun saveToHistory(config: TimerConfiguration): Result<Unit> {
     return try {
-      val validatedConfig =
-        TimerConfiguration.validate(
-          config.laps,
-          config.workDuration,
-          config.restDuration,
-        )
-
-      // Check if a configuration with the same VALIDATED values already exists (LRU behavior)
-      // Use VALIDATED values for search to find actual duplicates after validation
+      // Check if a configuration with the same values already exists (LRU behavior)
       val existingConfig =
         configurationDao.findConfigurationByValues(
-          laps = validatedConfig.laps,
-          workDurationSeconds = validatedConfig.workDuration.inWholeSeconds,
-          restDurationSeconds = validatedConfig.restDuration.inWholeSeconds,
+          laps = config.laps,
+          workDurationSeconds = config.workDuration.inWholeSeconds,
+          restDurationSeconds = config.restDuration.inWholeSeconds,
         )
 
       val finalConfig =
         if (existingConfig != null) {
           // Reuse existing ID and update timestamp (move to front of LRU)
-          validatedConfig.copy(
+          config.copy(
             id = existingConfig.id,
             lastUsed = timeProvider.now(),
           )
         } else {
           // New configuration - create new entry with provided ID
-          validatedConfig.copy(
+          config.copy(
             id = config.id,
             lastUsed = timeProvider.now(),
           )
