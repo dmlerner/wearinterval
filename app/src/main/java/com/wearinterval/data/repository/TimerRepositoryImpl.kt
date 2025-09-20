@@ -99,9 +99,11 @@ constructor(
 
   override suspend fun startTimer(): Result<Unit> {
     return try {
+      android.util.Log.e("TimerRepo", "startTimer() called")
       ensureServiceBound()
       val config = configurationRepository.get().currentConfiguration.value
 
+      android.util.Log.e("TimerRepo", "About to save to history: ${config.displayString()}")
       // Save configuration to history when timer starts
       configurationRepository
         .get()

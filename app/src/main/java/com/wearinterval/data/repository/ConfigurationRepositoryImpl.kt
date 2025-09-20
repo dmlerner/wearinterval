@@ -86,7 +86,9 @@ constructor(
 
   override suspend fun saveToHistory(config: TimerConfiguration): Result<Unit> {
     return try {
-      // Check if a configuration with the same values already exists (LRU behavior)
+      // Check if same configuration was started recently (within last 10 seconds)
+      // This prevents duplicates from multiple startTimer() calls
+      val recentThreshold = timeProvider.now().minusSeconds(10)
       val existingConfig =
         configurationDao.findConfigurationByValues(
           laps = config.laps,
@@ -95,16 +97,19 @@ constructor(
         )
 
       val finalConfig =
-        if (existingConfig != null) {
-          // Reuse existing ID and update timestamp (move to front of LRU)
+        if (
+          existingConfig != null &&
+            java.time.Instant.ofEpochMilli(existingConfig.lastUsed).isAfter(recentThreshold)
+        ) {
+          // Recent duplicate - update existing timestamp
           config.copy(
             id = existingConfig.id,
             lastUsed = timeProvider.now(),
           )
         } else {
-          // New configuration - create new entry with provided ID
+          // New config or old duplicate - create new entry
           config.copy(
-            id = config.id,
+            id = java.util.UUID.randomUUID().toString(),
             lastUsed = timeProvider.now(),
           )
         }
